@@ -38,6 +38,10 @@ A static wellness website for tracking daily moods, journaling, and healthy habi
 
 This is a static website and can be hosted on GitHub Pages, Netlify, Vercel, or any static file host.
 
+GitHub Pages is configured for this repository using a workflow that deploys the site from the `main` branch. Once the workflow runs, the site should be available at:
+
+- `https://miola585.github.io/MoodJournal/`
+
 ## Notes
 
 - Data is stored locally in the browser using `localStorage`.
