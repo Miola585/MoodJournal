@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- head
+
+        Purpose:
+        - Title used here shows up in the browser tab
+        - Link to the favicon (small image that appears in the browser tab)
+        - Link to the CSS file (used to style the webpage)
+
+        When To Modify:
+        - [ ] Project 2 (REQUIRED FEATURE) 
+        - [ ] Project 2 (STRETCH FEATURE) (favicon)
+        - [ ] Any time after
+        -->
+        <title>Mood Journal</title>
+        <link rel="icon" href="img/JJ.png">
+        <link rel="stylesheet" href="style.css">
+        
+        
+    </head>
+    
+    <body>
+    
+        <!-- navbar
+
+    Purpose:
+    - Navigation bar that allows users to jump to different sections of the webpage
+    - Also holds buttons for user settings (dark mode, reduce motion)
+    -->
+    <div class="navbar">
+        <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#eventschedule">Schedule</a></li>
+        <li><a href="#rsvp">RSVP</a></li>
+        <li><a href="#links">Links</a></li>
+        
+        <li><button id="theme-button"> 🌙 Dark Mode OFF</button></li>
+        <li><button id="reduce-motion-btn">💫 Reduce Motion ON</button></li>
+        </ul>
+    </div>
+
+        <!-- headings
+
+        Purpose:
+        - Main header section of the webpage
+        - Contains the title, subtitle, image, and key buttons for the webpage
+        -->
+       <div id = "home" class = 'header-container revealable'>
+        <div class = "header-item">
+            <img id="header-img" src="img/JJ.png" />
+        </div>
+        <div class = 'header-item'>
+            <h1 >Daily Mood Check-In</h1>
+            <h3>Every Mood Tells a Story!</h3>
+            <a href="daily.html" class="header-button">Daily Check-In</a>
+            <a href="activities.html" class="header-button">Activities</a>
+            <a href="journal.html" class="header-button">Start Journaling!</a>
+            <a href="tips.html" class="header-button">Positivity tips</a>
+            <a href="view_entries.html" class="header-button">View My Journal Entries</a>
+        </div>
+    </div>
+        <!--
+        Mood Grid: User selects their mood with buttons
+        -->
+        
+        <!-- about
+        Purpose:
+        - Section for general info about the event
+        - Contains a video, description, and key points about the event
+        --> 
+       
+    <section id="about" class="about revealable">
+        <h2>About the Event</h2>
+        <div class="video-container">
+            <iframe width="300" height="200" src="https://www.youtube.com/embed/eZBa63NZbbE?si=1-lljpa63qeL2DnA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        
+        </div>
+         <p>A safe corner for your feelings. Jot down your mood, add a note, build healthy habits and come back to see how you are growing.
+            No Pressure! Reflect on what matters and find small ways to feel better everyday!
+        </p>
+
+        <div class="text-container"><h3 >What to Expect</h3></div>
+            <ul>
+                <li> <b class="text-sizer">Journaling:</b> <i class="text-sizer">Express your emotions freely</i></li>
+                <li> <b class="text-sizer">Emotion Identification:</b> <i class="text-sizer">Find the words to describe how you feel</i></li>
+                <li> <b class="text-sizer">Activities:</b> <i class="text-sizer">Be prepared to move to improve your mood</i></li>
+            </ul>
+
+    </section>
+        
+        <!-- schedule
+        --> 
+    <section id="eventschedule" class="schedule-container revealable">
+    <h2>Event Schedule</h2>
+
+    <div class="schedule-items">
+
+        <div class="schedule-item">
+            <img src="img/Emotion-Wheel.png" />
+            <h3>Emotion Exploration</h3>
+            <p>Take a look at the wheel and try to identify your current mood. 
+                Use the check in button to pick out which emotion best represents how you are feeling
+            </p>
+        </div>
+
+        <div class="schedule-item">
+            <img src="img/Journal.png" />
+            <h3>Journals and Notes</h3>
+            <p>Be bold! Take some time to write out how you are feeling and feel free to express your thoughts, emotions, or events that have previously happened.</p>
+        </div>
+
+        <div class="schedule-item">
+            <img src="img/Yoga.png" />
+            <h3>Mindfulness Activity</h3>
+            <p>Activities to help lift or steady your mood. You'll get activities recommended to you based on 
+                your current emotion. Pick out one or two to help improve your mood.
+            </p>
+        </div>
+
+    </div>
+</section>
+       
+
+        <!-- rsvp [PLACEHOLDER] [ADDED IN UNIT 6] -->
+ 
+    <div id = "rsvp" class="revealable">
+        <h2>Stay Connected</h2>
+        <div class="rsvp-container">
+            <div class="rsvp-para">
+                <p>
+                    Stay connected with upcoming wellness activities, journaling prompts, and mindfulness tips. 
+                    Join our community to receive gentle reminders and supportive resources to help you reflect, 
+                    reset, and take care of your well-being.
+                </p>
+            </div>
+            <div class="rsvp-participants">
+                 <p>🌻 Jamie from Morgan State has checked in!</p>
+                <p>🌻 Amy from Bowie has checked in!</p>
+                <p>🌻 Teresa from UMBC has checked in!</p>
+                <p id = "rsvp-count"> 🔔 3 people have checked in!</p>
+            </div>
+            <div class="participants">
+                    
+            </div>
+        </div>
+            
+            <!--- Sign RSVP Form --->
+        <div class="form-container">
+            <form id="rsvp-form" title="rsvp-form">
+                    <label for="name"> Name: </label>
+                    <input type="text" id="name"> 
+                    <label for="email"> Email: </label>
+                    <input type="text" id="email"> 
+                    <label for="school"> School: </label>
+                    <input type="text" id="school"> 
+            </form>
+                <!-- Submit button -->
+            <button id="rsvp-button">Stay Updated!</button>
+         </div>      
+    </div>
+
+        <!-- success modal [PLACEHOLDER] [ADDED IN UNIT 9] --> 
+        <div id="success-modal" class="modal">
+            <div class="modal-container">
+                <div id="modal-text">
+                    <p>
+                    You're all set ☑️<br>
+                    You'll receive updates with wellness tips, journaling prompts, 
+                    and future community events designed to support your mental well-being.
+                    </p>
+                
+                
+                </div>
+                <div class="modal-actions">
+                    <button id="close-modal-btn">Close</button>
+                </div>
+                <div id="modal-image">
+                    <img src="img/sunshine.png" alt="A cartoony image of the sun">
+                </div>
+            </div>
+        </div>
+
+        <!-- links
+        --> 
+       <section id="links" class="links revealable">
+            <h2>Links</h2>
+            <div class="links-row">
+                <a class="block" href="https://youtu.be/j7rKKpwdXNE?si=hZhSu72GBqKiXU2b">
+                    <article class="resource-card calm">
+                        <h5>🧘🏾‍♀️ Stretch and Relief</h5>
+                        <span class="tag"> Stress Relief</span>
+                        <p>10-min youtube yoga stretches to help relieve stress and loosen tension.</p>
+                    </article>
+                </a>
+                <a class="block" href="https://www.youtube.com/live/dnBAU8Co6PA?si=J-u4VaLRCmOt_Npu">
+                    <article class="resource-card focus">
+                        <h5>🎧Music Playlist</h5>
+                        <span class="tag"> Calm / Focus</span>
+                        <p>Soothing instrumental tracks to calm your mind</p>
+                    </article>
+                </a>
+                <a class="block" href="https://positivepsychology.com/emotion-regulation/">
+                    <article class="resource-card learn">
+                        <h5>📙Emotional Regulation</h5>
+                        <span class="tag">Learn</span>
+                        <p>Short article with clear tips to stay balanced, spot triggers, and respond to challenges in healthier ways </p>
+                    </article>
+                </a>
+            </div>
+        <!-- This <a> block is one link.  Copy and paste all 6 lines to create another link. -->
+            
+       </section>
+       
+
+       <!-- footer [PLACEHOLDER] [ADDED IN UNIT 3] -->
+         <div class="footer">
+            
+            <a href="https://positivepsychology.com/benefits-of-journaling/" id = "footer-link">Learn More / </a>
+            <a href="https://www.choosingtherapy.com/journaling-for-mental-health/" id = "footer-link">  About</a>
+        </div>
+        <!-- script [PLACEHOLDER] [ADDED IN UNIT 5] -->
+        <script src="site.js"></script>
+        <script src="index.js"> </script>
+    </body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Journal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="navbar">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="view_entries.html">View Entries</a></li>
+        <li><button id="theme-button"> 🌙 Dark Mode OFF</button></li>
+        <li><button id="reduce-motion-btn">💫 Reduce Motion ON</button></li>
+      </ul>
+    </div>
+
+    <main style="padding: 110px 20px 80px; text-align:center;">
+      <h2>Write a Journal Entry</h2>
+      <div style="max-width:900px;margin:12px auto;text-align:left;">
+        <label for="meals-select">Meals today:</label>
+        <select id="meals-select">
+          <option value="">--</option>
+          <option value="None">None</option>
+          <option value="Light">Light</option>
+          <option value="Regular">Regular</option>
+          <option value="Heavy">Heavy</option>
+        </select>
+        <label for="water-select" style="margin-left:12px;">Water (cups):</label>
+        <select id="water-select">
+          <option value="">--</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4+</option>
+        </select>
+        <label for="sleep-select" style="margin-left:12px;">Sleep (hrs):</label>
+        <select id="sleep-select">
+          <option value="">--</option>
+          <option value="0">0</option>
+          <option value="2">2</option>
+          <option value="4">4</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8+</option>
+        </select>
+      </div>
+      <textarea id="journal-text" placeholder="Write how you're feeling..." style="width:90%;height:240px;margin-top:12px;padding:12px;font-size:16px;"></textarea>
+      <div style="margin-top:12px;">
+        <button id="prompt-btn" class="header-button">Get a prompt</button>
+        <span id="prompt-text" style="margin-left:12px;font-style:italic;color:var(--text-color);"></span>
+      </div>
+      <div style="margin-top:12px;">
+        <button id="save-entry-btn" class="header-button">Save Entry</button>
+        <a href="view_entries.html" class="header-button">View Entries</a>
+        <a href="calendar.html" class="header-button">Calendar</a>
+        <a href="weekly_summary.html" class="header-button">Weekly Summary</a>
+      </div>
+    </main>
+
+    <div class="footer">
+      <a href="index.html" id="footer-link">Back to Home</a>
+    </div>
+
+    <script src="site.js"></script>
+    <script src="index.js"></script>
+  </body>
+</html>
