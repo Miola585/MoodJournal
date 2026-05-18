@@ -31,14 +31,116 @@
     { key: 'Numb', label: '😶 Numb', color: '#cfd8dc' }
   ];
 
+  const specificFeelingsByMood = {
+    Happy: ['Joyful', 'Proud', 'Playful', 'Hopeful', 'Loved'],
+    Content: ['Settled', 'Comfortable', 'Balanced', 'Safe', 'Present'],
+    Excited: ['Eager', 'Inspired', 'Energized', 'Curious', 'Motivated'],
+    Calm: ['Peaceful', 'Relaxed', 'Grounded', 'Clear', 'Relieved'],
+    Anxious: ['Worried', 'Nervous', 'Unsure', 'Restless', 'Scared'],
+    Sad: ['Disappointed', 'Hurt', 'Grieving', 'Discouraged', 'Heavy'],
+    Angry: ['Frustrated', 'Irritated', 'Resentful', 'Betrayed', 'Defensive'],
+    Lonely: ['Left out', 'Disconnected', 'Unseen', 'Homesick', 'Isolated'],
+    Grateful: ['Thankful', 'Appreciative', 'Touched', 'Lucky', 'Supported'],
+    Tired: ['Drained', 'Sleepy', 'Burned out', 'Foggy', 'Low energy'],
+    Overwhelmed: ['Stressed', 'Pressured', 'Scattered', 'Stuck', 'Flooded'],
+    Panic: ['Terrified', 'Shaky', 'Trapped', 'Racing', 'Unsafe'],
+    Numb: ['Blank', 'Detached', 'Flat', 'Distant', 'Frozen']
+  };
+
+  const contextFactors = ['Sleep', 'School', 'Work', 'Friends', 'Family', 'Body', 'Food', 'Money', 'Social media', 'Weather', 'Health', 'Identity'];
+
+  const copingStepsByMood = {
+    Happy: 'Save this moment by writing what made it possible.',
+    Content: 'Notice what helped today feel steady.',
+    Excited: 'Use the energy on one clear action.',
+    Calm: 'Protect this calm with one simple boundary.',
+    Anxious: 'Try 4 slow breaths, then write one next step.',
+    Sad: 'Do one gentle thing for your body, like water or rest.',
+    Angry: 'Step away for two minutes before replying.',
+    Lonely: 'Send one low-pressure check-in text.',
+    Grateful: 'Tell someone one specific thing you appreciate.',
+    Tired: 'Lower one demand and choose a realistic rest step.',
+    Overwhelmed: 'Pick the smallest task and ignore the rest for 10 minutes.',
+    Panic: 'Name 5 things you see and feel your feet on the floor.',
+    Numb: 'Notice one texture, sound, or temperature near you.'
+  };
+
+  const moodScores = {
+    Happy: 8,
+    Content: 7,
+    Excited: 8,
+    Calm: 7,
+    Anxious: 4,
+    Sad: 3,
+    Angry: 4,
+    Lonely: 3,
+    Grateful: 8,
+    Tired: 4,
+    Overwhelmed: 3,
+    Panic: 2,
+    Numb: 3
+  };
+
+  const renderSpecificFeelings = (moodKey) => {
+    const select = document.getElementById('specific-feeling');
+    if(!select) return;
+    select.innerHTML = '<option value="">Choose a specific feeling</option>';
+    (specificFeelingsByMood[moodKey] || []).forEach(feeling => {
+      const option = document.createElement('option');
+      option.value = feeling;
+      option.textContent = feeling;
+      select.appendChild(option);
+    });
+  };
+
+  const renderContextFactors = () => {
+    const container = document.getElementById('context-factors');
+    if(!container || container.children.length > 0) return;
+    contextFactors.forEach(factor => {
+      const label = document.createElement('label');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = factor;
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(factor));
+      container.appendChild(label);
+    });
+  };
+
+  const getSelectedContextFactors = () => {
+    return Array.from(document.querySelectorAll('#context-factors input:checked')).map(input => input.value);
+  };
+
+  const escapeHTML = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[char]);
+
+  const renderEntryMeta = (entry) => {
+    const chips = [];
+    if(entry.specificFeeling) chips.push(`Feeling: ${entry.specificFeeling}`);
+    if(entry.intensity) chips.push(`Intensity: ${entry.intensity}/10`);
+    if(entry.contextFactors && entry.contextFactors.length) chips.push(`Factors: ${entry.contextFactors.join(', ')}`);
+    if(entry.copingStep) chips.push(`Next step: ${entry.copingStep}`);
+    if(!chips.length) return '';
+    return `<div class="entry-meta">${chips.map(chip => `<span>${escapeHTML(chip)}</span>`).join('')}</div>`;
+  };
+
   const showDailyJournalSection = (moodKey) => {
     const section = document.getElementById('daily-journal-section');
     if(!section) return;
     const heading = document.getElementById('daily-journal-heading');
     const promptContainer = document.getElementById('daily-prompt');
+    const copingInput = document.getElementById('coping-step');
     const moodData = moods.find(m => m.key === moodKey);
     if(heading) heading.textContent = `What made you feel ${moodData ? moodData.label : moodKey} today?`;
     if(promptContainer) promptContainer.textContent = '';
+    if(copingInput && !copingInput.value) copingInput.placeholder = copingStepsByMood[moodKey] || copingInput.placeholder;
+    renderSpecificFeelings(moodKey);
+    renderContextFactors();
     section.style.display = 'block';
     const textarea = document.getElementById('daily-journal-text');
     if(textarea) textarea.placeholder = `Write what made you feel ${moodData ? moodData.label : moodKey} today...`;
@@ -373,8 +475,9 @@
       card.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div style="flex:1;text-align:left;">
-            <strong>${e.mood ? 'Mood: ' + e.mood : ''}</strong>
-            <div style="font-size:0.9rem;color:var(--text-color);margin-top:6px;white-space:pre-wrap">${e.content}</div>
+            <strong>${e.mood ? 'Mood: ' + escapeHTML(e.mood) : ''}</strong>
+            ${renderEntryMeta(e)}
+            <div style="font-size:0.9rem;color:var(--text-color);margin-top:6px;white-space:pre-wrap">${escapeHTML(e.content)}</div>
             <div style="margin-top:8px;font-size:0.8rem;color:var(--navi-bar-text);">${date}</div>
           </div>
           <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;margin-left:12px;">
@@ -455,18 +558,20 @@
         const info = dailyLogs[key];
         const details = document.getElementById('calendar-details');
         if(details){
+          const linkedEntry = info && info.journalId ? (loadEntries().find(e=>e.id===info.journalId) || null) : null;
           details.innerHTML = info ? `
-            <h4>${key}</h4>
+            <h4>${escapeHTML(key)}</h4>
             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
               <strong>Mood:</strong>
               <span style="display:inline-flex;align-items:center;padding:4px 12px;border-radius:999px;background:${(moods.find(x=>x.key===info.mood)||{color:'var(--accent-color-medium)'}).color};color:#fff;">
-                ${info.mood || '—'}
+                ${escapeHTML(info.mood || '—')}
               </span>
             </div>
-            <div><strong>Meals:</strong> ${info.meals || '—'}</div>
-            <div><strong>Water:</strong> ${info.water || '—'}</div>
-            <div><strong>Sleep:</strong> ${info.sleep || '—'}</div>
-            <div><strong>Journal:</strong> ${info.journalId ? (loadEntries().find(e=>e.id===info.journalId)||{content:'—'}).content : '—'}</div>
+            ${renderEntryMeta(info)}
+            <div><strong>Meals:</strong> ${escapeHTML(info.meals || '—')}</div>
+            <div><strong>Water:</strong> ${escapeHTML(info.water || '—')}</div>
+            <div><strong>Sleep:</strong> ${escapeHTML(info.sleep || '—')}</div>
+            <div><strong>Journal:</strong> ${linkedEntry ? escapeHTML(linkedEntry.content) : '—'}</div>
             ${key === new Date().toISOString().slice(0,10) ? '<div style="margin-top:8px;"><span style="display:inline-block;padding:4px 10px;border-radius:999px;background:var(--accent-color-green);color:#fff;font-weight:700;">Today</span></div>' : ''}
             <div style="margin-top:8px;display:flex;gap:8px;justify-content:flex-end;">
               <button id="delete-log-btn" class="header-button">Delete Log</button>
@@ -539,16 +644,30 @@
     }
     // aggregate moods
     const moodCounts = {};
-    let totalSleep = 0, sleepCount = 0, totalWater = 0, waterCount = 0;
+    const factorCounts = {};
+    let totalSleep = 0, sleepCount = 0, totalWater = 0, waterCount = 0, totalIntensity = 0, intensityCount = 0;
     last7.forEach(x=>{
       if(x.data && x.data.mood){ moodCounts[x.data.mood] = (moodCounts[x.data.mood]||0)+1; }
       if(x.data && x.data.sleep){ totalSleep += Number(x.data.sleep); sleepCount++; }
       if(x.data && x.data.water){ totalWater += Number(x.data.water); waterCount++; }
+      if(x.data && x.data.intensity){ totalIntensity += Number(x.data.intensity); intensityCount++; }
+      if(x.data && x.data.contextFactors){
+        x.data.contextFactors.forEach(factor => {
+          factorCounts[factor] = (factorCounts[factor] || 0) + 1;
+        });
+      }
     });
+    const topFactors = Object.keys(factorCounts)
+      .sort((a,b) => factorCounts[b] - factorCounts[a])
+      .slice(0,3)
+      .map(factor => `${factor} (${factorCounts[factor]})`)
+      .join(', ');
     if(statsEl) {
       statsEl.innerHTML = `<h4>Stats</h4>
         <div>Average sleep: ${sleepCount? (totalSleep/sleepCount).toFixed(1) + ' hrs' : '—'}</div>
-        <div>Average water: ${waterCount? (totalWater/waterCount).toFixed(1) + ' cups' : '—'}</div>`;
+        <div>Average water: ${waterCount? (totalWater/waterCount).toFixed(1) + ' cups' : '—'}</div>
+        <div>Average mood intensity: ${intensityCount? (totalIntensity/intensityCount).toFixed(1) + '/10' : '—'}</div>
+        <div>Top mood factors: ${topFactors ? escapeHTML(topFactors) : '—'}</div>`;
     }
     const labels = Object.keys(moodCounts);
     const values = labels.map(l => moodCounts[l]);
@@ -603,6 +722,9 @@
     }
   };
 
+  window.renderCalendar = renderCalendar;
+  window.renderWeeklySummary = renderWeeklySummary;
+
   // attach event listeners when DOM ready
   document.addEventListener('DOMContentLoaded', () => {
     initMoodGrid();
@@ -655,6 +777,13 @@
         if(container) container.textContent = prompt;
       });
     }
+    const intensityInput = document.getElementById('mood-intensity');
+    const intensityValue = document.getElementById('mood-intensity-value');
+    if(intensityInput && intensityValue){
+      intensityInput.addEventListener('input', () => {
+        intensityValue.textContent = `${intensityInput.value}/10`;
+      });
+    }
     const dailySaveBtn = document.getElementById('daily-save-btn');
     if(dailySaveBtn){
       dailySaveBtn.addEventListener('click', ()=>{
@@ -663,15 +792,40 @@
         const content = ta.value.trim();
         if(content.length < 1){ ta.classList.add('error'); return; }
         const mood = localStorage.getItem('lastMood') || null;
+        const intensity = document.getElementById('mood-intensity') ? document.getElementById('mood-intensity').value : null;
+        const specificFeeling = document.getElementById('specific-feeling') ? document.getElementById('specific-feeling').value : '';
+        const contextFactors = getSelectedContextFactors();
+        const copingStep = document.getElementById('coping-step') ? document.getElementById('coping-step').value.trim() : '';
         const entries = loadEntries();
-        const entry = { id: Date.now(), created: new Date().toISOString(), dateKey: new Date().toISOString().slice(0,10), mood, content };
+        const entry = {
+          id: Date.now(),
+          created: new Date().toISOString(),
+          dateKey: new Date().toISOString().slice(0,10),
+          mood,
+          moodScore: moodScores[mood] || null,
+          intensity,
+          specificFeeling,
+          contextFactors,
+          copingStep,
+          content
+        };
         entries.unshift(entry); saveEntries(entries);
         // update daily logs
         const logs = loadDailyLogs();
         const key = entry.dateKey;
-        logs[key] = Object.assign({}, logs[key] || {}, { mood: mood, journalId: entry.id, updated: new Date().toISOString() });
+        logs[key] = Object.assign({}, logs[key] || {}, {
+          mood,
+          moodScore: entry.moodScore,
+          intensity,
+          specificFeeling,
+          contextFactors,
+          copingStep,
+          journalId: entry.id,
+          updated: new Date().toISOString()
+        });
         saveDailyLogs(logs);
         ta.value = '';
+        if(document.getElementById('coping-step')) document.getElementById('coping-step').value = '';
         // Provide quick feedback and re-render calendar
         alert('Entry saved.');
         renderCalendar();

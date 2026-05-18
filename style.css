@@ -537,6 +537,83 @@ utilize class tags for these
 .mood-Btn{
 }
 
+.support-note {
+  max-width: 760px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--accent-color-dark);
+  background: var(--card-bg);
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.checkin-panel {
+  margin: 14px 0;
+  padding: 14px;
+  background: var(--card-bg);
+  border-radius: 8px;
+}
+
+.checkin-panel label,
+.field-label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.range-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-row input {
+  flex: 1;
+}
+
+#specific-feeling,
+#coping-step {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 2px solid var(--accent-color-darkest);
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-grid label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--accent-color-dark);
+  border-radius: 999px;
+  background: var(--bg-color);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.entry-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.entry-meta span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent-color-light);
+  font-size: 14px;
+}
+
 
 .revealable {
   --reveal-distance: 150px; 
@@ -630,4 +707,5 @@ html.dark-mode {
   --accent-color-medium: #e0a07a;
   --accent-color-dark: #c97a4c;
   --accent-color-darkest: #2a1f1a;
+
 }

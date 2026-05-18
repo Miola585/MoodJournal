@@ -13,6 +13,7 @@ let themeButton = document.getElementById("theme-button");
 // Step 2: Write the callback function
 const toggleDarkMode = () => {
     document.documentElement.classList.toggle("dark-mode");
+    if (!themeButton) return;
     if (document.documentElement.classList.contains("dark-mode")) {
     themeButton.textContent = "🌙 Dark Mode ON";
     } else {
@@ -23,7 +24,7 @@ const toggleDarkMode = () => {
 
 // Step 3: Register a 'click' event listener for the theme button,
 //             and tell it to use toggleDarkMode as its callback function
-themeButton.addEventListener("click", toggleDarkMode)
+if (themeButton) themeButton.addEventListener("click", toggleDarkMode)
 
 /*** Form Handling [PLACEHOLDER] [ADDED IN UNIT 6] ***/
 // Step 1: Add your query for the submit RSVP button here
@@ -34,6 +35,7 @@ const addParticipant = (person) => {
     const newParticipant = document.createElement("p");
     newParticipant.textContent = ` 🌻 ${person.name} from ${person.school} has checked in! `;
     const participantContainer = document.querySelector(".rsvp-participants");
+    if (!participantContainer) return;
     participantContainer.appendChild(newParticipant);
 
     
@@ -58,8 +60,10 @@ const addParticipant = (person) => {
 /*** Form Validation [PLACEHOLDER] [ADDED IN UNIT 7] ***/
 const validateForm = (event) =>{
     event.preventDefault();
+    const form = document.getElementById("rsvp-form");
+    if (!form) return;
     let containsErrors = false;
-    let rsvpInputs = document.getElementById("rsvp-form").elements;
+    let rsvpInputs = form.elements;
 
     let person = {
         name: document.getElementById("name").value,
@@ -98,7 +102,7 @@ const validateForm = (event) =>{
     }
     
 }
-rsvpButton.addEventListener("click", validateForm);
+if (rsvpButton) rsvpButton.addEventListener("click", validateForm);
 let revealableContainers = document.querySelectorAll(".revealable");
 
 // Step 2: Write function to reveal elements when they are in view.
@@ -131,6 +135,7 @@ const toggleModal = (person) => {
     
     const modal = document.getElementById("success-modal");
     const modalContent =document.getElementById("modal-text");
+    if (!modal || !modalContent) return;
     // TODO: Update modal display to flex
     modal.style.display = "flex";
 
@@ -158,6 +163,7 @@ let motionReduced = false;
 let intervalId;
 const animateImage = () => {
     if (motionReduced) return;
+    if (!modalImage) return;
     rotateFactor = (rotateFactor === 0) ? -10 : 0;
     modalImage.style.transform = `rotate(${rotateFactor}deg)`;
 }
@@ -166,12 +172,13 @@ const closeModalBtn = document.getElementById("close-modal-btn");
 const closeModal = () =>{
     modal.style.display = 'none'
 };
-closeModalBtn.addEventListener("click", closeModal);
+if (closeModalBtn) closeModalBtn.addEventListener("click", closeModal);
 
 let reduceMotionBtn = document.getElementById("reduce-motion-btn")
 const toggleReduceMotion = () => {
     document.body.classList.toggle("reduce-motion");
     motionReduced = !motionReduced;
+    if (!reduceMotionBtn) return;
 
     // optional: update button text so user knows state
     if (motionReduced) {
@@ -181,5 +188,5 @@ const toggleReduceMotion = () => {
     }
 };
 
-reduceMotionBtn.addEventListener("click", toggleReduceMotion);
+if (reduceMotionBtn) reduceMotionBtn.addEventListener("click", toggleReduceMotion);
 reveal();
