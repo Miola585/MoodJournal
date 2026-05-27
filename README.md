@@ -1,48 +1,100 @@
 # Mood Journal
 
-A static wellness website for tracking daily moods, journaling, and healthy habits.
+Mood Journal is a React web app for tracking emotions, journaling, and building healthy regulation habits.
+
+The app is still a work in progress. The current version is frontend-only and stores data in the user's browser with `localStorage`.
 
 ## Features
 
-- Daily mood selection with emoji-based emotion options
-- Mood-linked journaling prompts
-- Activity and positivity tip generation
-- Journal entry saving with local storage
-- Daily logs for meals, water, and sleep
-- Calendar view with mood badges and editable day details
-- Weekly summary with mood counts and health stats
-- Export/import data as JSON
-- Dark mode and reduced motion toggles
+- Daily mood check-in with emotion labels and specific feelings
+- Dashboard with today's mood, current streak, and quick check-in
+- Mood intensity tracking from 1 to 10
+- Context factors like sleep, school, work, family, body, food, and social media
+- Journal entries with tags and one small next step
+- Search and mood filtering for saved entries
+- Entry filtering by keyword, mood, tag, and date
+- Edit and delete journal entries
+- Monthly calendar with mood emoji markers
+- Weekly summary with mood trends, common factors, and average intensity
+- Mood intensity chart and pattern summaries
+- Mood-based activity suggestions with one main completion checkbox and optional timers
+- Home mini games for mood matching, grounding scavenger hunts, and breathing practice
+- Guided journaling prompt modes
+- Browser notification reminders
+- Simple local PIN lock
+- Home, About, How It Helps, and resource links before the main app tools
+- Separate newsletter sign-up view
+- Embedded breathing/mindfulness YouTube video
+- Mood-based activities shown immediately after saving a check-in
+- Activity timers
+- Dark mode, reduced motion, and font settings
+- Export/import journal data as JSON
 
-## Files
+## Tech Stack
 
-- `index.html` — homepage with main navigation
-- `daily.html` — daily mood selection and inline journaling
-- `activities.html` — activity suggestions based on mood
-- `tips.html` — positive tips generator
-- `journal.html` — journal entry page with dropdown tracking
-- `view_entries.html` — browse saved journal entries
-- `calendar.html` — calendar overview of mood and daily log history
-- `weekly_summary.html` — weekly summary view
-- `site.js` — shared JavaScript logic for app features
-- `style.css` — site styling and theme variables
+- Vite
+- React
+- CSS
+- Browser `localStorage`
 
-## How to use
+## Commands
 
-1. Open `index.html` in a browser to start.
-2. Use the navigation buttons to check in, journal, and review your history.
-3. Save journal entries to make them available on the calendar and weekly summary.
-4. Export data to backup your entries, or import a JSON backup file.
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run locally:
+
+```bash
+npm run dev
+```
+
+Build:
+
+```bash
+npm run build
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+Test:
+
+```bash
+npm test
+```
+
+## Project Structure
+
+- `index.html` - Vite app entry point
+- `src/main.jsx` - React startup file
+- `src/App.jsx` - main app views and local data logic
+- `src/styles.css` - app styling
+- `img/` - app images and visual assets
+- `vercel.json` - Vercel deployment settings
+
+Older standalone HTML files are still in the repo while the project is being migrated, but the main app now runs through React/Vite. The first screen is the homepage experience, and users enter the journal tools from there.
 
 ## Hosting
 
-This is a static website and can be hosted on GitHub Pages.
+This project is ready for Vercel.
 
-GitHub Pages is configured for this repository using a workflow that deploys the site from the `main` branch. the site should be available at:
+Use these Vercel settings:
 
-- `https://miola585.github.io/MoodJournal/`
+- Framework Preset: `Vite`
+- Install Command: `npm install`
+- Build Command: `npm run build`
+- Output Directory: `dist`
+
+The `vercel.json` file also sets these values and rewrites app routes back to `index.html`, which keeps the single-page app working on refresh.
 
 ## Notes
 
-- Data is stored locally in the browser using `localStorage`.
-
+- Data is currently stored locally in each browser.
+- For synced accounts and multiple users later, add a backend such as Supabase or Firebase.
+- This app is not a crisis service. If someone might hurt themselves or someone else in the U.S., they should call or text 988.
