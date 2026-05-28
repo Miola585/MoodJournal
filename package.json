@@ -7,12 +7,14 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:moodjournal": "vite --host 127.0.0.1 --port 5174 --base /MoodJournal/",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "npm run build",
     "test": "npm run build"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
     "@vitejs/plugin-react": "^6.0.2",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

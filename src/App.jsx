@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isSupabaseConfigured, supabase } from './supabaseClient';
 
 const logoUrl = new URL('../img/JJ.png', import.meta.url).href;
 const emotionWheelUrl = new URL('../img/Emotion-Wheel.png', import.meta.url).href;
@@ -76,7 +77,7 @@ const activities = {
 };
 
 const featureCards = [
-  { image: emotionWheelUrl, title: 'Emotion Exploration', text: 'Use a wider feeling vocabulary to identify what is happening inside you.' },
+  { image: emotionWheelUrl, title: 'Emotion Exploration', text: 'Use a wider feeling vocabulary to identify what is happening.' },
   { image: journalUrl, title: 'Journals and Notes', text: 'Write what happened, what you felt, and what you need without judgment.' },
   { image: yogaUrl, title: 'Mindfulness Activity', text: 'Try small body-based activities that can help steady or lift your mood.' }
 ];
@@ -86,20 +87,44 @@ const resourceLinks = [
   { href: 'https://www.youtube.com/live/dnBAU8Co6PA?si=J-u4VaLRCmOt_Npu', title: 'Music Playlist', tag: 'Calm / Focus', className: 'focus', text: 'Soothing instrumental tracks to calm your mind.' },
   { href: 'https://positivepsychology.com/emotion-regulation/', title: 'Emotional Regulation', tag: 'Learn', className: 'learn', text: 'Clear tips to stay balanced, spot triggers, and respond to challenges in healthier ways.' }
 ];
+const scavengerSets = [
+  ['Find something soft', 'Notice one calming color', 'Name a sound nearby', 'Find something that makes you smile'],
+  ['Find something round', 'Notice one shadow', 'Name one steady object', 'Find something that feels cool'],
+  ['Find something that reminds you of outside', 'Notice one texture', 'Name one faraway sound', 'Find one thing you can tidy'],
+  ['Find something blue or green', 'Notice one source of light', 'Name one scent', 'Find something you are grateful for']
+];
+const matchThemes = [
+  { id: 'anxious', label: 'Anxious', pieces: ['Box breathing', 'I can slow down', 'Wave'] },
+  { id: 'sad', label: 'Sad', pieces: ['Text someone safe', 'I deserve care', 'Blanket'] },
+  { id: 'angry', label: 'Angry', pieces: ['Step away', 'I can choose my response', 'Flame'] },
+  { id: 'tired', label: 'Tired', pieces: ['Rest eyes', 'Rest is productive', 'Moon'] }
+];
+const rotatingGames = ['match', 'constellation', 'garden', 'memory', 'orbit', 'night'];
+const gameLabels = {
+  match: 'Emotional Match',
+  constellation: 'Daily Constellation',
+  garden: 'Mood Garden',
+  memory: 'Memory Jar',
+  orbit: 'Orbit Simulator',
+  night: 'Night Sky Reflection'
+};
 
-const appViews = ['checkin', 'activities', 'entries', 'calendar', 'summary', 'about', 'newsletter'];
+const appViews = ['checkin', 'activities', 'games', 'entries', 'calendar', 'summary', 'about', 'newsletter'];
 const navLabels = {
   checkin: 'Check-In',
   activities: 'Activities',
+  games: 'Games',
   entries: 'Entries',
   calendar: 'Calendar',
   summary: 'Summary',
   about: 'About',
-  newsletter: 'Newsletter'
+  newsletter: 'Newsletter',
+  admin: 'Admin'
 };
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const createEntry = () => ({
   id: crypto.randomUUID(),
+  type: 'checkin',
   created: new Date().toISOString(),
   dateKey: todayKey(),
   mood: '',
@@ -114,6 +139,16 @@ const createEntry = () => ({
   sleep: '',
   primary: false
 });
+const createFreeWriteEntry = () => ({
+  ...createEntry(),
+  type: 'journal',
+  mood: 'Content',
+  specificFeeling: 'Present',
+  intensity: 5,
+  tags: ['free-write']
+});
+const localEntriesKey = 'journalEntriesV2';
+const normalizeUsername = (value) => value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 const readStorage = (key, fallback) => {
   try {
     return JSON.parse(localStorage.getItem(key)) ?? fallback;
@@ -124,38 +159,79 @@ const readStorage = (key, fallback) => {
 
 function App() {
   const [view, setView] = useState('home');
-  const [entries, setEntries] = useState(() => readStorage('journalEntriesV2', []));
+  const [authMode, setAuthMode] = useState('signin');
+  const [entries, setEntries] = useState(() => isSupabaseConfigured ? [] : readStorage(localEntriesKey, []));
+  const [localEntries] = useState(() => readStorage(localEntriesKey, []));
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(isSupabaseConfigured);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [dataError, setDataError] = useState('');
+  const [importMessage, setImportMessage] = useState('');
+  const [profile, setProfile] = useState(null);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [siteTheme, setSiteTheme] = useState(() => localStorage.getItem('siteTheme') || 'warm');
   const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem('reduceMotion') === 'true');
   const [fontScale, setFontScale] = useState(() => Number(localStorage.getItem('fontScale') || 1));
   const [fontStyle, setFontStyle] = useState(() => localStorage.getItem('fontStyle') || 'friendly');
   const [pin, setPin] = useState(() => localStorage.getItem('journalPin') || '');
   const [locked, setLocked] = useState(() => Boolean(localStorage.getItem('journalPin')));
-  const [reminder, setReminder] = useState(() => readStorage('journalReminder', { enabled: false, time: '19:00' }));
+  // Journal lock is a local UI privacy layer. It hides journal content on this device,
+  // while Supabase RLS remains the database rule that prevents users from reading other users' entries.
+  const [journalLockCode, setJournalLockCode] = useState(() => localStorage.getItem('journalPrivacyCode') || '');
+  const [journalUnlocked, setJournalUnlocked] = useState(() => !localStorage.getItem('journalPrivacyCode'));
+  const [reminder, setReminder] = useState(() => normalizeReminder(readStorage('journalReminder', { enabled: false, time: '19:00', times: ['19:00'] })));
 
-  const saveEntries = (nextEntries) => {
+  const user = session?.user || null;
+  const saveEntries = async (nextEntries) => {
     setEntries(nextEntries);
-    localStorage.setItem('journalEntriesV2', JSON.stringify(nextEntries));
+    if (!isSupabaseConfigured || !user) {
+      localStorage.setItem(localEntriesKey, JSON.stringify(nextEntries));
+      return;
+    }
+    const { error } = await supabase.from('journal_entries').upsert(nextEntries.map((entry) => entryToRow(entry, user.id)));
+    if (error) setDataError(error.message);
   };
-  const saveEntry = (entry) => {
+  const saveEntry = async (entry, nextView = 'activities') => {
     const mood = moods.find((item) => item.key === entry.mood);
-    const sameDayEntries = entries.filter((item) => item.dateKey === entry.dateKey && item.id !== entry.id);
+    const entryType = entry.type || 'checkin';
+    const sameDayCheckIns = entries.filter((item) => isCheckIn(item) && item.dateKey === entry.dateKey && item.id !== entry.id);
     const normalized = {
       ...entry,
-      primary: entry.primary || sameDayEntries.length === 0,
+      type: entryType,
+      primary: entryType === 'checkin' && (entry.primary || sameDayCheckIns.length === 0),
       moodScore: mood?.score || null,
       updated: new Date().toISOString()
     };
     const exists = entries.some((item) => item.id === normalized.id);
     const nextEntries = exists ? entries.map((item) => item.id === normalized.id ? normalized : item) : [normalized, ...entries];
-    saveEntries(normalized.primary ? nextEntries.map((item) => item.dateKey === normalized.dateKey ? { ...item, primary: item.id === normalized.id } : item) : nextEntries);
-    setView('activities');
+    await saveEntries(normalized.primary ? nextEntries.map((item) => isCheckIn(item) && item.dateKey === normalized.dateKey ? { ...item, primary: item.id === normalized.id } : item) : nextEntries);
+    setView(nextView);
   };
-  const deleteEntry = (id) => saveEntries(entries.filter((entry) => entry.id !== id));
-  const setPrimaryEntry = (id) => {
+  const deleteEntry = async (id) => {
+    setEntries(entries.filter((entry) => entry.id !== id));
+    if (!isSupabaseConfigured || !user) {
+      localStorage.setItem(localEntriesKey, JSON.stringify(entries.filter((entry) => entry.id !== id)));
+      return;
+    }
+    const { error } = await supabase.from('journal_entries').delete().eq('id', id);
+    if (error) setDataError(error.message);
+  };
+  const setPrimaryEntry = async (id) => {
     const target = entries.find((entry) => entry.id === id);
-    if (!target) return;
-    saveEntries(entries.map((entry) => entry.dateKey === target.dateKey ? { ...entry, primary: entry.id === id } : entry));
+    if (!target || !isCheckIn(target)) return;
+    await saveEntries(entries.map((entry) => isCheckIn(entry) && entry.dateKey === target.dateKey ? { ...entry, primary: entry.id === id } : entry));
+  };
+  const importLocalEntries = async () => {
+    if (!user || localEntries.length === 0) return;
+    const existingIds = new Set(entries.map((entry) => entry.id));
+    const entriesToImport = localEntries.filter((entry) => !existingIds.has(entry.id));
+    if (entriesToImport.length === 0) {
+      setImportMessage('Those local entries are already in this account.');
+      return;
+    }
+    await saveEntries([...entriesToImport, ...entries]);
+    setImportMessage(`${entriesToImport.length} local entr${entriesToImport.length === 1 ? 'y' : 'ies'} imported.`);
   };
   const openApp = (nextView = 'checkin') => {
     setView(nextView);
@@ -165,6 +241,10 @@ function App() {
     const next = theme === 'light' ? 'dark' : 'light';
     setTheme(next);
     localStorage.setItem('theme', next);
+  };
+  const updateSiteTheme = (value) => {
+    setSiteTheme(value);
+    localStorage.setItem('siteTheme', value);
   };
   const updateMotion = () => {
     const next = !reduceMotion;
@@ -189,51 +269,164 @@ function App() {
       setLocked(false);
     }
   };
-  const updateReminder = (nextReminder) => {
-    setReminder(nextReminder);
-    localStorage.setItem('journalReminder', JSON.stringify(nextReminder));
+  const updateJournalLock = (value) => {
+    const nextValue = value.trim();
+    setJournalLockCode(nextValue);
+    if (nextValue) {
+      localStorage.setItem('journalPrivacyCode', nextValue);
+      setJournalUnlocked(false);
+    } else {
+      localStorage.removeItem('journalPrivacyCode');
+      setJournalUnlocked(true);
+    }
   };
+  const updateReminder = (nextReminder) => {
+    const normalizedReminder = normalizeReminder(nextReminder);
+    setReminder(normalizedReminder);
+    localStorage.setItem('journalReminder', JSON.stringify(normalizedReminder));
+  };
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return undefined;
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      setAuthLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      setSession(nextSession);
+      setAuthLoading(false);
+      setImportMessage('');
+      setProfile(null);
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+    if (!user) {
+      setEntries([]);
+      setProfile(null);
+      return;
+    }
+    let active = true;
+    setDataLoading(true);
+    setDataError('');
+    supabase
+      .from('journal_entries')
+      .select('*')
+      .order('created', { ascending: false })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) setDataError(error.message);
+        else setEntries((data || []).map(rowToEntry));
+        setDataLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user) return;
+    let active = true;
+    supabase
+      .from('profiles')
+      .select('username, role')
+      .eq('user_id', user.id)
+      .maybeSingle()
+      .then(async ({ data, error }) => {
+        if (!active) return;
+        if (data) {
+          setProfile(data);
+          return;
+        }
+        if (error) {
+          setDataError(error.message);
+          return;
+        }
+        const username = normalizeUsername(user.user_metadata?.username || user.email?.split('@')[0] || `user_${user.id.slice(0, 8)}`);
+        const { data: createdProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({ user_id: user.id, username })
+          .select('username, role')
+          .single();
+        if (!active) return;
+        if (createError) setDataError(createError.message);
+        else setProfile(createdProfile);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!reminder.enabled || !('Notification' in window) || Notification.permission !== 'granted') return undefined;
     const now = new Date();
-    const [hours, minutes] = reminder.time.split(':').map(Number);
-    const next = new Date();
-    next.setHours(hours, minutes, 0, 0);
-    if (next <= now) next.setDate(next.getDate() + 1);
+    const upcoming = reminder.times.map((time) => {
+      const [hours, minutes] = time.split(':').map(Number);
+      const next = new Date();
+      next.setHours(hours, minutes, 0, 0);
+      if (next <= now) next.setDate(next.getDate() + 1);
+      return next;
+    }).sort((a, b) => a - b);
+    const next = upcoming[0];
     const timeout = setTimeout(() => {
       new Notification('Mood Journal', { body: 'Take a minute to check in with yourself.' });
     }, next.getTime() - now.getTime());
     return () => clearTimeout(timeout);
   }, [reminder]);
 
+  const canUseApp = !authLoading && (!isSupabaseConfigured || user);
+  const visibleViews = profile?.role === 'admin' ? [...appViews, 'admin'] : appViews;
+  const journalIsHidden = Boolean(journalLockCode && !journalUnlocked);
+  const sectionNav = canUseApp && !locked && !passwordRecovery ? <AppNav activeView={view} views={visibleViews} onOpen={openApp} /> : null;
+
   return (
-    <div className={`app ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
+    <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
+      <ThemeAtmosphere />
       <header className="topbar">
         <button className="brand" onClick={() => setView('home')} type="button">
           <img src={logoUrl} alt="" />
           <span>Mood Journal</span>
         </button>
         <div className="header-actions">
-          <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => setView('home')} type="button">Home</button>
-          <button className={view === 'settings' ? 'header-link active' : 'header-link'} onClick={() => openApp('settings')} type="button">Settings</button>
+          {!canUseApp && isSupabaseConfigured ? <>
+            <button className={authMode === 'signin' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signin')} type="button">Log In</button>
+            <button className={authMode === 'signup' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signup')} type="button">Sign Up</button>
+          </> : <>
+            <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => setView('home')} type="button">Home</button>
+            <button className={view === 'settings' ? 'header-link active' : 'header-link'} onClick={() => openApp('settings')} type="button">Profile</button>
+          </>}
+          {user && <button className="header-link" onClick={() => supabase.auth.signOut()} type="button">Sign out</button>}
           <button className={theme === 'dark' ? 'toggle active' : 'toggle'} aria-label="Toggle dark mode" onClick={updateTheme} type="button"><span /></button>
           <button className={reduceMotion ? 'toggle motion active' : 'toggle motion'} aria-label="Toggle reduced motion" onClick={updateMotion} type="button"><span /></button>
+          <ReminderBell reminder={reminder} setReminder={updateReminder} />
         </div>
       </header>
       <main>
-        <AppNav activeView={view} views={appViews} onOpen={openApp} />
-        {locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} /> : <>
-        {view === 'home' && <Home entries={entries} onOpen={openApp} />}
-        {view === 'checkin' && <CheckIn onSave={saveEntry} />}
-        {view === 'activities' && <Activities entries={entries} />}
-        {view === 'entries' && <Entries entries={entries} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} />}
-        {view === 'calendar' && <Calendar entries={entries} onPrimary={setPrimaryEntry} />}
-        {view === 'summary' && <Summary entries={entries} />}
-        {view === 'about' && <About />}
-        {view === 'newsletter' && <Newsletter />}
-        {view === 'settings' && <Settings entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} pin={pin} setPin={updatePin} reminder={reminder} setReminder={updateReminder} />}
-        </>}
+        {authLoading && <section className="screen app-screen"><div className="panel auth-panel"><p>Loading your account...</p></div></section>}
+        {!authLoading && isSupabaseConfigured && !user && <AuthScreen mode={authMode} setMode={setAuthMode} />}
+        {canUseApp && passwordRecovery && <PasswordUpdateScreen onDone={() => setPasswordRecovery(false)} />}
+        {canUseApp && !passwordRecovery && (locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} /> : <>
+        {isSupabaseConfigured && <AccountStatus localEntries={localEntries} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />}
+        {view === 'home' && <Home nav={sectionNav} entries={entries} onOpen={openApp} />}
+        {view === 'checkin' && <CheckIn nav={sectionNav} onSave={saveEntry} />}
+        {view === 'activities' && <Activities nav={sectionNav} entries={entries} />}
+        {view === 'games' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} /></JournalPrivacyGate>}
+        {view === 'entries' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Entries nav={sectionNav} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>}
+        {view === 'calendar' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Calendar nav={sectionNav} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>}
+        {view === 'summary' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Summary nav={sectionNav} entries={entries} /></JournalPrivacyGate>}
+        {view === 'about' && <About nav={sectionNav} />}
+        {view === 'newsletter' && <Newsletter nav={sectionNav} />}
+        {view === 'admin' && profile?.role === 'admin' && <AdminPanel nav={sectionNav} />}
+        {view === 'settings' && <Settings nav={sectionNav} user={user} profile={profile} entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} pin={pin} setPin={updatePin} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} />}
+        </>)}
       </main>
       <footer className="footer">
         <a href="https://positivepsychology.com/benefits-of-journaling/" target="_blank" rel="noreferrer">Learn More</a>
@@ -255,17 +448,262 @@ function AppNav({ activeView, views, onOpen }) {
   );
 }
 
-function Home({ entries, onOpen }) {
+function ThemeAtmosphere() {
+  return (
+    <div className="theme-atmosphere" aria-hidden="true">
+      <span className="atmosphere-layer layer-one" />
+      <span className="atmosphere-layer layer-two" />
+      <span className="atmosphere-layer layer-three" />
+      <span className="atmosphere-particles" />
+    </div>
+  );
+}
+
+function JournalPrivacyGate({ locked, code, onUnlock, children }) {
+  const [attempt, setAttempt] = useState('');
+  const [error, setError] = useState('');
+  const submit = (event) => {
+    event.preventDefault();
+    if (attempt === code) {
+      setError('');
+      onUnlock(true);
+      return;
+    }
+    setError('That passphrase or PIN did not match.');
+  };
+  if (!locked) return children;
+  return (
+    <section className="screen app-screen">
+      <div className="privacy-lock-panel">
+        <div className="privacy-blur" aria-hidden="true">
+          <article />
+          <article />
+          <article />
+        </div>
+        <form className="panel lock-form privacy-unlock" onSubmit={submit}>
+          <h1>Journal Locked</h1>
+          <p>Your journal entries are hidden on this device. Enter your journal passphrase or PIN to reveal them.</p>
+          <label>Passphrase or PIN
+            <input autoComplete="current-password" onChange={(event) => setAttempt(event.target.value)} type="password" value={attempt} />
+          </label>
+          <button className="primary" type="submit">Reveal journal</button>
+          {error && <p className="form-error">{error}</p>}
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function AuthScreen({ mode, setMode }) {
+  const [form, setForm] = useState({ email: '', username: '', password: '' });
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const submit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setMessage('');
+    const email = form.email.trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      setError('Please enter an email address like email@example.com.');
+      setSubmitting(false);
+      return;
+    }
+    if (mode === 'reset') {
+      const redirectTo = `${window.location.origin}${window.location.pathname}`;
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      setSubmitting(false);
+      if (resetError) {
+        setError(resetError.message);
+        return;
+      }
+      setMessage('Password reset email sent. Check your inbox and follow the link.');
+      return;
+    }
+    const username = normalizeUsername(form.username);
+    if (mode === 'signup' && username.length < 3) {
+      setError('Username must be at least 3 characters and use letters, numbers, or underscores.');
+      setSubmitting(false);
+      return;
+    }
+    if (mode === 'signup') {
+      const { data: existingProfile, error: usernameError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle();
+      if (usernameError) {
+        setError(usernameError.message);
+        setSubmitting(false);
+        return;
+      }
+      if (existingProfile) {
+        setError('That username is already taken.');
+        setSubmitting(false);
+        return;
+      }
+    }
+    const credentials = { email, password: form.password };
+    const { error: authError } = mode === 'signin'
+      ? await supabase.auth.signInWithPassword(credentials)
+      : await supabase.auth.signUp({ ...credentials, options: { data: { username } } });
+    setSubmitting(false);
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
+    if (mode === 'signup') setMessage('Account created. If email verification is enabled in Supabase, check your inbox before signing in.');
+  };
+
+  if (!isSupabaseConfigured) {
+    return (
+      <section className="screen app-screen">
+        <div className="panel auth-panel">
+          <h1>Connect Supabase</h1>
+          <p>Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel and your local `.env` file to turn on multi-user accounts.</p>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="screen app-screen">
+      <div className="panel auth-panel">
+        <h1>{mode === 'signin' ? 'Sign In' : mode === 'signup' ? 'Create Account' : 'Password Recovery'}</h1>
+        <p>{mode === 'reset' ? 'Enter your account email and Supabase will send a reset link.' : 'Use an account to keep your journal entries private and available across devices.'}</p>
+        <form className="auth-form" onSubmit={submit}>
+          <label>Email
+            <input autoComplete="email" onChange={(event) => setForm({ ...form, email: event.target.value })} placeholder="email@example.com" required type="email" value={form.email} />
+          </label>
+          {mode === 'signup' && <label>Username
+            <input autoComplete="username" onChange={(event) => setForm({ ...form, username: event.target.value })} placeholder="letters, numbers, underscores" required value={form.username} />
+          </label>}
+          {mode !== 'reset' && <label>Password
+            <input autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} minLength="6" onChange={(event) => setForm({ ...form, password: event.target.value })} required type="password" value={form.password} />
+          </label>}
+          <button className="primary" disabled={submitting} type="submit">{submitting ? 'Please wait...' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset email'}</button>
+        </form>
+        {error && <p className="form-error">{error}</p>}
+        {message && <p className="success-message">{message}</p>}
+        {mode === 'signin' && <p className="auth-note">If your project has email verification on, confirm your email before signing in.</p>}
+        <button className="text-button" onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')} type="button">
+          {mode === 'signin' ? 'Need an account? Create one' : 'Already have an account? Sign in'}
+        </button>
+        {mode === 'signin' && <button className="text-button" onClick={() => setMode('reset')} type="button">Forgot password?</button>}
+      </div>
+    </section>
+  );
+}
+
+function PasswordUpdateScreen({ onDone }) {
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const submit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setMessage('');
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setSubmitting(false);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setMessage('Password updated. You can continue to the app.');
+  };
+  return (
+    <section className="screen app-screen">
+      <div className="panel auth-panel">
+        <h1>Reset Password</h1>
+        <p>Enter a new password for your account.</p>
+        <form className="auth-form" onSubmit={submit}>
+          <label>New password
+            <input autoComplete="new-password" minLength="6" onChange={(event) => setPassword(event.target.value)} required type="password" value={password} />
+          </label>
+          <button className="primary" disabled={submitting} type="submit">{submitting ? 'Updating...' : 'Update password'}</button>
+        </form>
+        {error && <p className="form-error">{error}</p>}
+        {message && <p className="success-message">{message}</p>}
+        {message && <button onClick={onDone} type="button">Continue</button>}
+      </div>
+    </section>
+  );
+}
+
+function AccountStatus({ localEntries, onImport, message, error, loading }) {
+  const hasLocalEntries = localEntries.length > 0;
+  if (!hasLocalEntries && !message && !error && !loading) return null;
+  return (
+    <section className="account-status">
+      <div>
+        <strong>{loading ? 'Syncing journal entries...' : 'Account notice'}</strong>
+      </div>
+      {hasLocalEntries && <button onClick={onImport} type="button">Import local entries</button>}
+      {message && <span className="success-message">{message}</span>}
+      {error && <span className="form-error">{error}</span>}
+    </section>
+  );
+}
+
+function AdminPanel({ nav }) {
+  const [stats, setStats] = useState({ users: null, entries: null });
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let active = true;
+    const loadStats = async () => {
+      const { count: userCount, error: userError } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+      if (!active) return;
+      if (userError) {
+        setError(userError.message);
+        return;
+      }
+      setStats({ users: userCount, entries: 'Private by RLS' });
+    };
+    loadStats();
+    return () => {
+      active = false;
+    };
+  }, []);
+  return (
+    <section className="screen app-screen">
+      <h1>Admin</h1>
+      {nav}
+      <div className="dashboard-grid">
+        <article className="dashboard-card">
+          <span>Total profiles</span>
+          <strong>{stats.users ?? '--'}</strong>
+        </article>
+        <article className="dashboard-card">
+          <span>Journal entries</span>
+          <strong>{stats.entries ?? '--'}</strong>
+          <p>Admins do not get a normal UI to browse private entries.</p>
+        </article>
+        <article className="dashboard-card">
+          <span>Status</span>
+          <p>{error || 'Admin read checks are working.'}</p>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+function Home({ nav, entries, onOpen }) {
   const todayEntries = entries.filter((entry) => entry.dateKey === todayKey());
-  const mainToday = getPrimaryEntry(todayEntries);
+  const todayCheckIns = todayEntries.filter(isCheckIn);
+  const mainToday = getPrimaryEntry(todayCheckIns);
   const mood = mainToday ? moods.find((item) => item.key === mainToday.mood) : null;
-  const streak = calculateStreak(entries);
+  const streak = calculateStreak(entries.filter(isCheckIn));
   return (
     <div className="home-page">
       <section className="home-hero" id="home">
         <img className="home-logo" src={logoUrl} alt="Mood Journal logo" />
         <div>
           <h1>Daily Mood Check-In</h1>
+          {nav}
           <h3>Every Mood Tells a Story!</h3>
         </div>
       </section>
@@ -286,7 +724,6 @@ function Home({ entries, onOpen }) {
           <button onClick={() => onOpen('entries')} type="button">Review Entries</button>
         </article>
       </section>
-      <MiniGames />
       <section className="about-section video-only" id="about">
         <div className="video-container">
           <iframe
@@ -302,33 +739,122 @@ function Home({ entries, onOpen }) {
   );
 }
 
-function MiniGames() {
-  const matchingCards = useMemo(() => {
-    const pairs = ['Calm', 'Happy', 'Tired', 'Grateful'];
-    return pairs.flatMap((mood) => [1, 2].map((copy) => ({ id: `${mood}-${copy}`, mood })))
-      .sort(() => Math.random() - 0.5);
-  }, []);
-  const huntItems = ['Find something soft', 'Notice one calming color', 'Name a sound nearby', 'Find something that makes you smile'];
-  const [selectedCards, setSelectedCards] = useState([]);
-  const [matchedMoods, setMatchedMoods] = useState([]);
+function ReminderBell({ reminder, setReminder }) {
+  const [open, setOpen] = useState(false);
+  const updateFirstTime = (time) => setReminder({ ...reminder, time, times: [time, ...(reminder.times || []).slice(1)] });
+  return (
+    <section className="reminder-widget">
+      <button className={reminder.enabled ? 'bell-button active' : 'bell-button'} onClick={() => setOpen(!open)} type="button" aria-label="Reminder settings">{'\uD83D\uDD14'}</button>
+      {open && <div className="reminder-menu">
+        <label>Daily reminder
+          <input onChange={(event) => updateFirstTime(event.target.value)} type="time" value={reminder.times?.[0] || reminder.time || '19:00'} />
+        </label>
+        <button onClick={async () => {
+          if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
+          setReminder({ ...reminder, enabled: !reminder.enabled });
+        }} type="button">{reminder.enabled ? 'Turn off' : 'Turn on'}</button>
+      </div>}
+    </section>
+  );
+}
+
+function Games({ nav, entries, onSave }) {
+  const gameEntries = entries.filter((entry) => (entry.tags || []).includes('game'));
+  return (
+    <section className="screen app-screen games-screen">
+      <h1>Games</h1>
+      {nav}
+      <MiniGames entries={entries} onSave={onSave} />
+      <NightSkyGalaxy entries={entries} />
+      <div className="collection-grid">
+        <ConstellationGallery entries={gameEntries} />
+        <MemoryJarCollection entries={gameEntries} />
+      </div>
+    </section>
+  );
+}
+
+function NightSkyGalaxy({ entries }) {
+  const grouped = groupEntriesByDate(entries);
+  const stars = Object.entries(grouped).map(([dateKey, dayEntries], index) => {
+    const entry = getPrimaryEntry(dayEntries);
+    const mood = moods.find((item) => item.key === entry?.mood) || moods[0];
+    return {
+      id: dateKey,
+      dateKey,
+      mood,
+      intensity: Number(entry?.intensity || mood.score || 5),
+      x: 8 + ((index * 23) % 84),
+      y: 10 + ((index * 37) % 78)
+    };
+  });
+  return (
+    <section className="galaxy-section">
+      <div>
+        <h2>Personal Night Sky</h2>
+        <p>Each journal day becomes a star. Brighter stars reflect stronger entries.</p>
+      </div>
+      <div className="galaxy-map">
+        {stars.length === 0 && <p>Add journal entries to begin your sky.</p>}
+        {stars.map((star) => (
+          <span
+            className="galaxy-star"
+            key={star.id}
+            style={{ '--star-x': `${star.x}%`, '--star-y': `${star.y}%`, '--star-size': `${10 + star.intensity * 2}px`, '--star-color': star.mood.color }}
+            title={`${star.dateKey}: ${star.mood.key}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ConstellationGallery({ entries }) {
+  const constellations = entries.filter((entry) => (entry.tags || []).includes('constellation'));
+  return (
+    <section className="collection-card">
+      <h2>Saved Constellations</h2>
+      {constellations.length === 0 ? <p>No constellations saved yet.</p> : constellations.slice(0, 4).map((entry) => (
+        <article className="saved-constellation" key={entry.id}>
+          <div className="mini-sky">{Array.from({ length: 6 }, (_, index) => <span key={index} />)}</div>
+          <p>{entry.note}</p>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function MemoryJarCollection({ entries }) {
+  const memories = entries.filter((entry) => (entry.tags || []).includes('memory-jar') || (entry.tags || []).includes('positive-moment'));
+  return (
+    <section className="collection-card">
+      <h2>Memory Jar</h2>
+      <div className="large-memory-jar">
+        {memories.length === 0 ? <span>Add a positive memory from the featured game.</span> : memories.slice(0, 6).map((entry) => <span key={entry.id}>{entry.note.replace('Memory Jar: ', '')}</span>)}
+      </div>
+    </section>
+  );
+}
+
+function MiniGames({ entries, onSave }) {
+  const dayNumber = Math.floor(new Date(todayKey()).getTime() / 86400000);
+  const huntItems = scavengerSets[dayNumber % scavengerSets.length];
+  const featuredGame = rotatingGames[dayNumber % rotatingGames.length];
+  const todayEntries = entries.filter((entry) => entry.dateKey === todayKey());
+  const mainToday = getPrimaryEntry(todayEntries);
+  const mood = moods.find((item) => item.key === mainToday?.mood) || moods[0];
   const [huntDone, setHuntDone] = useState([]);
   const [bubbleRunning, setBubbleRunning] = useState(false);
-
-  const chooseCard = (card) => {
-    if (selectedCards.includes(card.id) || matchedMoods.includes(card.mood) || selectedCards.length === 2) return;
-    const nextSelection = [...selectedCards, card.id];
-    setSelectedCards(nextSelection);
-    if (nextSelection.length === 2) {
-      const firstCard = matchingCards.find((item) => item.id === nextSelection[0]);
-      if (firstCard?.mood === card.mood) {
-        setMatchedMoods((current) => [...current, card.mood]);
-        setSelectedCards([]);
-      } else {
-        setTimeout(() => setSelectedCards([]), 700);
-      }
-    }
-  };
-
+  const saveGameEntry = (title, note, tags = []) => onSave({
+    ...createEntry(),
+    type: 'game',
+    mood: mood.key,
+    specificFeeling: mood.feelings[0],
+    intensity: mainToday?.intensity || mood.score || 5,
+    note: `${title}: ${note}`,
+    tags: ['game', ...tags],
+    copingStep: 'Reflect on what changed after this activity.'
+  });
   const toggleHuntItem = (item) => {
     setHuntDone((current) => (
       current.includes(item) ? current.filter((doneItem) => doneItem !== item) : [...current, item]
@@ -338,23 +864,16 @@ function MiniGames() {
   return (
     <section className="minigames-section" id="minigames">
       <h2>Mini Games</h2>
-      <div className="minigame-grid">
-        <article className="minigame-card">
-          <h3>Matching Mood Cards</h3>
-          <p>Flip two cards and match the feeling words.</p>
-          <div className="match-grid">
-            {matchingCards.map((card) => {
-              const visible = selectedCards.includes(card.id) || matchedMoods.includes(card.mood);
-              return (
-                <button className={visible ? 'match-card visible' : 'match-card'} key={card.id} onClick={() => chooseCard(card)} type="button">
-                  {visible ? card.mood : '?'}
-                </button>
-              );
-            })}
-          </div>
+      <p className="recommendation-note">Breathing and scavenger hunt stay available every day. The featured game changes daily.</p>
+      <div className="minigame-grid daily-games">
+        <article className="minigame-card breathing-game">
+          <h3>Breathing Bubble</h3>
+          <p>Follow the bubble as it grows and settles.</p>
+          <div className={bubbleRunning ? 'breathing-bubble active' : 'breathing-bubble'} />
+          <button onClick={() => setBubbleRunning(!bubbleRunning)} type="button">{bubbleRunning ? 'Pause' : 'Start'}</button>
         </article>
         <article className="minigame-card">
-          <h3>Scavenger Hunt</h3>
+          <h3>Daily Scavenger Hunt</h3>
           <p>Use your space to ground yourself for a minute.</p>
           <div className="hunt-list">
             {huntItems.map((item) => (
@@ -364,22 +883,152 @@ function MiniGames() {
               </label>
             ))}
           </div>
-        </article>
-        <article className="minigame-card breathing-game">
-          <h3>Breathing Bubble</h3>
-          <p>Follow the bubble as it grows and settles.</p>
-          <div className={bubbleRunning ? 'breathing-bubble active' : 'breathing-bubble'} />
-          <button onClick={() => setBubbleRunning(!bubbleRunning)} type="button">{bubbleRunning ? 'Pause' : 'Start'}</button>
+          <button disabled={huntDone.length === 0} onClick={() => saveGameEntry('Scavenger Hunt', `Found: ${huntDone.join(', ')}`, ['scavenger-hunt'])} type="button">Save finds</button>
         </article>
       </div>
+      <section className="featured-game-section">
+        <div>
+          <h2>Featured Today: {gameLabels[featuredGame]}</h2>
+          <p>One rotating reflection game keeps the page focused.</p>
+        </div>
+        <FeaturedGame game={featuredGame} mood={mood} mainToday={mainToday} entries={entries} onSave={saveGameEntry} />
+      </section>
     </section>
   );
 }
 
-function About() {
+function FeaturedGame({ game, mood, mainToday, entries, onSave }) {
+  const games = {
+    match: <EmotionalMatchGame onSave={onSave} />,
+    constellation: <ConstellationGame mood={mood} onSave={onSave} />,
+    garden: <MoodGardenGame mood={mood} onSave={onSave} />,
+    memory: <MemoryJarGame entries={entries} onSave={onSave} />,
+    orbit: <OrbitGame onSave={onSave} />,
+    night: <NightSkyGame mood={mood} mainToday={mainToday} onSave={onSave} />
+  };
+  return games[game] || games.match;
+}
+
+function EmotionalMatchGame({ onSave }) {
+  const cards = useMemo(() => matchThemes.flatMap((theme) => [
+    { id: `${theme.id}-emotion`, theme: theme.id, label: theme.label },
+    { id: `${theme.id}-strategy`, theme: theme.id, label: theme.pieces[0] },
+    { id: `${theme.id}-affirmation`, theme: theme.id, label: theme.pieces[1] },
+    { id: `${theme.id}-symbol`, theme: theme.id, label: theme.pieces[2] }
+  ]).sort(() => Math.random() - 0.5), []);
+  const [selected, setSelected] = useState([]);
+  const [matched, setMatched] = useState([]);
+  const chooseCard = (card) => {
+    if (selected.includes(card.id) || matched.includes(card.id) || selected.length === 2) return;
+    const nextSelected = [...selected, card.id];
+    setSelected(nextSelected);
+    if (nextSelected.length === 2) {
+      const first = cards.find((item) => item.id === nextSelected[0]);
+      if (first?.theme === card.theme) {
+        setMatched((current) => [...current, ...nextSelected]);
+        setSelected([]);
+      } else {
+        setTimeout(() => setSelected([]), 700);
+      }
+    }
+  };
+  return (
+    <article className="minigame-card">
+      <h3>Featured: Emotional Match</h3>
+      <p>Match a feeling with a strategy, affirmation, or symbol from the same mood family.</p>
+      <div className="match-grid">
+        {cards.map((card) => {
+          const visible = selected.includes(card.id) || matched.includes(card.id);
+          return <button className={visible ? 'match-card visible' : 'match-card'} key={card.id} onClick={() => chooseCard(card)} type="button">{visible ? card.label : '?'}</button>;
+        })}
+      </div>
+      <button disabled={matched.length < cards.length} onClick={() => onSave('Emotional Match', 'Completed the emotional matching game.', ['emotional-match'])} type="button">Save win</button>
+    </article>
+  );
+}
+
+function ConstellationGame({ mood, onSave }) {
+  const [selectedStars, setSelectedStars] = useState([]);
+  const [name, setName] = useState('');
+  const stars = Array.from({ length: 9 }, (_, index) => index + 1);
+  const toggleStar = (star) => setSelectedStars((current) => current.includes(star) ? current.filter((item) => item !== star) : [...current, star]);
+  return (
+    <article className="minigame-card">
+      <h3>Featured: Daily Constellation</h3>
+      <p>Tap stars, name the shape, and save it to today's journal.</p>
+      <div className="star-map">
+        {stars.map((star) => <button className={selectedStars.includes(star) ? 'star selected' : 'star'} key={star} onClick={() => toggleStar(star)} type="button" aria-label={`Star ${star}`} />)}
+      </div>
+      <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Constellation name" />
+      <button disabled={!name.trim() || selectedStars.length === 0} onClick={() => onSave('Daily Constellation', `${name.trim()} for ${mood.key}. Stars: ${selectedStars.join(', ')}`, ['constellation'])} type="button">Save constellation</button>
+    </article>
+  );
+}
+
+function MoodGardenGame({ mood, onSave }) {
+  const growth = Math.max(2, Math.min(8, mood.score || 5));
+  return (
+    <article className="minigame-card">
+      <h3>Featured: Mood Garden</h3>
+      <p>Your current mood grows a small garden preview.</p>
+      <div className="garden-preview" style={{ '--garden-color': mood.color }}>
+        {Array.from({ length: growth }, (_, index) => <span key={index} />)}
+      </div>
+      <button onClick={() => onSave('Mood Garden', `${mood.key} grew ${growth} garden pieces today.`, ['mood-garden'])} type="button">Save garden</button>
+    </article>
+  );
+}
+
+function MemoryJarGame({ entries, onSave }) {
+  const [memory, setMemory] = useState('');
+  const previousMemories = entries.filter((entry) => (entry.tags || []).includes('memory-jar')).slice(0, 3);
+  return (
+    <article className="minigame-card">
+      <h3>Featured: Memory Jar</h3>
+      <p>Add one small positive moment to revisit later.</p>
+      <div className="memory-jar">
+        {memory ? <span>{memory}</span> : previousMemories.length > 0 ? previousMemories.map((entry) => <span key={entry.id}>{entry.note.replace('Memory Jar: ', '')}</span>) : <span>Write a memory below</span>}
+      </div>
+      <textarea value={memory} onChange={(event) => setMemory(event.target.value)} placeholder="A tiny good thing from today..." />
+      <button disabled={!memory.trim()} onClick={() => onSave('Memory Jar', memory.trim(), ['memory-jar', 'positive-moment'])} type="button">Save memory</button>
+    </article>
+  );
+}
+
+function OrbitGame({ onSave }) {
+  const [planets, setPlanets] = useState({ emotion: 'near', goal: 'middle', thought: 'far' });
+  const updatePlanet = (planet) => setPlanets((current) => ({ ...current, [planet]: current[planet] === 'near' ? 'middle' : current[planet] === 'middle' ? 'far' : 'near' }));
+  return (
+    <article className="minigame-card">
+      <h3>Featured: Orbit Simulator</h3>
+      <p>Click planets until emotion, goal, and thought feel balanced.</p>
+      <div className="orbit-map">
+        {Object.entries(planets).map(([planet, orbit]) => <button className={`planet ${orbit}`} key={planet} onClick={() => updatePlanet(planet)} type="button">{planet}</button>)}
+      </div>
+      <button onClick={() => onSave('Orbit Simulator', Object.entries(planets).map(([planet, orbit]) => `${planet}: ${orbit}`).join(', '), ['orbit-simulator'])} type="button">Save orbit</button>
+    </article>
+  );
+}
+
+function NightSkyGame({ mood, mainToday, onSave }) {
+  const brightness = Math.max(2, Math.min(10, Number(mainToday?.intensity || mood.score || 5)));
+  return (
+    <article className="minigame-card">
+      <h3>Featured: Night Sky Reflection</h3>
+      <p>Add today's star to your personal emotional galaxy.</p>
+      <div className="night-sky">
+        <span style={{ '--star-brightness': brightness / 10 }} />
+      </div>
+      <button onClick={() => onSave('Night Sky Reflection', `${mood.key} star brightness: ${brightness}/10.`, ['night-sky'])} type="button">Save star</button>
+    </article>
+  );
+}
+
+function About({ nav }) {
   return (
     <section className="screen app-screen">
       <h1>About the App</h1>
+      {nav}
       <div className="feature-cards">
         {featureCards.map((card) => (
           <article className="feature-card" key={card.title}>
@@ -394,7 +1043,7 @@ function About() {
   );
 }
 
-function Newsletter() {
+function Newsletter({ nav }) {
   const [people, setPeople] = useState([
     { name: 'Jamie', school: 'Morgan State' },
     { name: 'Amy', school: 'Bowie' },
@@ -418,6 +1067,7 @@ function Newsletter() {
   return (
     <section className="newsletter-section app-screen" id="rsvp">
       <h1>Stay Connected</h1>
+      {nav}
       <div className="newsletter-grid">
         <p>Stay connected with upcoming wellness activities, journaling prompts, and mindfulness tips. Join our community to receive gentle reminders and supportive resources.</p>
         <div className="participants">
@@ -482,7 +1132,7 @@ function Links() {
   );
 }
 
-function CheckIn({ onSave }) {
+function CheckIn({ nav, onSave }) {
   const [entry, setEntry] = useState(createEntry);
   const [promptType, setPromptType] = useState('Reflect');
   const mood = moods.find((item) => item.key === entry.mood);
@@ -504,6 +1154,7 @@ function CheckIn({ onSave }) {
     <section className="screen app-screen">
       <div className="tool-heading">
         <h1>Daily Mood Check-In</h1>
+        {nav}
         <p>Name what you feel, notice what shaped it, and choose one small next step.</p>
       </div>
       <p className="support-note">This journal can help you notice patterns, but it is not a crisis service. If you might hurt yourself or someone else, call or text 988 in the U.S. now.</p>
@@ -582,12 +1233,13 @@ function ChipGroup({ label, values, selected, onToggle }) {
   );
 }
 
-function Entries({ entries, onSave, onDelete, onPrimary }) {
+function Entries({ nav, entries, onCreate, onSave, onDelete, onPrimary }) {
   const [query, setQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('');
   const [tagFilter, setTagFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [editing, setEditing] = useState(null);
+  const [creatingFreeWrite, setCreatingFreeWrite] = useState(false);
   const filtered = entries.filter((entry) => {
     const text = `${entry.note} ${entry.mood} ${entry.specificFeeling} ${(entry.tags || []).join(' ')} ${(entry.factors || []).join(' ')}`.toLowerCase();
     const matchesKeyword = text.includes(query.toLowerCase());
@@ -597,9 +1249,16 @@ function Entries({ entries, onSave, onDelete, onPrimary }) {
     return matchesKeyword && matchesMood && matchesTag && matchesDate;
   });
   if (editing) return <EditEntry entry={editing} onCancel={() => setEditing(null)} onSave={(entry) => { onSave(entry); setEditing(null); }} />;
+  if (creatingFreeWrite) return <FreeWriteEntry nav={nav} onCancel={() => setCreatingFreeWrite(false)} onSave={(entry) => { onSave(entry, 'entries'); setCreatingFreeWrite(false); }} />;
   return (
     <section className="screen app-screen">
       <h1>Journal Entries</h1>
+      {nav}
+      <div className="entry-actions">
+        <button className="primary" onClick={() => setCreatingFreeWrite(true)} type="button">Create Free Write</button>
+        <button onClick={onCreate} type="button">Create Check-In</button>
+        <button onClick={() => setEditing(null)} type="button">View Previous Entries</button>
+      </div>
       <div className="toolbar">
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Keyword search" />
         <select value={moodFilter} onChange={(event) => setMoodFilter(event.target.value)}>
@@ -613,6 +1272,49 @@ function Entries({ entries, onSave, onDelete, onPrimary }) {
         {filtered.length === 0 && <p>No matching entries yet.</p>}
         {filtered.map((entry) => <EntryCard entry={entry} key={entry.id} onEdit={() => setEditing(entry)} onDelete={() => onDelete(entry.id)} onPrimary={() => onPrimary(entry.id)} />)}
       </div>
+    </section>
+  );
+}
+
+function FreeWriteEntry({ nav, onSave, onCancel }) {
+  const [draft, setDraft] = useState(createFreeWriteEntry());
+  const setField = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
+  return (
+    <section className="screen app-screen">
+      <h1>Free Write</h1>
+      {nav}
+      <form className="flow" onSubmit={(event) => {
+        event.preventDefault();
+        onSave({ ...draft, tags: Array.from(new Set([...(draft.tags || []), 'free-write'])) });
+      }}>
+        <div className="panel two-col">
+          <label>Entry title or feeling
+            <input value={draft.specificFeeling} onChange={(event) => setField('specificFeeling', event.target.value)} placeholder="What would you call this entry?" />
+          </label>
+          <label>Mood label
+            <select value={draft.mood} onChange={(event) => setField('mood', event.target.value)}>
+              {moods.map((mood) => <option key={mood.key}>{mood.key}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="panel">
+          <label>Journal
+            <textarea value={draft.note} onChange={(event) => setField('note', event.target.value)} placeholder="Write freely. This will stay separate from your check-in summaries." />
+          </label>
+        </div>
+        <div className="panel two-col">
+          <label>Tags
+            <input value={(draft.tags || []).join(', ')} onChange={(event) => setField('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="memory, school, idea" />
+          </label>
+          <label>Optional next step
+            <input value={draft.copingStep || ''} onChange={(event) => setField('copingStep', event.target.value)} placeholder="One thing you may want to do next" />
+          </label>
+        </div>
+        <div className="actions">
+          <button className="primary" type="submit">Save Free Write</button>
+          <button onClick={onCancel} type="button">Cancel</button>
+        </div>
+      </form>
     </section>
   );
 }
@@ -650,10 +1352,11 @@ function EditEntry({ entry, onSave, onCancel }) {
 
 function EntryCard({ entry, onEdit, onDelete, onPrimary }) {
   const mood = moods.find((item) => item.key === entry.mood);
+  const entryLabel = isCheckIn(entry) ? 'Check-In' : 'Free Write';
   return (
     <article className="entry-card">
       <div>
-        <strong>{mood?.emoji} {entry.mood} {entry.primary ? <span className="primary-marker">Main</span> : null}</strong>
+        <strong>{mood?.emoji} {entry.mood} <span className="primary-marker">{entryLabel}</span>{entry.primary ? <span className="primary-marker">Main</span> : null}</strong>
         <span>{new Date(entry.created).toLocaleString()}</span>
       </div>
       <p>{entry.note}</p>
@@ -667,13 +1370,13 @@ function EntryCard({ entry, onEdit, onDelete, onPrimary }) {
       {(onEdit || onDelete) && <div className="actions">
         {onEdit && <button onClick={onEdit} type="button">Edit</button>}
         {onDelete && <button onClick={onDelete} type="button">Delete</button>}
-        {onPrimary && !entry.primary && <button onClick={onPrimary} type="button">Set as main</button>}
+        {onPrimary && isCheckIn(entry) && !entry.primary && <button onClick={onPrimary} type="button">Set as main</button>}
       </div>}
     </article>
   );
 }
 
-function Calendar({ entries, onPrimary }) {
+function Calendar({ nav, entries, onPrimary }) {
   const [monthDate, setMonthDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const year = monthDate.getFullYear();
@@ -686,6 +1389,7 @@ function Calendar({ entries, onPrimary }) {
   return (
     <section className="screen app-screen">
       <h1>Calendar</h1>
+      {nav}
       <div className="calendar-toolbar">
         <button onClick={() => moveMonth(-1)} type="button">Prev</button>
         <h2>{monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</h2>
@@ -715,18 +1419,20 @@ function Calendar({ entries, onPrimary }) {
   );
 }
 
-function Summary({ entries }) {
-  const last7 = entries.filter((entry) => Date.now() - new Date(entry.created).getTime() < 7 * 24 * 60 * 60 * 1000);
+function Summary({ nav, entries }) {
+  const checkInEntries = entries.filter(isCheckIn);
+  const last7 = checkInEntries.filter((entry) => Date.now() - new Date(entry.created).getTime() < 7 * 24 * 60 * 60 * 1000);
   const moodCounts = countBy(last7, 'mood');
   const factorCounts = countMany(last7, 'factors');
   const avgIntensity = last7.length ? (last7.reduce((sum, entry) => sum + Number(entry.intensity || 0), 0) / last7.length).toFixed(1) : '-';
-  const chartEntries = entries.slice().sort((a, b) => new Date(a.created) - new Date(b.created)).slice(-14);
-  const patterns = getPatternNotes(entries);
+  const chartEntries = checkInEntries.slice().sort((a, b) => new Date(a.created) - new Date(b.created)).slice(-14);
+  const patterns = getPatternNotes(checkInEntries);
   return (
     <section className="screen app-screen">
       <h1>Weekly Summary</h1>
+      {nav}
       <div className="stats-grid">
-        <Stat label="Entries this week" value={last7.length} />
+        <Stat label="Check-ins this week" value={last7.length} />
         <Stat label="Average intensity" value={avgIntensity === '-' ? avgIntensity : `${avgIntensity}/10`} />
         <Stat label="Most common mood" value={topLabel(moodCounts)} />
         <Stat label="Top factor" value={topLabel(factorCounts)} />
@@ -751,12 +1457,13 @@ function Summary({ entries }) {
   );
 }
 
-function Activities({ entries }) {
-  const recentMood = entries[0]?.mood;
+function Activities({ nav, entries }) {
+  const recentMood = entries.find(isCheckIn)?.mood;
   const list = activities[recentMood] || activities.default;
   return (
     <section className="screen app-screen">
       <h1>Activities</h1>
+      {nav}
       {recentMood && <p className="recommendation-note">Based on your latest check-in, here are a few ideas for feeling {recentMood.toLowerCase()}.</p>}
       <div className="activity-grid">
         {list.map((activity) => <ActivityCard activity={activity} key={activity.title} />)}
@@ -798,8 +1505,23 @@ function ActivityCard({ activity }) {
   );
 }
 
-function Settings({ entries, saveEntries, fontScale, setFontScale, fontStyle, setFontStyle, pin, setPin, reminder, setReminder }) {
+function Settings({ nav, user, profile, entries, saveEntries, fontScale, setFontScale, fontStyle, setFontStyle, siteTheme, setSiteTheme, pin, setPin, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder }) {
   const [pinDraft, setPinDraft] = useState(pin);
+  const [journalCodeDraft, setJournalCodeDraft] = useState(journalLockCode);
+  const reminderTimes = reminder.times?.length ? reminder.times : [reminder.time || '19:00'];
+  const updateReminderTime = (index, value) => {
+    const nextTimes = reminderTimes.map((time, timeIndex) => timeIndex === index ? value : time);
+    setReminder({ ...reminder, time: nextTimes[0], times: nextTimes });
+  };
+  const addReminderTime = () => {
+    const nextTimes = [...reminderTimes, '19:00'];
+    setReminder({ ...reminder, time: nextTimes[0], times: nextTimes });
+  };
+  const removeReminderTime = (index) => {
+    const nextTimes = reminderTimes.filter((_, timeIndex) => timeIndex !== index);
+    const safeTimes = nextTimes.length ? nextTimes : ['19:00'];
+    setReminder({ ...reminder, time: safeTimes[0], times: safeTimes });
+  };
   const exportData = () => {
     const blob = new Blob([JSON.stringify({ journalEntriesV2: entries }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -825,7 +1547,15 @@ function Settings({ entries, saveEntries, fontScale, setFontScale, fontStyle, se
   };
   return (
     <section className="screen app-screen">
-      <h1>Settings</h1>
+      <h1>Profile & Settings</h1>
+      {nav}
+      <div className="panel profile-card">
+        <div>
+          <h2>{profile?.username || 'Your profile'}</h2>
+          <p>{user?.email || 'Local browser profile'}</p>
+        </div>
+        {profile?.role === 'admin' && <span className="admin-badge">Admin</span>}
+      </div>
       <div className="panel settings-grid font-settings">
         <label>Font size
           <input max="1.3" min="0.9" onChange={(event) => setFontScale(Number(event.target.value))} step="0.05" type="range" value={fontScale} />
@@ -837,10 +1567,15 @@ function Settings({ entries, saveEntries, fontScale, setFontScale, fontStyle, se
             <option value="clean">Clean</option>
           </select>
         </label>
-      </div>
-      <div className="panel settings-list">
-        <button onClick={exportData} type="button">Export data</button>
-        <label className="file-button">Import data<input accept="application/json" onChange={importData} type="file" /></label>
+        <label>Theme
+          <select onChange={(event) => setSiteTheme(event.target.value)} value={siteTheme}>
+            <option value="warm">Warm journal</option>
+            <option value="sunrise">Sunrise minimal</option>
+            <option value="night">Night sky</option>
+            <option value="garden">Garden</option>
+            <option value="ocean">Ocean calm</option>
+          </select>
+        </label>
       </div>
       <div className="panel settings-grid">
         <label>Privacy PIN
@@ -852,15 +1587,39 @@ function Settings({ entries, saveEntries, fontScale, setFontScale, fontStyle, se
         </div>
       </div>
       <div className="panel settings-grid">
-        <label>Reminder time
-          <input onChange={(event) => setReminder({ ...reminder, time: event.target.value })} type="time" value={reminder.time} />
+        <label>Journal lock passphrase or PIN
+          <input onChange={(event) => setJournalCodeDraft(event.target.value)} placeholder="Hide entries until this is entered" type="password" value={journalCodeDraft} />
         </label>
         <div className="settings-list">
+          <button onClick={() => setJournalLockCode(journalCodeDraft)} type="button">{journalLockCode ? 'Update journal lock' : 'Enable journal lock'}</button>
+          {journalLockCode && <button onClick={() => { setJournalCodeDraft(''); setJournalLockCode(''); }} type="button">Remove journal lock</button>}
+          {journalLockCode && <button onClick={() => setJournalUnlocked(!journalUnlocked)} type="button">{journalUnlocked ? 'Hide entries now' : 'Keep entries revealed'}</button>}
+        </div>
+        <p className="privacy-note">This beginner-friendly lock hides journal content in the app UI. Supabase RLS protects each user's database rows; this is not full end-to-end encryption.</p>
+      </div>
+      <div className="panel reminder-settings">
+        <h2>Daily Reminders</h2>
+        <div className="reminder-time-list">
+          {reminderTimes.map((time, index) => (
+            <label key={`${time}-${index}`}>Reminder {index + 1}
+              <span className="reminder-time-row">
+                <input onChange={(event) => updateReminderTime(index, event.target.value)} type="time" value={time} />
+                {reminderTimes.length > 1 && <button onClick={() => removeReminderTime(index)} type="button">Remove</button>}
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="settings-list">
+          <button onClick={addReminderTime} type="button">Add reminder</button>
           <button onClick={async () => {
             if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
             setReminder({ ...reminder, enabled: !reminder.enabled });
           }} type="button">{reminder.enabled ? 'Turn reminders off' : 'Turn reminders on'}</button>
         </div>
+      </div>
+      <div className="panel settings-list">
+        <button onClick={exportData} type="button">Export data</button>
+        <label className="file-button">Import data<input accept="application/json" onChange={importData} type="file" /></label>
       </div>
     </section>
   );
@@ -903,12 +1662,13 @@ const countMany = (items, key) => items.reduce((acc, item) => {
 }, {});
 const topLabel = (counts) => Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
 const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const isCheckIn = (entry) => (entry.type || 'checkin') === 'checkin';
 const groupEntriesByDate = (entries) => entries.reduce((acc, entry) => {
   acc[entry.dateKey] = acc[entry.dateKey] || [];
   acc[entry.dateKey].push(entry);
   return acc;
 }, {});
-const getPrimaryEntry = (entries) => entries.find((entry) => entry.primary) || entries[0] || null;
+const getPrimaryEntry = (entries) => entries.find((entry) => isCheckIn(entry) && entry.primary) || entries.find(isCheckIn) || entries[0] || null;
 const calculateStreak = (entries) => {
   const dates = new Set(entries.map((entry) => entry.dateKey));
   let streak = 0;
@@ -919,6 +1679,49 @@ const calculateStreak = (entries) => {
   }
   return streak;
 };
+const normalizeReminder = (value) => {
+  const times = Array.isArray(value?.times) && value.times.length > 0 ? value.times : [value?.time || '19:00'];
+  return { enabled: Boolean(value?.enabled), time: times[0], times };
+};
+const entryToRow = (entry, userId) => ({
+  id: String(entry.id || crypto.randomUUID()),
+  user_id: userId,
+  entry_type: entry.type || 'checkin',
+  created: entry.created,
+  date_key: entry.dateKey,
+  mood: entry.mood,
+  specific_feeling: entry.specificFeeling || '',
+  intensity: Number(entry.intensity || 5),
+  factors: entry.factors || [],
+  tags: entry.tags || [],
+  note: entry.note || '',
+  coping_step: entry.copingStep || '',
+  meals: entry.meals || '',
+  water: entry.water || '',
+  sleep: entry.sleep || '',
+  primary: Boolean(entry.primary),
+  mood_score: entry.moodScore || null,
+  updated_at: entry.updated || new Date().toISOString()
+});
+const rowToEntry = (row) => ({
+  id: row.id,
+  type: row.entry_type || 'checkin',
+  created: row.created,
+  dateKey: row.date_key,
+  mood: row.mood,
+  specificFeeling: row.specific_feeling || '',
+  intensity: row.intensity || 5,
+  factors: row.factors || [],
+  tags: row.tags || [],
+  note: row.note || '',
+  copingStep: row.coping_step || '',
+  meals: row.meals || '',
+  water: row.water || '',
+  sleep: row.sleep || '',
+  primary: Boolean(row.primary),
+  moodScore: row.mood_score || null,
+  updated: row.updated_at
+});
 const getPatternNotes = (entries) => {
   const notes = [];
   const moodFactorCounts = {};
