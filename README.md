@@ -87,6 +87,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 Then run the SQL schema inside Supabase SQL Editor.
+Full setup in docs\supabase-schema.sql
 
 ## Deployment
 
