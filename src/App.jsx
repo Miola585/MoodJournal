@@ -189,8 +189,23 @@ function App() {
       localStorage.setItem(localEntriesKey, JSON.stringify(nextEntries));
       return;
     }
-    const { error } = await supabase.from('journal_entries').upsert(nextEntries.map((entry) => entryToRow(entry, user.id)));
-    if (error) setDataError(error.message);
+    const rows = nextEntries.map((entry) => entryToRow(entry, user.id));
+    const { error } = await supabase.from('journal_entries').upsert(rows);
+    if (!error) {
+      setDataError('');
+      return;
+    }
+    if (isMissingEntryTypeError(error)) {
+      const fallbackRows = rows.map(({ entry_type, ...row }) => row);
+      const { error: fallbackError } = await supabase.from('journal_entries').upsert(fallbackRows);
+      if (fallbackError) {
+        setDataError(fallbackError.message);
+        return;
+      }
+      setDataError('Saved without entry type because Supabase is missing the entry_type column. Run docs/supabase-schema.sql in Supabase SQL Editor to fully enable Check-In, Free Write, and Game entry separation.');
+      return;
+    }
+    setDataError(error.message);
   };
   const saveEntry = async (entry, nextView = 'activities') => {
     const mood = moods.find((item) => item.key === entry.mood);
@@ -779,11 +794,13 @@ function NightSkyGalaxy({ entries }) {
   const stars = Object.entries(grouped).map(([dateKey, dayEntries], index) => {
     const entry = getPrimaryEntry(dayEntries);
     const mood = moods.find((item) => item.key === entry?.mood) || moods[0];
+    const intensity = Number(entry?.intensity || mood.score || 5);
     return {
       id: dateKey,
       dateKey,
       mood,
-      intensity: Number(entry?.intensity || mood.score || 5),
+      intensity,
+      starColor: getStarColor(mood, intensity),
       x: 8 + ((index * 23) % 84),
       y: 10 + ((index * 37) % 78)
     };
@@ -800,7 +817,7 @@ function NightSkyGalaxy({ entries }) {
           <span
             className="galaxy-star"
             key={star.id}
-            style={{ '--star-x': `${star.x}%`, '--star-y': `${star.y}%`, '--star-size': `${10 + star.intensity * 2}px`, '--star-color': star.mood.color }}
+            style={{ '--star-x': `${star.x}%`, '--star-y': `${star.y}%`, '--star-size': `${10 + star.intensity * 2}px`, '--star-color': star.starColor }}
             title={`${star.dateKey}: ${star.mood.key}`}
           />
         ))}
@@ -830,7 +847,7 @@ function MemoryJarCollection({ entries }) {
     <section className="collection-card">
       <h2>Memory Jar</h2>
       <div className="large-memory-jar">
-        {memories.length === 0 ? <span>Add a positive memory from the featured game.</span> : memories.slice(0, 6).map((entry) => <span key={entry.id}>{entry.note.replace('Memory Jar: ', '')}</span>)}
+        {memories.length === 0 ? <span>Add a positive memory from the featured game.</span> : memories.slice(0, 6).map((entry) => <span key={entry.id} style={{ '--memory-color': getMoodColor(entry.mood) }}>{entry.note.replace('Memory Jar: ', '')}</span>)}
       </div>
     </section>
   );
@@ -883,7 +900,7 @@ function MiniGames({ entries, onSave }) {
               </label>
             ))}
           </div>
-          <button disabled={huntDone.length === 0} onClick={() => saveGameEntry('Scavenger Hunt', `Found: ${huntDone.join(', ')}`, ['scavenger-hunt'])} type="button">Save finds</button>
+          <button disabled={huntDone.length === 0} onClick={() => setHuntDone([])} type="button">Clear finds</button>
         </article>
       </div>
       <section className="featured-game-section">
@@ -981,16 +998,31 @@ function MoodGardenGame({ mood, onSave }) {
 
 function MemoryJarGame({ entries, onSave }) {
   const [memory, setMemory] = useState('');
+  const [message, setMessage] = useState('');
+  const memoryText = memory.trim();
   const previousMemories = entries.filter((entry) => (entry.tags || []).includes('memory-jar')).slice(0, 3);
+  const duplicateToday = memoryText && entries.some((entry) => (
+    entry.dateKey === todayKey()
+    && (entry.tags || []).includes('memory-jar')
+    && entry.note.replace('Memory Jar: ', '').trim().toLowerCase() === memoryText.toLowerCase()
+  ));
+  const saveMemory = async () => {
+    if (!memoryText || duplicateToday) return;
+    await onSave('Memory Jar', memoryText, ['memory-jar', 'positive-moment']);
+    setMemory('');
+    setMessage('Memory saved to your jar.');
+  };
   return (
     <article className="minigame-card">
       <h3>Featured: Memory Jar</h3>
       <p>Add one small positive moment to revisit later.</p>
       <div className="memory-jar">
-        {memory ? <span>{memory}</span> : previousMemories.length > 0 ? previousMemories.map((entry) => <span key={entry.id}>{entry.note.replace('Memory Jar: ', '')}</span>) : <span>Write a memory below</span>}
+        {memory ? <span>{memory}</span> : previousMemories.length > 0 ? previousMemories.map((entry) => <span key={entry.id} style={{ '--memory-color': getMoodColor(entry.mood) }}>{entry.note.replace('Memory Jar: ', '')}</span>) : <span>Write a memory below</span>}
       </div>
-      <textarea value={memory} onChange={(event) => setMemory(event.target.value)} placeholder="A tiny good thing from today..." />
-      <button disabled={!memory.trim()} onClick={() => onSave('Memory Jar', memory.trim(), ['memory-jar', 'positive-moment'])} type="button">Save memory</button>
+      <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
+      {duplicateToday && <p className="form-error">That memory is already in today's jar.</p>}
+      {message && <p className="success-message">{message}</p>}
+      <button disabled={!memoryText || duplicateToday} onClick={saveMemory} type="button">Save memory</button>
     </article>
   );
 }
@@ -1012,12 +1044,13 @@ function OrbitGame({ onSave }) {
 
 function NightSkyGame({ mood, mainToday, onSave }) {
   const brightness = Math.max(2, Math.min(10, Number(mainToday?.intensity || mood.score || 5)));
+  const starColor = getStarColor(mood, brightness);
   return (
     <article className="minigame-card">
       <h3>Featured: Night Sky Reflection</h3>
       <p>Add today's star to your personal emotional galaxy.</p>
       <div className="night-sky">
-        <span style={{ '--star-brightness': brightness / 10 }} />
+        <span style={{ '--star-brightness': brightness / 10, '--star-color': starColor }} />
       </div>
       <button onClick={() => onSave('Night Sky Reflection', `${mood.key} star brightness: ${brightness}/10.`, ['night-sky'])} type="button">Save star</button>
     </article>
@@ -1240,7 +1273,8 @@ function Entries({ nav, entries, onCreate, onSave, onDelete, onPrimary }) {
   const [dateFilter, setDateFilter] = useState('');
   const [editing, setEditing] = useState(null);
   const [creatingFreeWrite, setCreatingFreeWrite] = useState(false);
-  const filtered = entries.filter((entry) => {
+  const journalEntries = entries.filter(isVisibleJournalEntry);
+  const filtered = journalEntries.filter((entry) => {
     const text = `${entry.note} ${entry.mood} ${entry.specificFeeling} ${(entry.tags || []).join(' ')} ${(entry.factors || []).join(' ')}`.toLowerCase();
     const matchesKeyword = text.includes(query.toLowerCase());
     const matchesMood = !moodFilter || entry.mood === moodFilter;
@@ -1569,11 +1603,11 @@ function Settings({ nav, user, profile, entries, saveEntries, fontScale, setFont
         </label>
         <label>Theme
           <select onChange={(event) => setSiteTheme(event.target.value)} value={siteTheme}>
-            <option value="warm">Warm journal</option>
-            <option value="sunrise">Sunrise minimal</option>
+            <option value="warm">Cozy Cafe</option>
+            <option value="sunrise">Sunrise & Sunset</option>
             <option value="night">Night sky</option>
             <option value="garden">Garden</option>
-            <option value="ocean">Ocean calm</option>
+            <option value="ocean">Seafoam</option>
           </select>
         </label>
       </div>
@@ -1663,6 +1697,33 @@ const countMany = (items, key) => items.reduce((acc, item) => {
 const topLabel = (counts) => Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
 const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const isCheckIn = (entry) => (entry.type || 'checkin') === 'checkin';
+const isVisibleJournalEntry = (entry) => isCheckIn(entry) || entry.type === 'journal' || (entry.tags || []).includes('free-write');
+const getMoodColor = (moodKey) => moods.find((mood) => mood.key === moodKey)?.color || '#fff7c7';
+const blackbodyStops = ['#ff5f3a', '#ff8f45', '#ffd166', '#fff4c1', '#f4fbff', '#b8d8ff'];
+const hexToRgb = (hex) => {
+  const clean = hex.replace('#', '');
+  return {
+    r: parseInt(clean.slice(0, 2), 16),
+    g: parseInt(clean.slice(2, 4), 16),
+    b: parseInt(clean.slice(4, 6), 16)
+  };
+};
+const rgbToHex = ({ r, g, b }) => `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}`;
+const blendHex = (firstHex, secondHex, weight = 0.5) => {
+  const first = hexToRgb(firstHex);
+  const second = hexToRgb(secondHex);
+  return rgbToHex({
+    r: first.r * (1 - weight) + second.r * weight,
+    g: first.g * (1 - weight) + second.g * weight,
+    b: first.b * (1 - weight) + second.b * weight
+  });
+};
+const getStarColor = (mood, intensity) => {
+  const normalized = Math.max(0, Math.min(1, (Number(intensity || 5) - 1) / 9));
+  const index = Math.min(blackbodyStops.length - 1, Math.floor(normalized * blackbodyStops.length));
+  return blendHex(blackbodyStops[index], mood?.color || '#fff7c7', 0.28);
+};
+const isMissingEntryTypeError = (error) => /entry[_-]?type|schema cache/i.test(error?.message || '');
 const groupEntriesByDate = (entries) => entries.reduce((acc, entry) => {
   acc[entry.dateKey] = acc[entry.dateKey] || [];
   acc[entry.dateKey].push(entry);
@@ -1705,7 +1766,7 @@ const entryToRow = (entry, userId) => ({
 });
 const rowToEntry = (row) => ({
   id: row.id,
-  type: row.entry_type || 'checkin',
+  type: row.entry_type || inferEntryType(row),
   created: row.created,
   dateKey: row.date_key,
   mood: row.mood,
@@ -1722,6 +1783,12 @@ const rowToEntry = (row) => ({
   moodScore: row.mood_score || null,
   updated: row.updated_at
 });
+const inferEntryType = (row) => {
+  const tags = row.tags || [];
+  if (tags.includes('game')) return 'game';
+  if (tags.includes('free-write')) return 'journal';
+  return 'checkin';
+};
 const getPatternNotes = (entries) => {
   const notes = [];
   const moodFactorCounts = {};
