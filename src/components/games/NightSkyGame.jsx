@@ -37,7 +37,7 @@ export function NightSkyGalaxy({ entries, moods, groupEntriesByDate, getPrimaryE
   );
 }
 
-export function NightSkyGame({ mood, mainToday, onSave }) {
+export function NightSkyGame({ mood, mainToday }) {
   const brightness = Math.max(2, Math.min(10, Number(mainToday?.intensity || mood.score || 5)));
   const starColor = getStarColor(mood, brightness);
   return (
@@ -47,7 +47,6 @@ export function NightSkyGame({ mood, mainToday, onSave }) {
       <div className="night-sky">
         <span style={{ '--star-brightness': brightness / 10, '--star-color': starColor }} />
       </div>
-      <button onClick={() => onSave('Night Sky Reflection', `${mood.key} star brightness: ${brightness}/10.`, ['night-sky'])} type="button">Save star</button>
     </article>
   );
 }

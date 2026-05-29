@@ -29,11 +29,12 @@ export function ConstellationGallery({ entries, moods }) {
   );
 }
 
-export function ConstellationGame({ mood, onSave }) {
+export function ConstellationGame({ mood }) {
   const [selectedStars, setSelectedStars] = useState([]);
   const [connections, setConnections] = useState([]);
   const [dragStart, setDragStart] = useState(null);
   const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
   const selectedStarData = constellationStars.filter((star) => selectedStars.includes(star.id));
   const archetype = detectConstellationArchetype(selectedStarData, connections);
   const addStar = (starId) => setSelectedStars((current) => current.includes(starId) ? current : [...current, starId]);
@@ -51,16 +52,8 @@ export function ConstellationGame({ mood, onSave }) {
   const removeLastConnection = () => {
     setConnections((current) => current.slice(0, -1));
   };
-  const saveConstellation = () => {
-    const payload = {
-      name: name.trim(),
-      stars: selectedStarData,
-      connections,
-      mood: mood.key,
-      archetype,
-      created: new Date().toISOString()
-    };
-    onSave('Daily Constellation', `${name.trim()} is a ${archetype} for ${mood.key}.`, ['constellation'], payload);
+  const finishConstellation = () => {
+    setMessage(`${name.trim()} is a ${archetype} constellation for ${mood.key}.`);
   };
   return (
     <article className="minigame-card">
@@ -92,8 +85,9 @@ export function ConstellationGame({ mood, onSave }) {
       <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Constellation name" />
       <div className="game-action-row">
         <button disabled={connections.length === 0} onClick={removeLastConnection} type="button">Undo line</button>
-        <button disabled={!name.trim() || selectedStars.length === 0} onClick={saveConstellation} type="button">Save constellation</button>
+        <button disabled={!name.trim() || selectedStars.length === 0} onClick={finishConstellation} type="button">Finish constellation</button>
       </div>
+      {message && <p className="success-message">{message}</p>}
     </article>
   );
 }

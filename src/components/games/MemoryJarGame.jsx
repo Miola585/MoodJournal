@@ -6,6 +6,24 @@ import {
   jarAssets
 } from './gameUtils';
 
+const plainGlassJarUrl = new URL('../../../img/Glass Jar.jpg', import.meta.url).href;
+const jarLayerUrls = {
+  calm: new URL('../../../img/Jar Layers/Sea-PNG-Transparent-Image.png', import.meta.url).href,
+  garden: new URL('../../../img/Jar Layers/Summer-Meadow-PNG-HD.png', import.meta.url).href,
+  night: new URL('../../../img/Jar Layers/Night Background.png', import.meta.url).href,
+  ocean: new URL('../../../img/Jar Layers/Sea-PNG-Free-Download.png', import.meta.url).href,
+  sunset: new URL('../../../img/Jar Layers/Sunset-Cloud-PNG-Photos.png', import.meta.url).href
+};
+
+const getJarLayer = (moodKey = '') => {
+  const key = moodKey.toLowerCase();
+  if (['calm', 'content', 'numb'].includes(key)) return jarLayerUrls.calm;
+  if (['happy', 'grateful'].includes(key)) return jarLayerUrls.garden;
+  if (['sad', 'lonely', 'tired'].includes(key)) return jarLayerUrls.night;
+  if (['anxious', 'panic', 'overwhelmed'].includes(key)) return jarLayerUrls.ocean;
+  return jarLayerUrls.sunset;
+};
+
 export function MemoryJarCollection({ entries, moods }) {
   const memories = entries
     .filter((entry) => (entry.tags || []).includes('memory-jar') || (entry.tags || []).includes('positive-moment'))
@@ -63,34 +81,58 @@ export function MemoryJarCollection({ entries, moods }) {
   );
 }
 
-export function MemoryJarGame({ entries, moods, todayKey, onSave }) {
+export function MemoryJarGame({ mood, mainToday }) {
   const [memory, setMemory] = useState('');
   const [message, setMessage] = useState('');
+  const [memories, setMemories] = useState([]);
   const memoryText = memory.trim();
-  const previousMemories = entries.filter((entry) => (entry.tags || []).includes('memory-jar')).map((entry) => buildMemoryView(entry, moods)).slice(0, 3);
-  const duplicateToday = memoryText && entries.some((entry) => (
-    entry.dateKey === todayKey()
-    && (entry.tags || []).includes('memory-jar')
-    && buildMemoryView(entry, moods).text.toLowerCase() === memoryText.toLowerCase()
-  ));
-  const saveMemory = async () => {
+  const duplicateToday = memoryText && memories.some((entry) => entry.text.toLowerCase() === memoryText.toLowerCase());
+  const addMemory = () => {
     if (!memoryText || duplicateToday) return;
     const category = detectMemoryCategory(memoryText);
-    await onSave('Memory Jar', memoryText, ['memory-jar', 'positive-moment', `category-${category}`], { text: memoryText, category });
+    setMemories((current) => [{
+      id: crypto.randomUUID(),
+      text: memoryText,
+      category,
+      mood: mood.key,
+      intensity: Number(mainToday?.intensity || mood.score || 5)
+    }, ...current].slice(0, 6));
     setMemory('');
-    setMessage('Memory saved to your jar.');
+    setMessage('Memory added to this reflection jar.');
   };
   return (
-    <article className="minigame-card">
+    <article className="minigame-card memory-scrapbook-card">
       <h3>Memory Jar</h3>
-      <p>Add one small positive moment to revisit later.</p>
-      <div className="memory-jar svg-jar" style={{ '--jar-image': `url("${jarAssets[0]}")`, '--jar-position': 'left center' }}>
-        {memory ? <span>{memory}</span> : previousMemories.length > 0 ? previousMemories.map((entry) => <span key={entry.id} style={{ '--memory-color': entry.color }}>{entry.day}</span>) : <span>Write a memory below</span>}
+      <p>Add small moments to this reflection jar. These stay on this page for now and do not create journal entries.</p>
+      <div
+        className="memory-scrapbook-jar"
+        style={{
+          '--jar-base': `url("${plainGlassJarUrl}")`,
+          '--jar-layer': `url("${getJarLayer(mood.key)}")`,
+          '--jar-light': mood.color
+        }}
+      >
+        <div className="memory-jar-glow" />
+        <div className="memory-jar-layer" />
+        <div className="memory-note-layer">
+          {memories.length === 0 && <span className="memory-note empty">A tiny good thing can live here.</span>}
+          {memories.map((entry, index) => (
+            <button
+              className="floating-memory-note"
+              key={entry.id}
+              style={{ '--note-index': index, '--note-color': mood.color }}
+              title={entry.text}
+              type="button"
+            >
+              {entry.text.slice(0, 28)}{entry.text.length > 28 ? '...' : ''}
+            </button>
+          ))}
+        </div>
       </div>
       <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
       {duplicateToday && <p className="form-error">That memory is already in today's jar.</p>}
       {message && <p className="success-message">{message}</p>}
-      <button disabled={!memoryText || duplicateToday} onClick={saveMemory} type="button">Save memory</button>
+      <button disabled={!memoryText || duplicateToday} onClick={addMemory} type="button">Add to jar</button>
     </article>
   );
 }

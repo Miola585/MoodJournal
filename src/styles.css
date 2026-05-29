@@ -1292,6 +1292,34 @@ main {
   background: linear-gradient(#d7edf7, #e9d6bf 68%, #6d8b62 69%);
 }
 
+.garden-weather-sunny,
+.garden-weather-golden,
+.garden-weather-sparkly {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 220, 118, 0.72), transparent 18%),
+    linear-gradient(#d7edf7, #f6dfb8 68%, #6d8b62 69%);
+}
+
+.garden-weather-rainy,
+.garden-weather-misty,
+.garden-weather-foggy,
+.garden-weather-cloudy {
+  background:
+    radial-gradient(circle at 24% 16%, rgba(255, 255, 255, 0.56), transparent 18%),
+    radial-gradient(circle at 70% 20%, rgba(255, 255, 255, 0.36), transparent 20%),
+    linear-gradient(#c9dce8, #ded3c5 68%, #5e7d58 69%);
+}
+
+.garden-weather-stormy,
+.garden-weather-breezy,
+.garden-weather-warm,
+.garden-weather-moonlit,
+.garden-weather-quiet {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--garden-color) 26%, transparent), transparent 45%),
+    linear-gradient(#bccbd8, #d9ceb9 68%, #536f50 69%);
+}
+
 .garden-preview img {
   width: clamp(42px, 9vw, 82px);
   height: auto;
@@ -1299,6 +1327,10 @@ main {
   filter: drop-shadow(0 10px 8px rgba(43, 32, 25, 0.22));
   animation: plant-settle 0.5s ease both;
   animation-delay: var(--plant-delay);
+}
+
+.garden-meta {
+  justify-content: center;
 }
 
 .memory-jar {
@@ -1335,6 +1367,114 @@ main {
 .memory-jar span:hover {
   background: var(--memory-color, rgba(255, 247, 210, 0.82));
   transform: translateY(-2px);
+}
+
+.memory-scrapbook-card {
+  overflow: hidden;
+}
+
+.memory-scrapbook-jar {
+  position: relative;
+  display: grid;
+  min-height: clamp(300px, 48vw, 520px);
+  overflow: hidden;
+  place-items: center;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 22% 18%, color-mix(in srgb, var(--jar-light) 34%, transparent), transparent 26%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.04)),
+    color-mix(in srgb, var(--card-bg) 72%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.38), var(--surface-shadow);
+}
+
+.memory-scrapbook-jar::before {
+  content: "";
+  position: absolute;
+  inset: 8% 16%;
+  background-image: var(--jar-base);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: drop-shadow(0 22px 26px rgba(43, 32, 25, 0.22));
+  opacity: 0.72;
+}
+
+.memory-scrapbook-jar::after {
+  content: "";
+  position: absolute;
+  inset: 11% 22% 15%;
+  border-radius: 45% 45% 32% 32%;
+  background:
+    radial-gradient(circle at 36% 34%, color-mix(in srgb, var(--jar-light) 44%, transparent), transparent 18%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04));
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.memory-jar-layer {
+  position: absolute;
+  inset: 18% 25% 20%;
+  z-index: 1;
+  border-radius: 38% 38% 28% 28%;
+  background-image: var(--jar-layer);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: saturate(0.92) blur(0.1px);
+  mix-blend-mode: soft-light;
+  opacity: 0.42;
+  pointer-events: none;
+}
+
+.memory-jar-glow {
+  position: absolute;
+  z-index: 1;
+  width: 48%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--jar-light) 26%, transparent);
+  filter: blur(24px);
+  opacity: 0.68;
+}
+
+.memory-note-layer {
+  position: relative;
+  z-index: 2;
+  width: min(74%, 430px);
+  min-height: 260px;
+}
+
+.floating-memory-note,
+.memory-note.empty {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 170px;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 12px 12px 12px 4px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(255, 247, 231, 0.64)),
+    color-mix(in srgb, var(--note-color, var(--jar-light)) 18%, #fff8ee);
+  color: #3b2f2a;
+  font-size: 0.86em;
+  line-height: 1.2;
+  box-shadow: 0 12px 24px rgba(43, 32, 25, 0.16);
+  transform: rotate(calc((var(--note-index, 0) - 2) * 4deg));
+}
+
+.floating-memory-note {
+  left: calc(8% + (var(--note-index) % 3) * 28%);
+  top: calc(18% + (var(--note-index) % 2) * 34%);
+  margin: 0;
+}
+
+.memory-note.empty {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-2deg);
 }
 
 .galaxy-section,

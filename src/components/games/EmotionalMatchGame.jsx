@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { matchThemes } from './gameUtils';
 
-export function EmotionalMatchGame({ onSave }) {
+export function EmotionalMatchGame() {
   const cards = useMemo(() => matchThemes.flatMap((theme) => [
     { id: `${theme.id}-emotion`, theme: theme.id, label: theme.label },
     { id: `${theme.id}-strategy`, theme: theme.id, label: theme.pieces[0] },
@@ -34,7 +34,7 @@ export function EmotionalMatchGame({ onSave }) {
           return <button className={visible ? 'match-card visible' : 'match-card'} key={card.id} onClick={() => chooseCard(card)} type="button">{visible ? card.label : '?'}</button>;
         })}
       </div>
-      <button disabled={matched.length < cards.length} onClick={() => onSave('Emotional Match', 'Completed the emotional matching game.', ['emotional-match'])} type="button">Save win</button>
+      {matched.length === cards.length && <p className="success-message">Nice work. You matched every mood set.</p>}
     </article>
   );
 }

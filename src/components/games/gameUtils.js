@@ -1,8 +1,4 @@
-const cafeJarUrl = new URL('../../../img/Cafe.svg', import.meta.url).href;
-const gardenJarUrl = new URL('../../../img/Garden.svg', import.meta.url).href;
-const nightJarUrl = new URL('../../../img/Night Sky.svg', import.meta.url).href;
-const oceanJarUrl = new URL('../../../img/Ocean.svg', import.meta.url).href;
-const sunsetJarUrl = new URL('../../../img/Sunset.svg', import.meta.url).href;
+const glassJarUrl = new URL('../../../img/Glass Jar.jpg', import.meta.url).href;
 
 export const scavengerSets = [
   ['Find something soft', 'Notice one calming color', 'Name a sound nearby', 'Find something that makes you smile'],
@@ -29,7 +25,7 @@ export const gameLabels = {
   night: 'Night Sky Reflection'
 };
 
-export const jarAssets = [cafeJarUrl, sunsetJarUrl, nightJarUrl, gardenJarUrl, oceanJarUrl];
+export const jarAssets = [glassJarUrl];
 
 export const constellationStars = [
   { id: 1, x: 18, y: 22 },

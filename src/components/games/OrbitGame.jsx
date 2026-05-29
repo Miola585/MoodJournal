@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getOrbitPrompt, getOrbitStability, orbitRings, planetSeeds } from './gameUtils';
 
-export function OrbitGame({ onSave }) {
+export function OrbitGame() {
   const [planets, setPlanets] = useState(planetSeeds);
   const stability = getOrbitStability(planets);
   const closest = planets.find((planet) => planet.orbit === 'near') || planets[0];
@@ -11,12 +11,6 @@ export function OrbitGame({ onSave }) {
     const nextOrbit = orbitRings[(orbitRings.indexOf(planet.orbit) + 1) % orbitRings.length];
     movePlanet(planetName, nextOrbit);
   };
-  const saveOrbit = () => onSave(
-    'Orbit Simulator',
-    `Stability ${stability}/100. Closest: ${closest.name}.`,
-    ['orbit-simulator'],
-    { planets, stability, prompt: getOrbitPrompt(closest) }
-  );
   return (
     <article className="minigame-card">
       <h3>Orbit Simulator</h3>
@@ -50,7 +44,6 @@ export function OrbitGame({ onSave }) {
         <strong>Stability: {stability}/100</strong>
         <p>{getOrbitPrompt(closest)}</p>
       </div>
-      <button onClick={saveOrbit} type="button">Save orbit</button>
     </article>
   );
 }
