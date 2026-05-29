@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Games } from './components/games/Games';
+import { stripGameData } from './components/games/gameUtils';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 
 const logoUrl = new URL('../img/JJ.png', import.meta.url).href;
@@ -87,28 +89,6 @@ const resourceLinks = [
   { href: 'https://www.youtube.com/live/dnBAU8Co6PA?si=J-u4VaLRCmOt_Npu', title: 'Music Playlist', tag: 'Calm / Focus', className: 'focus', text: 'Soothing instrumental tracks to calm your mind.' },
   { href: 'https://positivepsychology.com/emotion-regulation/', title: 'Emotional Regulation', tag: 'Learn', className: 'learn', text: 'Clear tips to stay balanced, spot triggers, and respond to challenges in healthier ways.' }
 ];
-const scavengerSets = [
-  ['Find something soft', 'Notice one calming color', 'Name a sound nearby', 'Find something that makes you smile'],
-  ['Find something round', 'Notice one shadow', 'Name one steady object', 'Find something that feels cool'],
-  ['Find something that reminds you of outside', 'Notice one texture', 'Name one faraway sound', 'Find one thing you can tidy'],
-  ['Find something blue or green', 'Notice one source of light', 'Name one scent', 'Find something you are grateful for']
-];
-const matchThemes = [
-  { id: 'anxious', label: 'Anxious', pieces: ['Box breathing', 'I can slow down', 'Wave'] },
-  { id: 'sad', label: 'Sad', pieces: ['Text someone safe', 'I deserve care', 'Blanket'] },
-  { id: 'angry', label: 'Angry', pieces: ['Step away', 'I can choose my response', 'Flame'] },
-  { id: 'tired', label: 'Tired', pieces: ['Rest eyes', 'Rest is productive', 'Moon'] }
-];
-const rotatingGames = ['match', 'constellation', 'garden', 'memory', 'orbit', 'night'];
-const gameLabels = {
-  match: 'Emotional Match',
-  constellation: 'Daily Constellation',
-  garden: 'Mood Garden',
-  memory: 'Memory Jar',
-  orbit: 'Orbit Simulator',
-  night: 'Night Sky Reflection'
-};
-
 const appViews = ['checkin', 'activities', 'games', 'entries', 'calendar', 'summary', 'about', 'newsletter'];
 const navLabels = {
   checkin: 'Check-In',
@@ -433,7 +413,7 @@ function App() {
         {view === 'home' && <Home nav={sectionNav} entries={entries} onOpen={openApp} />}
         {view === 'checkin' && <CheckIn nav={sectionNav} onSave={saveEntry} />}
         {view === 'activities' && <Activities nav={sectionNav} entries={entries} />}
-        {view === 'games' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} /></JournalPrivacyGate>}
+        {view === 'games' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>}
         {view === 'entries' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Entries nav={sectionNav} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>}
         {view === 'calendar' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Calendar nav={sectionNav} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>}
         {view === 'summary' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Summary nav={sectionNav} entries={entries} /></JournalPrivacyGate>}
@@ -773,290 +753,6 @@ function ReminderBell({ reminder, setReminder }) {
   );
 }
 
-function Games({ nav, entries, onSave }) {
-  const gameEntries = entries.filter((entry) => (entry.tags || []).includes('game'));
-  return (
-    <section className="screen app-screen games-screen">
-      <h1>Games</h1>
-      {nav}
-      <MiniGames entries={entries} onSave={onSave} />
-      <NightSkyGalaxy entries={entries} />
-      <div className="collection-grid">
-        <ConstellationGallery entries={gameEntries} />
-        <MemoryJarCollection entries={gameEntries} />
-      </div>
-    </section>
-  );
-}
-
-function NightSkyGalaxy({ entries }) {
-  const grouped = groupEntriesByDate(entries);
-  const stars = Object.entries(grouped).map(([dateKey, dayEntries], index) => {
-    const entry = getPrimaryEntry(dayEntries);
-    const mood = moods.find((item) => item.key === entry?.mood) || moods[0];
-    const intensity = Number(entry?.intensity || mood.score || 5);
-    return {
-      id: dateKey,
-      dateKey,
-      mood,
-      intensity,
-      starColor: getStarColor(mood, intensity),
-      x: 8 + ((index * 23) % 84),
-      y: 10 + ((index * 37) % 78)
-    };
-  });
-  return (
-    <section className="galaxy-section">
-      <div>
-        <h2>Personal Night Sky</h2>
-        <p>Each journal day becomes a star. Brighter stars reflect stronger entries.</p>
-      </div>
-      <div className="galaxy-map">
-        {stars.length === 0 && <p>Add journal entries to begin your sky.</p>}
-        {stars.map((star) => (
-          <span
-            className="galaxy-star"
-            key={star.id}
-            style={{ '--star-x': `${star.x}%`, '--star-y': `${star.y}%`, '--star-size': `${10 + star.intensity * 2}px`, '--star-color': star.starColor }}
-            title={`${star.dateKey}: ${star.mood.key}`}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ConstellationGallery({ entries }) {
-  const constellations = entries.filter((entry) => (entry.tags || []).includes('constellation'));
-  return (
-    <section className="collection-card">
-      <h2>Saved Constellations</h2>
-      {constellations.length === 0 ? <p>No constellations saved yet.</p> : constellations.slice(0, 4).map((entry) => (
-        <article className="saved-constellation" key={entry.id}>
-          <div className="mini-sky">{Array.from({ length: 6 }, (_, index) => <span key={index} />)}</div>
-          <p>{entry.note}</p>
-        </article>
-      ))}
-    </section>
-  );
-}
-
-function MemoryJarCollection({ entries }) {
-  const memories = entries.filter((entry) => (entry.tags || []).includes('memory-jar') || (entry.tags || []).includes('positive-moment'));
-  return (
-    <section className="collection-card">
-      <h2>Memory Jar</h2>
-      <div className="large-memory-jar">
-        {memories.length === 0 ? <span>Add a positive memory from the featured game.</span> : memories.slice(0, 6).map((entry) => <span key={entry.id} style={{ '--memory-color': getMoodColor(entry.mood) }}>{entry.note.replace('Memory Jar: ', '')}</span>)}
-      </div>
-    </section>
-  );
-}
-
-function MiniGames({ entries, onSave }) {
-  const dayNumber = Math.floor(new Date(todayKey()).getTime() / 86400000);
-  const huntItems = scavengerSets[dayNumber % scavengerSets.length];
-  const featuredGame = rotatingGames[dayNumber % rotatingGames.length];
-  const todayEntries = entries.filter((entry) => entry.dateKey === todayKey());
-  const mainToday = getPrimaryEntry(todayEntries);
-  const mood = moods.find((item) => item.key === mainToday?.mood) || moods[0];
-  const [huntDone, setHuntDone] = useState([]);
-  const [bubbleRunning, setBubbleRunning] = useState(false);
-  const saveGameEntry = (title, note, tags = []) => onSave({
-    ...createEntry(),
-    type: 'game',
-    mood: mood.key,
-    specificFeeling: mood.feelings[0],
-    intensity: mainToday?.intensity || mood.score || 5,
-    note: `${title}: ${note}`,
-    tags: ['game', ...tags],
-    copingStep: 'Reflect on what changed after this activity.'
-  });
-  const toggleHuntItem = (item) => {
-    setHuntDone((current) => (
-      current.includes(item) ? current.filter((doneItem) => doneItem !== item) : [...current, item]
-    ));
-  };
-
-  return (
-    <section className="minigames-section" id="minigames">
-      <h2>Mini Games</h2>
-      <p className="recommendation-note">Breathing and scavenger hunt stay available every day. The featured game changes daily.</p>
-      <div className="minigame-grid daily-games">
-        <article className="minigame-card breathing-game">
-          <h3>Breathing Bubble</h3>
-          <p>Follow the bubble as it grows and settles.</p>
-          <div className={bubbleRunning ? 'breathing-bubble active' : 'breathing-bubble'} />
-          <button onClick={() => setBubbleRunning(!bubbleRunning)} type="button">{bubbleRunning ? 'Pause' : 'Start'}</button>
-        </article>
-        <article className="minigame-card">
-          <h3>Daily Scavenger Hunt</h3>
-          <p>Use your space to ground yourself for a minute.</p>
-          <div className="hunt-list">
-            {huntItems.map((item) => (
-              <label key={item}>
-                <input checked={huntDone.includes(item)} onChange={() => toggleHuntItem(item)} type="checkbox" />
-                {item}
-              </label>
-            ))}
-          </div>
-          <button disabled={huntDone.length === 0} onClick={() => setHuntDone([])} type="button">Clear finds</button>
-        </article>
-      </div>
-      <section className="featured-game-section">
-        <div>
-          <h2>Featured Today: {gameLabels[featuredGame]}</h2>
-          <p>One rotating reflection game keeps the page focused.</p>
-        </div>
-        <FeaturedGame game={featuredGame} mood={mood} mainToday={mainToday} entries={entries} onSave={saveGameEntry} />
-      </section>
-    </section>
-  );
-}
-
-function FeaturedGame({ game, mood, mainToday, entries, onSave }) {
-  const games = {
-    match: <EmotionalMatchGame onSave={onSave} />,
-    constellation: <ConstellationGame mood={mood} onSave={onSave} />,
-    garden: <MoodGardenGame mood={mood} onSave={onSave} />,
-    memory: <MemoryJarGame entries={entries} onSave={onSave} />,
-    orbit: <OrbitGame onSave={onSave} />,
-    night: <NightSkyGame mood={mood} mainToday={mainToday} onSave={onSave} />
-  };
-  return games[game] || games.match;
-}
-
-function EmotionalMatchGame({ onSave }) {
-  const cards = useMemo(() => matchThemes.flatMap((theme) => [
-    { id: `${theme.id}-emotion`, theme: theme.id, label: theme.label },
-    { id: `${theme.id}-strategy`, theme: theme.id, label: theme.pieces[0] },
-    { id: `${theme.id}-affirmation`, theme: theme.id, label: theme.pieces[1] },
-    { id: `${theme.id}-symbol`, theme: theme.id, label: theme.pieces[2] }
-  ]).sort(() => Math.random() - 0.5), []);
-  const [selected, setSelected] = useState([]);
-  const [matched, setMatched] = useState([]);
-  const chooseCard = (card) => {
-    if (selected.includes(card.id) || matched.includes(card.id) || selected.length === 2) return;
-    const nextSelected = [...selected, card.id];
-    setSelected(nextSelected);
-    if (nextSelected.length === 2) {
-      const first = cards.find((item) => item.id === nextSelected[0]);
-      if (first?.theme === card.theme) {
-        setMatched((current) => [...current, ...nextSelected]);
-        setSelected([]);
-      } else {
-        setTimeout(() => setSelected([]), 700);
-      }
-    }
-  };
-  return (
-    <article className="minigame-card">
-      <h3>Featured: Emotional Match</h3>
-      <p>Match a feeling with a strategy, affirmation, or symbol from the same mood family.</p>
-      <div className="match-grid">
-        {cards.map((card) => {
-          const visible = selected.includes(card.id) || matched.includes(card.id);
-          return <button className={visible ? 'match-card visible' : 'match-card'} key={card.id} onClick={() => chooseCard(card)} type="button">{visible ? card.label : '?'}</button>;
-        })}
-      </div>
-      <button disabled={matched.length < cards.length} onClick={() => onSave('Emotional Match', 'Completed the emotional matching game.', ['emotional-match'])} type="button">Save win</button>
-    </article>
-  );
-}
-
-function ConstellationGame({ mood, onSave }) {
-  const [selectedStars, setSelectedStars] = useState([]);
-  const [name, setName] = useState('');
-  const stars = Array.from({ length: 9 }, (_, index) => index + 1);
-  const toggleStar = (star) => setSelectedStars((current) => current.includes(star) ? current.filter((item) => item !== star) : [...current, star]);
-  return (
-    <article className="minigame-card">
-      <h3>Featured: Daily Constellation</h3>
-      <p>Tap stars, name the shape, and save it to today's journal.</p>
-      <div className="star-map">
-        {stars.map((star) => <button className={selectedStars.includes(star) ? 'star selected' : 'star'} key={star} onClick={() => toggleStar(star)} type="button" aria-label={`Star ${star}`} />)}
-      </div>
-      <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Constellation name" />
-      <button disabled={!name.trim() || selectedStars.length === 0} onClick={() => onSave('Daily Constellation', `${name.trim()} for ${mood.key}. Stars: ${selectedStars.join(', ')}`, ['constellation'])} type="button">Save constellation</button>
-    </article>
-  );
-}
-
-function MoodGardenGame({ mood, onSave }) {
-  const growth = Math.max(2, Math.min(8, mood.score || 5));
-  return (
-    <article className="minigame-card">
-      <h3>Featured: Mood Garden</h3>
-      <p>Your current mood grows a small garden preview.</p>
-      <div className="garden-preview" style={{ '--garden-color': mood.color }}>
-        {Array.from({ length: growth }, (_, index) => <span key={index} />)}
-      </div>
-      <button onClick={() => onSave('Mood Garden', `${mood.key} grew ${growth} garden pieces today.`, ['mood-garden'])} type="button">Save garden</button>
-    </article>
-  );
-}
-
-function MemoryJarGame({ entries, onSave }) {
-  const [memory, setMemory] = useState('');
-  const [message, setMessage] = useState('');
-  const memoryText = memory.trim();
-  const previousMemories = entries.filter((entry) => (entry.tags || []).includes('memory-jar')).slice(0, 3);
-  const duplicateToday = memoryText && entries.some((entry) => (
-    entry.dateKey === todayKey()
-    && (entry.tags || []).includes('memory-jar')
-    && entry.note.replace('Memory Jar: ', '').trim().toLowerCase() === memoryText.toLowerCase()
-  ));
-  const saveMemory = async () => {
-    if (!memoryText || duplicateToday) return;
-    await onSave('Memory Jar', memoryText, ['memory-jar', 'positive-moment']);
-    setMemory('');
-    setMessage('Memory saved to your jar.');
-  };
-  return (
-    <article className="minigame-card">
-      <h3>Featured: Memory Jar</h3>
-      <p>Add one small positive moment to revisit later.</p>
-      <div className="memory-jar">
-        {memory ? <span>{memory}</span> : previousMemories.length > 0 ? previousMemories.map((entry) => <span key={entry.id} style={{ '--memory-color': getMoodColor(entry.mood) }}>{entry.note.replace('Memory Jar: ', '')}</span>) : <span>Write a memory below</span>}
-      </div>
-      <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
-      {duplicateToday && <p className="form-error">That memory is already in today's jar.</p>}
-      {message && <p className="success-message">{message}</p>}
-      <button disabled={!memoryText || duplicateToday} onClick={saveMemory} type="button">Save memory</button>
-    </article>
-  );
-}
-
-function OrbitGame({ onSave }) {
-  const [planets, setPlanets] = useState({ emotion: 'near', goal: 'middle', thought: 'far' });
-  const updatePlanet = (planet) => setPlanets((current) => ({ ...current, [planet]: current[planet] === 'near' ? 'middle' : current[planet] === 'middle' ? 'far' : 'near' }));
-  return (
-    <article className="minigame-card">
-      <h3>Featured: Orbit Simulator</h3>
-      <p>Click planets until emotion, goal, and thought feel balanced.</p>
-      <div className="orbit-map">
-        {Object.entries(planets).map(([planet, orbit]) => <button className={`planet ${orbit}`} key={planet} onClick={() => updatePlanet(planet)} type="button">{planet}</button>)}
-      </div>
-      <button onClick={() => onSave('Orbit Simulator', Object.entries(planets).map(([planet, orbit]) => `${planet}: ${orbit}`).join(', '), ['orbit-simulator'])} type="button">Save orbit</button>
-    </article>
-  );
-}
-
-function NightSkyGame({ mood, mainToday, onSave }) {
-  const brightness = Math.max(2, Math.min(10, Number(mainToday?.intensity || mood.score || 5)));
-  const starColor = getStarColor(mood, brightness);
-  return (
-    <article className="minigame-card">
-      <h3>Featured: Night Sky Reflection</h3>
-      <p>Add today's star to your personal emotional galaxy.</p>
-      <div className="night-sky">
-        <span style={{ '--star-brightness': brightness / 10, '--star-color': starColor }} />
-      </div>
-      <button onClick={() => onSave('Night Sky Reflection', `${mood.key} star brightness: ${brightness}/10.`, ['night-sky'])} type="button">Save star</button>
-    </article>
-  );
-}
-
 function About({ nav }) {
   return (
     <section className="screen app-screen">
@@ -1393,7 +1089,7 @@ function EntryCard({ entry, onEdit, onDelete, onPrimary }) {
         <strong>{mood?.emoji} {entry.mood} <span className="primary-marker">{entryLabel}</span>{entry.primary ? <span className="primary-marker">Main</span> : null}</strong>
         <span>{new Date(entry.created).toLocaleString()}</span>
       </div>
-      <p>{entry.note}</p>
+      <p>{stripGameData(entry.note)}</p>
       <div className="meta">
         {entry.specificFeeling && <span>{entry.specificFeeling}</span>}
         <span>{entry.intensity}/10</span>
@@ -1698,31 +1394,6 @@ const topLabel = (counts) => Object.entries(counts).sort((a, b) => b[1] - a[1])[
 const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const isCheckIn = (entry) => (entry.type || 'checkin') === 'checkin';
 const isVisibleJournalEntry = (entry) => isCheckIn(entry) || entry.type === 'journal' || (entry.tags || []).includes('free-write');
-const getMoodColor = (moodKey) => moods.find((mood) => mood.key === moodKey)?.color || '#fff7c7';
-const blackbodyStops = ['#ff5f3a', '#ff8f45', '#ffd166', '#fff4c1', '#f4fbff', '#b8d8ff'];
-const hexToRgb = (hex) => {
-  const clean = hex.replace('#', '');
-  return {
-    r: parseInt(clean.slice(0, 2), 16),
-    g: parseInt(clean.slice(2, 4), 16),
-    b: parseInt(clean.slice(4, 6), 16)
-  };
-};
-const rgbToHex = ({ r, g, b }) => `#${[r, g, b].map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}`;
-const blendHex = (firstHex, secondHex, weight = 0.5) => {
-  const first = hexToRgb(firstHex);
-  const second = hexToRgb(secondHex);
-  return rgbToHex({
-    r: first.r * (1 - weight) + second.r * weight,
-    g: first.g * (1 - weight) + second.g * weight,
-    b: first.b * (1 - weight) + second.b * weight
-  });
-};
-const getStarColor = (mood, intensity) => {
-  const normalized = Math.max(0, Math.min(1, (Number(intensity || 5) - 1) / 9));
-  const index = Math.min(blackbodyStops.length - 1, Math.floor(normalized * blackbodyStops.length));
-  return blendHex(blackbodyStops[index], mood?.color || '#fff7c7', 0.28);
-};
 const isMissingEntryTypeError = (error) => /entry[_-]?type|schema cache/i.test(error?.message || '');
 const groupEntriesByDate = (entries) => entries.reduce((acc, entry) => {
   acc[entry.dateKey] = acc[entry.dateKey] || [];

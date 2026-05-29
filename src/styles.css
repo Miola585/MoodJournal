@@ -1053,26 +1053,54 @@ main {
 }
 
 .star-map {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  position: relative;
   padding: 24px;
 }
 
+.constellation-builder {
+  min-height: 260px;
+  overflow: hidden;
+}
+
 .star {
+  position: absolute;
+  left: var(--star-left);
+  top: var(--star-top);
   width: 26px;
   height: 26px;
-  justify-self: center;
   margin: 0;
+  padding: 0;
   border-radius: 50%;
-  background: #f7e7a6;
-  box-shadow: 0 0 16px rgba(247, 231, 166, 0.6);
+  background: var(--star-color, #f7e7a6);
+  box-shadow: 0 0 16px var(--star-color, rgba(247, 231, 166, 0.6));
+  transform: translate(-50%, -50%);
 }
 
 .star.selected {
-  background: #ffffff;
-  box-shadow: 0 0 24px rgba(255, 255, 255, 0.95);
-  transform: scale(1.18);
+  box-shadow: 0 0 24px var(--star-color, rgba(255, 255, 255, 0.95));
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+.constellation-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.constellation-lines line {
+  stroke: var(--line-color, #fff7c7);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  opacity: 0.72;
+  filter: drop-shadow(0 0 5px var(--line-color, #fff7c7));
+}
+
+.mini-insight {
+  margin: 0;
+  font-weight: 800;
+  text-align: center;
 }
 
 .garden-preview {
@@ -1163,6 +1191,31 @@ main {
   gap: 18px;
 }
 
+.memory-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.memory-month-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.memory-month-card {
+  display: grid;
+  gap: 10px;
+  text-align: center;
+}
+
+.memory-month-card h3 {
+  margin: 0;
+}
+
 .saved-constellation {
   display: grid;
   grid-template-columns: 120px 1fr;
@@ -1175,25 +1228,22 @@ main {
 .mini-sky {
   position: relative;
   min-height: 90px;
+  overflow: hidden;
   border-radius: 10px;
   background: #17162e;
 }
 
 .mini-sky span {
   position: absolute;
+  left: 50%;
+  top: 50%;
   width: 9px;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: #fff7c7;
-  box-shadow: 0 0 10px #fff7c7;
+  background: var(--star-color, #fff7c7);
+  box-shadow: 0 0 10px var(--star-color, #fff7c7);
+  transform: translate(-50%, -50%);
 }
-
-.mini-sky span:nth-child(1) { left: 18%; top: 24%; }
-.mini-sky span:nth-child(2) { left: 44%; top: 34%; }
-.mini-sky span:nth-child(3) { left: 70%; top: 18%; }
-.mini-sky span:nth-child(4) { left: 28%; top: 66%; }
-.mini-sky span:nth-child(5) { left: 58%; top: 72%; }
-.mini-sky span:nth-child(6) { left: 78%; top: 58%; }
 
 .large-memory-jar {
   display: flex;
@@ -1211,26 +1261,77 @@ main {
     color-mix(in srgb, var(--accent-color-light) 50%, transparent);
 }
 
-.large-memory-jar span {
-  max-width: 180px;
-  padding: 10px 12px;
-  border-radius: 999px;
-  background: #fff7c7;
-  color: #3b2f2a;
-  box-shadow: 0 0 14px rgba(255, 247, 199, 0.7);
-  transition: background-color 0.2s ease, transform 0.2s ease;
+.svg-jar {
+  position: relative;
+  min-height: 260px;
+  border: 0;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.02)),
+    var(--jar-image);
+  background-position: center, var(--jar-position);
+  background-repeat: no-repeat;
+  background-size: auto, 205% auto;
 }
 
-.large-memory-jar span:hover {
-  background: var(--memory-color, #fff7c7);
-  transform: translateY(-3px);
+.memory-ball {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  aspect-ratio: 1;
+  margin: 2px;
+  padding: 0;
+  border: 2px solid color-mix(in srgb, var(--memory-color) 60%, #ffffff);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--memory-color) 78%, #ffffff);
+  color: #3b2f2a;
+  font-weight: 900;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--memory-color) 62%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.memory-ball:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--memory-color) 82%, transparent);
+}
+
+.memory-ball.rarity-rare {
+  border-style: dashed;
+}
+
+.memory-ball.rarity-legendary {
+  border-width: 3px;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--memory-color) 82%, #fff4c1);
+}
+
+.memory-detail {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--glass-bg);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+}
+
+.memory-rarity {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--selected-bg);
+  color: var(--selected-text);
+  font-weight: 800;
+  text-transform: capitalize;
 }
 
 .orbit-map {
   position: relative;
   display: grid;
   place-items: center;
+  min-height: 320px;
   overflow: hidden;
+}
+
+.deep-orbit {
+  isolation: isolate;
 }
 
 .orbit-map::before,
@@ -1251,24 +1352,78 @@ main {
   height: 42%;
 }
 
+.orbit-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: start center;
+  border: 1px dashed rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+  color: #fff7ef;
+  font-size: 0.82em;
+  font-weight: 800;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+}
+
+.orbit-ring.near {
+  width: 34%;
+  height: 34%;
+}
+
+.orbit-ring.middle {
+  width: 58%;
+  height: 58%;
+}
+
+.orbit-ring.far {
+  width: 82%;
+  height: 82%;
+}
+
+.orbit-ring span {
+  margin-top: 8px;
+}
+
 .planet {
-  position: relative;
-  z-index: 1;
-  min-width: 76px;
-  margin: 4px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: var(--planet-size);
+  min-width: 0;
+  aspect-ratio: 1;
+  margin: 0;
+  padding: 8px;
   border-radius: 999px;
+  background: radial-gradient(circle at 32% 28%, #ffffff, var(--planet-color));
+  color: #2a1f1a;
+  font-size: 0.78em;
+  font-weight: 900;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--planet-color) 70%, transparent);
+  transform-origin: center;
 }
 
 .planet.near {
-  transform: translate(-28px, 24px);
+  transform: translate(-50%, -50%) rotate(var(--planet-angle)) translateX(48px) rotate(calc(var(--planet-angle) * -1));
 }
 
 .planet.middle {
-  transform: translate(36px, -18px);
+  transform: translate(-50%, -50%) rotate(var(--planet-angle)) translateX(88px) rotate(calc(var(--planet-angle) * -1));
 }
 
 .planet.far {
-  transform: translate(4px, 46px);
+  transform: translate(-50%, -50%) rotate(var(--planet-angle)) translateX(126px) rotate(calc(var(--planet-angle) * -1));
+}
+
+.orbit-readout {
+  padding: 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent-color-light) 62%, transparent);
+  text-align: center;
 }
 
 .night-sky {
