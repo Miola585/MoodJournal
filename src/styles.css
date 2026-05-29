@@ -192,6 +192,9 @@ a:hover {
   --selected-bg: #7772c8;
   --selected-text: #ffffff;
   --soft-border: #aeb4df;
+  --glass-bg: color-mix(in srgb, #d8ddf4 86%, transparent);
+  --glass-strong: color-mix(in srgb, #ece6ff 90%, transparent);
+  --glass-border: color-mix(in srgb, #aeb4df 76%, #ffffff);
   --atmo-base:
     linear-gradient(140deg, rgba(119, 114, 200, 0.2), transparent 36%),
     linear-gradient(320deg, rgba(227, 222, 248, 0.54), transparent 44%);
@@ -222,6 +225,9 @@ a:hover {
   --selected-bg: #f3c969;
   --selected-text: #3f302a;
   --soft-border: #eec1a8;
+  --glass-bg: color-mix(in srgb, #ffe0d3 86%, transparent);
+  --glass-strong: color-mix(in srgb, #fff1c9 90%, transparent);
+  --glass-border: color-mix(in srgb, #eec1a8 76%, #ffffff);
   --shadow: 0 12px 28px rgba(191, 95, 107, 0.14);
   --atmo-base:
     linear-gradient(115deg, rgba(255, 241, 201, 0.76), transparent 42%),
@@ -253,6 +259,9 @@ a:hover {
   --selected-bg: #7c9b68;
   --selected-text: #ffffff;
   --soft-border: #abc69d;
+  --glass-bg: color-mix(in srgb, #d8e7cd 86%, transparent);
+  --glass-strong: color-mix(in srgb, #f0ead0 90%, transparent);
+  --glass-border: color-mix(in srgb, #abc69d 76%, #ffffff);
   --atmo-base:
     linear-gradient(150deg, rgba(185, 212, 155, 0.38), transparent 36%),
     linear-gradient(315deg, rgba(240, 234, 208, 0.64), transparent 48%);
@@ -283,6 +292,9 @@ a:hover {
   --selected-bg: #5daeb2;
   --selected-text: #ffffff;
   --soft-border: #9ec9c9;
+  --glass-bg: color-mix(in srgb, #cde6e4 86%, transparent);
+  --glass-strong: color-mix(in srgb, #eef4df 90%, transparent);
+  --glass-border: color-mix(in srgb, #9ec9c9 76%, #ffffff);
   --atmo-base:
     linear-gradient(160deg, rgba(93, 174, 178, 0.22), transparent 42%),
     linear-gradient(340deg, rgba(238, 244, 223, 0.62), transparent 48%);
@@ -351,6 +363,9 @@ a:hover {
   --selected-text: #2b1c22;
   --tab-text: #fff5e8;
   --soft-border: #bc7467;
+  --glass-bg: color-mix(in srgb, #482b31 76%, transparent);
+  --glass-strong: color-mix(in srgb, #7d4e4f 78%, transparent);
+  --glass-border: color-mix(in srgb, #bc7467 72%, #ffffff);
   --atmo-base:
     linear-gradient(115deg, rgba(243, 201, 105, 0.18), transparent 42%),
     linear-gradient(300deg, rgba(233, 152, 117, 0.16), transparent 46%);
@@ -377,6 +392,9 @@ a:hover {
   --selected-text: #15142c;
   --tab-text: #f5f1ff;
   --soft-border: #756fd1;
+  --glass-bg: color-mix(in srgb, #1f203d 76%, transparent);
+  --glass-strong: color-mix(in srgb, #34305c 78%, transparent);
+  --glass-border: color-mix(in srgb, #756fd1 72%, #ffffff);
   --atmo-base:
     linear-gradient(140deg, rgba(183, 176, 255, 0.14), transparent 38%),
     linear-gradient(330deg, rgba(54, 51, 95, 0.24), transparent 48%);
@@ -405,6 +423,9 @@ a:hover {
   --selected-text: #142015;
   --tab-text: #f2f8e9;
   --soft-border: #779762;
+  --glass-bg: color-mix(in srgb, #21351f 76%, transparent);
+  --glass-strong: color-mix(in srgb, #506640 78%, transparent);
+  --glass-border: color-mix(in srgb, #779762 72%, #ffffff);
   --atmo-base:
     linear-gradient(150deg, rgba(185, 212, 155, 0.12), transparent 40%),
     linear-gradient(315deg, rgba(51, 77, 46, 0.26), transparent 48%);
@@ -431,6 +452,9 @@ a:hover {
   --selected-text: #102326;
   --tab-text: #effffe;
   --soft-border: #5baeb4;
+  --glass-bg: color-mix(in srgb, #18363a 76%, transparent);
+  --glass-strong: color-mix(in srgb, #416a6d 78%, transparent);
+  --glass-border: color-mix(in srgb, #5baeb4 72%, #ffffff);
   --atmo-base:
     linear-gradient(160deg, rgba(152, 220, 224, 0.12), transparent 42%),
     linear-gradient(340deg, rgba(37, 73, 77, 0.3), transparent 48%);
@@ -1390,13 +1414,19 @@ main {
 .memory-scrapbook-jar::before {
   content: "";
   position: absolute;
-  inset: 8% 16%;
-  background-image: var(--jar-base);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  filter: drop-shadow(0 22px 26px rgba(43, 32, 25, 0.22));
-  opacity: 0.72;
+  inset: 9% 20% 8%;
+  border: 2px solid rgba(255, 255, 255, 0.58);
+  border-top: 18px solid rgba(255, 255, 255, 0.5);
+  border-bottom-width: 5px;
+  border-radius: 44% 44% 28% 28% / 16% 16% 18% 18%;
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.5), transparent 18% 72%, rgba(255, 255, 255, 0.26)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.04));
+  box-shadow:
+    inset 0 1px 18px rgba(255, 255, 255, 0.28),
+    inset 0 -18px 26px rgba(255, 255, 255, 0.1),
+    0 24px 32px rgba(43, 32, 25, 0.2);
+  opacity: 0.94;
 }
 
 .memory-scrapbook-jar::after {
@@ -1413,16 +1443,16 @@ main {
 
 .memory-jar-layer {
   position: absolute;
-  inset: 18% 25% 20%;
+  inset: 17% 24% 17%;
   z-index: 1;
-  border-radius: 38% 38% 28% 28%;
+  border-radius: 42% 42% 26% 26% / 14% 14% 20% 20%;
   background-image: var(--jar-layer);
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
-  filter: saturate(0.92) blur(0.1px);
-  mix-blend-mode: soft-light;
-  opacity: 0.42;
+  filter: saturate(0.92) contrast(0.94);
+  mix-blend-mode: multiply;
+  opacity: 0.34;
   pointer-events: none;
 }
 
@@ -1622,13 +1652,22 @@ main {
 .svg-jar {
   position: relative;
   min-height: 260px;
-  border: 0;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.58);
+  border-top: 18px solid rgba(255, 255, 255, 0.5);
+  border-bottom-width: 5px;
+  border-radius: 44% 44% 28% 28% / 16% 16% 18% 18%;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.02)),
+    linear-gradient(110deg, rgba(255, 255, 255, 0.48), transparent 18% 72%, rgba(255, 255, 255, 0.26)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.04)),
     var(--jar-image);
-  background-position: center, var(--jar-position);
+  background-position: center, center, var(--jar-position);
   background-repeat: no-repeat;
-  background-size: auto, 205% auto;
+  background-size: auto, auto, cover;
+  box-shadow:
+    inset 0 1px 18px rgba(255, 255, 255, 0.28),
+    inset 0 -18px 26px rgba(255, 255, 255, 0.1),
+    0 24px 32px rgba(43, 32, 25, 0.16);
 }
 
 .memory-ball {

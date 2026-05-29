@@ -6,18 +6,17 @@ import {
   jarAssets
 } from './gameUtils';
 
-const plainGlassJarUrl = new URL('../../../img/Glass Jar.jpg', import.meta.url).href;
 const jarLayerUrls = {
-  calm: new URL('../../../img/Jar Layers/Sea-PNG-Transparent-Image.png', import.meta.url).href,
-  garden: new URL('../../../img/Jar Layers/Summer-Meadow-PNG-HD.png', import.meta.url).href,
+  cafe: new URL('../../../img/Jar Layers/Cafe.png', import.meta.url).href,
+  garden: new URL('../../../img/Jar Layers/Garden.jpg', import.meta.url).href,
   night: new URL('../../../img/Jar Layers/Night Background.png', import.meta.url).href,
-  ocean: new URL('../../../img/Jar Layers/Sea-PNG-Free-Download.png', import.meta.url).href,
-  sunset: new URL('../../../img/Jar Layers/Sunset-Cloud-PNG-Photos.png', import.meta.url).href
+  ocean: new URL('../../../img/Jar Layers/Sea.png', import.meta.url).href,
+  sunset: new URL('../../../img/Jar Layers/Sunset.png', import.meta.url).href
 };
 
 const getJarLayer = (moodKey = '') => {
   const key = moodKey.toLowerCase();
-  if (['calm', 'content', 'numb'].includes(key)) return jarLayerUrls.calm;
+  if (['calm', 'content', 'numb'].includes(key)) return jarLayerUrls.cafe;
   if (['happy', 'grateful'].includes(key)) return jarLayerUrls.garden;
   if (['sad', 'lonely', 'tired'].includes(key)) return jarLayerUrls.night;
   if (['anxious', 'panic', 'overwhelmed'].includes(key)) return jarLayerUrls.ocean;
@@ -107,7 +106,6 @@ export function MemoryJarGame({ mood, mainToday }) {
       <div
         className="memory-scrapbook-jar"
         style={{
-          '--jar-base': `url("${plainGlassJarUrl}")`,
           '--jar-layer': `url("${getJarLayer(mood.key)}")`,
           '--jar-light': mood.color
         }}
