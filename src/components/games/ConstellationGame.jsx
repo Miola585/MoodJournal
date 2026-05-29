@@ -31,41 +31,69 @@ export function ConstellationGallery({ entries, moods }) {
 
 export function ConstellationGame({ mood, onSave }) {
   const [selectedStars, setSelectedStars] = useState([]);
+  const [connections, setConnections] = useState([]);
+  const [dragStart, setDragStart] = useState(null);
   const [name, setName] = useState('');
   const selectedStarData = constellationStars.filter((star) => selectedStars.includes(star.id));
-  const connections = buildConnections(selectedStars);
   const archetype = detectConstellationArchetype(selectedStarData, connections);
-  const toggleStar = (starId) => setSelectedStars((current) => current.includes(starId) ? current.filter((item) => item !== starId) : [...current, starId]);
+  const addStar = (starId) => setSelectedStars((current) => current.includes(starId) ? current : [...current, starId]);
+  const connectStars = (fromId, toId) => {
+    if (!fromId || !toId || fromId === toId) return;
+    addStar(fromId);
+    addStar(toId);
+    setConnections((current) => {
+      const exists = current.some(([from, to]) => (
+        (from === fromId && to === toId) || (from === toId && to === fromId)
+      ));
+      return exists ? current : [...current, [fromId, toId]];
+    });
+  };
+  const removeLastConnection = () => {
+    setConnections((current) => current.slice(0, -1));
+  };
   const saveConstellation = () => {
     const payload = {
       name: name.trim(),
       stars: selectedStarData,
       connections,
       mood: mood.key,
-      archetype
+      archetype,
+      created: new Date().toISOString()
     };
     onSave('Daily Constellation', `${name.trim()} is a ${archetype} for ${mood.key}.`, ['constellation'], payload);
   };
   return (
     <article className="minigame-card">
-      <h3>Featured: Daily Constellation</h3>
-      <p>Tap stars, name the shape, and save it to today's journal.</p>
+      <h3>Daily Constellation</h3>
+      <p>Press a star, drag to another star, and release to connect them.</p>
       <div className="star-map constellation-builder">
         <ConstellationLines stars={selectedStarData} connections={connections} mood={mood.key} moods={[mood]} />
         {constellationStars.map((star) => (
           <button
-            className={selectedStars.includes(star.id) ? 'star selected' : 'star'}
+            className={`${selectedStars.includes(star.id) ? 'star selected' : 'star'} ${dragStart === star.id ? 'dragging' : ''}`}
             key={star.id}
-            onClick={() => toggleStar(star.id)}
-            style={{ '--star-left': `${star.x}%`, '--star-top': `${star.y}%`, '--star-color': getStarColor(mood, selectedStars.includes(star.id) ? 9 : 5) }}
+            onPointerDown={(event) => {
+              event.preventDefault();
+              setDragStart(star.id);
+              addStar(star.id);
+            }}
+            onPointerUp={() => {
+              connectStars(dragStart, star.id);
+              setDragStart(null);
+            }}
+            onPointerCancel={() => setDragStart(null)}
+            style={{ '--star-left': `${star.x}%`, '--star-top': `${star.y}%`, '--star-color': mood.color }}
             type="button"
-            aria-label={`Star ${star.id}`}
+            aria-label={`Drag from or to star ${star.id}`}
           />
         ))}
       </div>
-      <p className="mini-insight">Shape: {archetype}</p>
+      <p className="mini-insight">Shape: {archetype} · {connections.length} connection{connections.length === 1 ? '' : 's'}</p>
       <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Constellation name" />
-      <button disabled={!name.trim() || selectedStars.length === 0} onClick={saveConstellation} type="button">Save constellation</button>
+      <div className="game-action-row">
+        <button disabled={connections.length === 0} onClick={removeLastConnection} type="button">Undo line</button>
+        <button disabled={!name.trim() || selectedStars.length === 0} onClick={saveConstellation} type="button">Save constellation</button>
+      </div>
     </article>
   );
 }

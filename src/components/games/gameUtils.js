@@ -12,13 +12,13 @@ export const scavengerSets = [
 ];
 
 export const matchThemes = [
-  { id: 'anxious', label: 'Anxious', pieces: ['Box breathing', 'I can slow down', 'Wave'] },
-  { id: 'sad', label: 'Sad', pieces: ['Text someone safe', 'I deserve care', 'Blanket'] },
-  { id: 'angry', label: 'Angry', pieces: ['Step away', 'I can choose my response', 'Flame'] },
-  { id: 'tired', label: 'Tired', pieces: ['Rest eyes', 'Rest is productive', 'Moon'] }
+  { id: 'anxious', label: '😰 Anxious', pieces: ['🫁 Box breathing', '🧡 I can slow down', '🌊 Wave'] },
+  { id: 'sad', label: '😢 Sad', pieces: ['💬 Text someone safe', '🤲 I deserve care', '🧣 Blanket'] },
+  { id: 'angry', label: '😡 Angry', pieces: ['🚪 Step away', '🧭 I can choose my response', '🔥 Flame'] },
+  { id: 'tired', label: '😴 Tired', pieces: ['🌙 Rest eyes', '🛌 Rest is productive', '⭐ Moon'] }
 ];
 
-export const rotatingGames = ['match', 'constellation', 'garden', 'memory', 'orbit', 'night'];
+export const rotatingGames = ['match', 'constellation', 'garden', 'memory', 'orbit'];
 
 export const gameLabels = {
   match: 'Emotional Match',

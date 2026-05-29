@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Games } from './components/games/Games';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { DailyGroundingTools } from './components/games/DailyGroundingTools';
 import { stripGameData } from './components/games/gameUtils';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
+
+const Games = lazy(() => import('./components/games/Games').then((module) => ({ default: module.Games })));
 
 const logoUrl = new URL('../img/JJ.png', import.meta.url).href;
 const emotionWheelUrl = new URL('../img/Emotion-Wheel.png', import.meta.url).href;
@@ -90,6 +93,19 @@ const resourceLinks = [
   { href: 'https://positivepsychology.com/emotion-regulation/', title: 'Emotional Regulation', tag: 'Learn', className: 'learn', text: 'Clear tips to stay balanced, spot triggers, and respond to challenges in healthier ways.' }
 ];
 const appViews = ['checkin', 'activities', 'games', 'entries', 'calendar', 'summary', 'about', 'newsletter'];
+const viewPaths = {
+  home: '/',
+  checkin: '/checkin',
+  activities: '/activities',
+  games: '/games',
+  entries: '/entries',
+  calendar: '/calendar',
+  summary: '/summary',
+  about: '/about',
+  newsletter: '/newsletter',
+  admin: '/admin',
+  settings: '/settings'
+};
 const navLabels = {
   checkin: 'Check-In',
   activities: 'Activities',
@@ -100,6 +116,10 @@ const navLabels = {
   about: 'About',
   newsletter: 'Newsletter',
   admin: 'Admin'
+};
+const viewFromPath = (pathname) => {
+  const match = Object.entries(viewPaths).find(([, path]) => path !== '/' && pathname.startsWith(path));
+  return match?.[0] || 'home';
 };
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const createEntry = () => ({
@@ -138,7 +158,9 @@ const readStorage = (key, fallback) => {
 };
 
 function App() {
-  const [view, setView] = useState('home');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const view = viewFromPath(location.pathname);
   const [authMode, setAuthMode] = useState('signin');
   const [entries, setEntries] = useState(() => isSupabaseConfigured ? [] : readStorage(localEntriesKey, []));
   const [localEntries] = useState(() => readStorage(localEntriesKey, []));
@@ -190,18 +212,27 @@ function App() {
   const saveEntry = async (entry, nextView = 'activities') => {
     const mood = moods.find((item) => item.key === entry.mood);
     const entryType = entry.type || 'checkin';
-    const sameDayCheckIns = entries.filter((item) => isCheckIn(item) && item.dateKey === entry.dateKey && item.id !== entry.id);
-    const normalized = {
+    const existingSameDayCheckIn = entryType === 'checkin' ? entries.find((item) => isCheckIn(item) && item.dateKey === entry.dateKey) : null;
+    const effectiveEntry = existingSameDayCheckIn ? {
       ...entry,
+      id: existingSameDayCheckIn.id,
+      created: existingSameDayCheckIn.created,
+      primary: true
+    } : entry;
+    const sameDayCheckIns = entries.filter((item) => isCheckIn(item) && item.dateKey === effectiveEntry.dateKey && item.id !== effectiveEntry.id);
+    const normalized = {
+      ...effectiveEntry,
       type: entryType,
       primary: entryType === 'checkin' && (entry.primary || sameDayCheckIns.length === 0),
       moodScore: mood?.score || null,
       updated: new Date().toISOString()
     };
     const exists = entries.some((item) => item.id === normalized.id);
-    const nextEntries = exists ? entries.map((item) => item.id === normalized.id ? normalized : item) : [normalized, ...entries];
+    const nextEntries = exists
+      ? entries.map((item) => item.id === normalized.id ? normalized : item).filter((item) => !(isCheckIn(item) && item.dateKey === normalized.dateKey && item.id !== normalized.id))
+      : [normalized, ...entries];
     await saveEntries(normalized.primary ? nextEntries.map((item) => isCheckIn(item) && item.dateKey === normalized.dateKey ? { ...item, primary: item.id === normalized.id } : item) : nextEntries);
-    setView(nextView);
+    navigate(viewPaths[nextView] || viewPaths.activities);
   };
   const deleteEntry = async (id) => {
     setEntries(entries.filter((entry) => entry.id !== id));
@@ -229,7 +260,7 @@ function App() {
     setImportMessage(`${entriesToImport.length} local entr${entriesToImport.length === 1 ? 'y' : 'ies'} imported.`);
   };
   const openApp = (nextView = 'checkin') => {
-    setView(nextView);
+    navigate(viewPaths[nextView] || viewPaths.checkin);
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
   };
   const updateTheme = () => {
@@ -386,7 +417,7 @@ function App() {
     <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
       <ThemeAtmosphere />
       <header className="topbar">
-        <button className="brand" onClick={() => setView('home')} type="button">
+        <button className="brand" onClick={() => openApp('home')} type="button">
           <img src={logoUrl} alt="" />
           <span>Mood Journal</span>
         </button>
@@ -395,13 +426,13 @@ function App() {
             <button className={authMode === 'signin' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signin')} type="button">Log In</button>
             <button className={authMode === 'signup' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signup')} type="button">Sign Up</button>
           </> : <>
-            <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => setView('home')} type="button">Home</button>
-            <button className={view === 'settings' ? 'header-link active' : 'header-link'} onClick={() => openApp('settings')} type="button">Profile</button>
+            <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => openApp('home')} type="button">Home</button>
+            {!user && <button className={view === 'settings' ? 'header-link active' : 'header-link'} onClick={() => openApp('settings')} type="button">Profile</button>}
           </>}
-          {user && <button className="header-link" onClick={() => supabase.auth.signOut()} type="button">Sign out</button>}
           <button className={theme === 'dark' ? 'toggle active' : 'toggle'} aria-label="Toggle dark mode" onClick={updateTheme} type="button"><span /></button>
           <button className={reduceMotion ? 'toggle motion active' : 'toggle motion'} aria-label="Toggle reduced motion" onClick={updateMotion} type="button"><span /></button>
           <ReminderBell reminder={reminder} setReminder={updateReminder} />
+          {user && <ProfileMenu user={user} profile={profile} openApp={openApp} />}
         </div>
       </header>
       <main>
@@ -410,17 +441,23 @@ function App() {
         {canUseApp && passwordRecovery && <PasswordUpdateScreen onDone={() => setPasswordRecovery(false)} />}
         {canUseApp && !passwordRecovery && (locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} /> : <>
         {isSupabaseConfigured && <AccountStatus localEntries={localEntries} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />}
-        {view === 'home' && <Home nav={sectionNav} entries={entries} onOpen={openApp} />}
-        {view === 'checkin' && <CheckIn nav={sectionNav} onSave={saveEntry} />}
-        {view === 'activities' && <Activities nav={sectionNav} entries={entries} />}
-        {view === 'games' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>}
-        {view === 'entries' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Entries nav={sectionNav} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>}
-        {view === 'calendar' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Calendar nav={sectionNav} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>}
-        {view === 'summary' && <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Summary nav={sectionNav} entries={entries} /></JournalPrivacyGate>}
-        {view === 'about' && <About nav={sectionNav} />}
-        {view === 'newsletter' && <Newsletter nav={sectionNav} />}
-        {view === 'admin' && profile?.role === 'admin' && <AdminPanel nav={sectionNav} />}
-        {view === 'settings' && <Settings nav={sectionNav} user={user} profile={profile} entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} pin={pin} setPin={updatePin} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} />}
+        <Suspense fallback={<section className="screen app-screen"><div className="panel auth-panel"><p>Loading page...</p></div></section>}>
+        <Routes>
+          <Route path="/" element={<Home nav={sectionNav} entries={entries} onOpen={openApp} />} />
+          <Route path="/checkin" element={<CheckIn nav={sectionNav} onSave={saveEntry} />} />
+          <Route path="/activities" element={<Activities nav={sectionNav} entries={entries} />} />
+          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>} />
+          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>} />
+          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Entries nav={sectionNav} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
+          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Calendar nav={sectionNav} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
+          <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Summary nav={sectionNav} entries={entries} /></JournalPrivacyGate>} />
+          <Route path="/about" element={<About nav={sectionNav} />} />
+          <Route path="/newsletter" element={<Newsletter nav={sectionNav} />} />
+          <Route path="/admin" element={profile?.role === 'admin' ? <AdminPanel nav={sectionNav} /> : <Navigate to="/" replace />} />
+          <Route path="/settings" element={<Settings nav={sectionNav} user={user} profile={profile} entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} pin={pin} setPin={updatePin} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        </Suspense>
         </>)}
       </main>
       <footer className="footer">
@@ -748,6 +785,41 @@ function ReminderBell({ reminder, setReminder }) {
           if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission();
           setReminder({ ...reminder, enabled: !reminder.enabled });
         }} type="button">{reminder.enabled ? 'Turn off' : 'Turn on'}</button>
+      </div>}
+    </section>
+  );
+}
+
+function ProfileMenu({ user, profile, openApp }) {
+  const [open, setOpen] = useState(false);
+  const displayName = profile?.username || user?.email?.split('@')[0] || 'Your profile';
+  const initial = (displayName || user?.email || '?').trim().charAt(0).toUpperCase() || '?';
+  const openView = (view) => {
+    openApp(view);
+    setOpen(false);
+  };
+  const signOut = async () => {
+    setOpen(false);
+    await supabase.auth.signOut();
+  };
+  return (
+    <section className="profile-menu">
+      <button
+        className="profile-avatar"
+        type="button"
+        aria-label="Profile menu"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        {initial}
+      </button>
+      {open && <div className="profile-dropdown">
+        <div className="profile-dropdown-header">
+          <strong>{displayName}</strong>
+          {user?.email && <span>{user.email}</span>}
+        </div>
+        <button onClick={() => openView('settings')} type="button">Profile & Settings</button>
+        <button onClick={signOut} type="button">Sign out</button>
       </div>}
     </section>
   );
@@ -1198,6 +1270,7 @@ function Activities({ nav, entries }) {
       <div className="activity-grid">
         {list.map((activity) => <ActivityCard activity={activity} key={activity.title} />)}
       </div>
+      <DailyGroundingTools todayKey={todayKey} />
     </section>
   );
 }
@@ -1278,7 +1351,6 @@ function Settings({ nav, user, profile, entries, saveEntries, fontScale, setFont
   return (
     <section className="screen app-screen">
       <h1>Profile & Settings</h1>
-      {nav}
       <div className="panel profile-card">
         <div>
           <h2>{profile?.username || 'Your profile'}</h2>

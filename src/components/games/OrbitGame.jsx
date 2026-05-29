@@ -19,7 +19,7 @@ export function OrbitGame({ onSave }) {
   );
   return (
     <article className="minigame-card">
-      <h3>Featured: Orbit Simulator</h3>
+      <h3>Orbit Simulator</h3>
       <p>Move each planet between rings until your emotional system feels balanced.</p>
       <div className="orbit-map deep-orbit">
         {orbitRings.map((orbit) => (

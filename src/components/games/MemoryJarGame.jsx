@@ -82,9 +82,9 @@ export function MemoryJarGame({ entries, moods, todayKey, onSave }) {
   };
   return (
     <article className="minigame-card">
-      <h3>Featured: Memory Jar</h3>
+      <h3>Memory Jar</h3>
       <p>Add one small positive moment to revisit later.</p>
-      <div className="memory-jar">
+      <div className="memory-jar svg-jar" style={{ '--jar-image': `url("${jarAssets[0]}")`, '--jar-position': 'left center' }}>
         {memory ? <span>{memory}</span> : previousMemories.length > 0 ? previousMemories.map((entry) => <span key={entry.id} style={{ '--memory-color': entry.color }}>{entry.day}</span>) : <span>Write a memory below</span>}
       </div>
       <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />

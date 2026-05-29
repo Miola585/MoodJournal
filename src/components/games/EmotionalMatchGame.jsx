@@ -26,7 +26,7 @@ export function EmotionalMatchGame({ onSave }) {
   };
   return (
     <article className="minigame-card">
-      <h3>Featured: Emotional Match</h3>
+      <h3>Emotional Match</h3>
       <p>Match a feeling with a strategy, affirmation, or symbol from the same mood family.</p>
       <div className="match-grid">
         {cards.map((card) => {
