@@ -1,0 +1,332 @@
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--navi-bar-color) 88%, transparent);
+  box-shadow: 0 10px 28px rgba(59, 47, 42, 0.12);
+  backdrop-filter: blur(14px);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--navi-bar-text);
+  font-weight: 800;
+}
+
+.brand:hover {
+  background: transparent;
+  color: var(--accent-color-green);
+}
+
+.brand img {
+  width: 38px;
+  height: 38px;
+}
+
+.header-link {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--navi-bar-text);
+}
+
+.header-link:hover,
+.header-link.active {
+  background: var(--selected-bg);
+  color: var(--selected-text);
+  transform: none;
+}
+
+.toggle {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--toggle-bg);
+}
+
+.toggle::after {
+  content: "☀";
+  position: absolute;
+  right: 7px;
+  top: 3px;
+  color: var(--text-on-dark);
+  font-size: 0.82rem;
+  line-height: 1;
+}
+
+.toggle span {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff7ef;
+  transition: transform 0.2s ease;
+}
+
+.toggle.active {
+  background: var(--selected-bg);
+}
+
+.toggle.active::after {
+  content: "☾";
+  left: 8px;
+  right: auto;
+  color: var(--selected-text);
+}
+
+.toggle.active span {
+  transform: translateX(20px);
+}
+
+.toggle.motion::before {
+  content: "↝";
+  position: absolute;
+  inset: auto;
+  right: 7px;
+  top: 2px;
+  border: 0;
+  color: var(--text-on-dark);
+  font-size: 1rem;
+}
+
+.toggle.motion::after {
+  content: "";
+}
+
+.toggle.motion.active::before {
+  content: "∥";
+  left: 8px;
+  right: auto;
+  color: var(--selected-text);
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 72px;
+}
+
+.body-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+  backdrop-filter: blur(12px);
+}
+
+.body-tabs button {
+  flex: 1 1 120px;
+  color: var(--tab-text);
+  text-transform: capitalize;
+}
+
+.body-tabs button.active {
+  background: var(--selected-bg);
+  color: var(--selected-text);
+}
+
+.app.dark .body-tabs button {
+  color: var(--tab-text);
+}
+
+.app.dark .body-tabs button.active {
+  background: var(--selected-bg);
+  color: var(--selected-text);
+}
+
+.app.dark .header-link {
+  color: var(--navi-bar-text);
+}
+
+.app.dark .header-link.active {
+  background: var(--selected-bg);
+  color: var(--selected-text);
+}
+
+.home-page,
+.screen,
+.flow,
+.entry-list,
+.calendar-list {
+  display: grid;
+  gap: 24px;
+}
+
+.home-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 42px;
+  padding: 24px 0 30px;
+  text-align: center;
+}
+
+.home-logo {
+  width: min(96px, 22vw);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-card,
+.lock-screen,
+.chart-wrap {
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.dashboard-card:first-child {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--selected-bg) 22%, transparent), transparent 46%),
+    var(--glass-strong);
+}
+
+.dashboard-card span {
+  font-weight: 800;
+}
+
+.dashboard-card strong {
+  color: var(--accent-color-dark);
+  font-size: 1.8em;
+}
+
+.reminder-widget {
+  position: relative;
+  flex: 0 0 auto;
+  width: auto;
+  text-align: center;
+}
+
+.bell-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 999px;
+  border-color: var(--glass-border);
+  background: color-mix(in srgb, var(--button-bg) 86%, transparent);
+  font-size: 1.25em;
+  box-shadow: var(--inner-highlight);
+}
+
+.bell-button.active {
+  background: var(--selected-bg);
+  color: var(--selected-text);
+}
+
+.reminder-menu {
+  position: absolute;
+  right: 0;
+  z-index: 3;
+  display: grid;
+  width: min(320px, calc(100vw - 32px));
+  gap: 12px;
+  margin-top: 10px;
+  padding: 16px;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: var(--glass-strong);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+  backdrop-filter: blur(14px);
+}
+
+.profile-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.profile-avatar {
+  display: inline-grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border-radius: 999px;
+  border-color: var(--glass-border);
+  background: var(--selected-bg);
+  color: var(--selected-text);
+  font-weight: 800;
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+}
+
+.profile-avatar:hover,
+.profile-avatar[aria-expanded="true"] {
+  background: var(--button-bg-hover);
+  color: var(--btn-hover);
+  transform: none;
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  z-index: 4;
+  display: grid;
+  width: min(280px, calc(100vw - 32px));
+  gap: 8px;
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid var(--soft-border);
+  border-radius: 10px;
+  background: var(--glass-strong);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+  backdrop-filter: blur(14px);
+}
+
+.profile-dropdown-header {
+  display: grid;
+  gap: 3px;
+  padding: 4px 4px 8px;
+  border-bottom: 1px solid var(--soft-border);
+  color: var(--text-color);
+}
+
+.profile-dropdown-header span {
+  overflow-wrap: anywhere;
+  color: var(--muted-text);
+  font-size: 0.9em;
+}
+
+.profile-dropdown button {
+  width: 100%;
+  margin: 0;
+  text-align: left;
+}

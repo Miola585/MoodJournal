@@ -1,0 +1,187 @@
+:root {
+  color-scheme: light;
+  --bg: #f3e8df;
+  --text: #3b2f2a;
+  --card-bg: #f0d4bc;
+  --header-card: #f7e2d0;
+  --button-bg: #c9825d;
+  --button-bg-hover: #b76f4f;
+  --btn-text: #ffffff;
+  --btn-hover: #2a1f1a;
+  --link-text: #3b2f2a;
+  --border-hover: #2a1f1a;
+  --schedule-color: #e0b894;
+  --navi-bar-color: #3b2f2a;
+  --navi-bar-text: #f6efe7;
+  --accent-color-light: #f2d6c7;
+  --accent-color-medium: #d98c5f;
+  --accent-color-dark: #a85e3b;
+  --accent-color-darkest: #3b2f2a;
+  --accent-color-green: #b7c7a3;
+  --selected-bg: #b7c7a3;
+  --selected-text: #2a1f1a;
+  --tab-text: var(--text);
+  --error-color: #f8c6c6;
+  --error-color-border: #e06b6b;
+  --soft-border: #d7b8a2;
+  --input-bg: #fffaf5;
+  --toggle-bg: #7c655b;
+  --text-on-light: #3b2f2a;
+  --text-on-dark: #fff7ef;
+  --white: #ffffff;
+  --game-deep-bg: #20172a;
+  --sky-deep-bg: #17162e;
+  --galaxy-deep-bg: #11142d;
+  --galaxy-mid-bg: #20163a;
+  --galaxy-end-bg: #100f1f;
+  --tag-calm-bg: #49c5b6;
+  --tag-focus-bg: #8f6be0;
+  --tag-learn-bg: #f2a65a;
+  --garden-sky-bg: #d7edf7;
+  --garden-ground-bg: #6d8b62;
+  --shadow: 0 8px 22px rgba(59, 47, 42, 0.12);
+  --surface-shadow: 0 16px 38px rgba(59, 47, 42, 0.14);
+  --hover-shadow: 0 22px 46px rgba(59, 47, 42, 0.2);
+  --glass-bg: color-mix(in srgb, var(--card-bg) 84%, transparent);
+  --glass-strong: color-mix(in srgb, var(--header-card) 88%, transparent);
+  --glass-border: color-mix(in srgb, var(--soft-border) 72%, #ffffff);
+  --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --atmo-base:
+    linear-gradient(135deg, rgba(255, 246, 232, 0.72), transparent 32%),
+    linear-gradient(315deg, rgba(216, 140, 95, 0.16), transparent 38%);
+  --atmo-detail:
+    repeating-linear-gradient(90deg, rgba(84, 56, 39, 0.035) 0 1px, transparent 1px 18px);
+  --atmo-particles:
+    radial-gradient(circle, rgba(255, 247, 232, 0.52) 0 1px, transparent 1.5px);
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea,
+.file-button {
+  font: inherit;
+}
+
+button,
+.file-button {
+  border: 1px solid var(--soft-border);
+  border-radius: 7px;
+  background: var(--button-bg);
+  color: var(--btn-text);
+  cursor: pointer;
+  padding: 7px 12px;
+  transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+button:hover,
+.file-button:hover {
+  background: var(--button-bg-hover);
+  border-color: var(--border-hover);
+  color: var(--btn-hover);
+  transform: scale(1.04);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  border: 1px solid var(--soft-border);
+  border-radius: 7px;
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 10px;
+}
+
+textarea {
+  min-height: 170px;
+  resize: vertical;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95em;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+}
+
+h1 {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 12px 34px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--header-card);
+  color: var(--text);
+  font-family: Georgia, "Trebuchet MS", serif;
+  font-size: 2.2em;
+  text-align: center;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-family: Georgia, "Trebuchet MS", serif;
+  font-size: 1.55em;
+  text-align: center;
+}
+
+h3 {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+}
+
+p {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+  font-size: 1.05em;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--link-text);
+}
+
+a:hover {
+  color: var(--accent-color-medium);
+}
+
+.app {
+  position: relative;
+  overflow-x: hidden;
+  min-height: 100vh;
+  padding-bottom: 44px;
+  background: var(--bg);
+  font-size: calc(1rem * var(--font-scale, 1));
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+.font-classic {
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.font-clean {
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.font-friendly {
+  font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
+}

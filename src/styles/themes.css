@@ -1,0 +1,428 @@
+.app.theme-night {
+  --bg: #eef0fb;
+  --text: #25243d;
+  --card-bg: #d8ddf4;
+  --header-card: #ece6ff;
+  --button-bg: #6f6bb7;
+  --button-bg-hover: #56519e;
+  --btn-text: #ffffff;
+  --btn-hover: #fff7ef;
+  --link-text: #2f2d72;
+  --schedule-color: #c6cde9;
+  --navi-bar-color: #25243d;
+  --navi-bar-text: #f7f4ff;
+  --accent-color-light: #e3def8;
+  --accent-color-medium: #7772c8;
+  --accent-color-dark: #4f4a96;
+  --accent-color-darkest: #25243d;
+  --accent-color-green: #c5d8ba;
+  --selected-bg: #7772c8;
+  --selected-text: #ffffff;
+  --soft-border: #aeb4df;
+  --glass-bg: color-mix(in srgb, #d8ddf4 86%, transparent);
+  --glass-strong: color-mix(in srgb, #ece6ff 90%, transparent);
+  --glass-border: color-mix(in srgb, #aeb4df 76%, #ffffff);
+  --atmo-base:
+    linear-gradient(140deg, rgba(119, 114, 200, 0.2), transparent 36%),
+    linear-gradient(320deg, rgba(227, 222, 248, 0.54), transparent 44%);
+  --atmo-detail:
+    radial-gradient(circle, rgba(79, 74, 150, 0.12) 0 1px, transparent 1.6px);
+  --atmo-particles:
+    radial-gradient(circle, rgba(79, 74, 150, 0.34) 0 1px, transparent 1.8px);
+}
+
+.app.theme-sunrise {
+  --bg: #fff4e9;
+  --text: #3f302a;
+  --card-bg: #ffe0d3;
+  --header-card: #fff1c9;
+  --button-bg: #e88672;
+  --button-bg-hover: #d66d5b;
+  --btn-text: #ffffff;
+  --btn-hover: #3f302a;
+  --link-text: #9e4f62;
+  --schedule-color: #ffd9b5;
+  --navi-bar-color: #6b3b46;
+  --navi-bar-text: #fff8ed;
+  --accent-color-light: #ffe9d7;
+  --accent-color-medium: #f4a261;
+  --accent-color-dark: #bf5f6b;
+  --accent-color-darkest: #3f302a;
+  --accent-color-green: #f3c969;
+  --selected-bg: #f3c969;
+  --selected-text: #3f302a;
+  --soft-border: #eec1a8;
+  --glass-bg: color-mix(in srgb, #ffe0d3 86%, transparent);
+  --glass-strong: color-mix(in srgb, #fff1c9 90%, transparent);
+  --glass-border: color-mix(in srgb, #eec1a8 76%, #ffffff);
+  --shadow: 0 12px 28px rgba(191, 95, 107, 0.14);
+  --atmo-base:
+    linear-gradient(115deg, rgba(255, 241, 201, 0.76), transparent 42%),
+    linear-gradient(280deg, rgba(232, 134, 114, 0.24), transparent 48%);
+  --atmo-detail:
+    repeating-linear-gradient(105deg, rgba(243, 201, 105, 0.2) 0 2px, transparent 2px 32px);
+  --atmo-particles:
+    radial-gradient(circle, rgba(255, 241, 201, 0.55) 0 1px, transparent 1.8px);
+}
+
+.app.theme-garden {
+  --bg: #edf4e8;
+  --text: #263726;
+  --card-bg: #d8e7cd;
+  --header-card: #f0ead0;
+  --button-bg: #6c8b5d;
+  --button-bg-hover: #567348;
+  --btn-text: #ffffff;
+  --btn-hover: #fbf7e7;
+  --link-text: #2e5f41;
+  --schedule-color: #c5d8ba;
+  --navi-bar-color: #263726;
+  --navi-bar-text: #f4f9ec;
+  --accent-color-light: #e5edda;
+  --accent-color-medium: #7c9b68;
+  --accent-color-dark: #49653f;
+  --accent-color-darkest: #263726;
+  --accent-color-green: #b9d49b;
+  --selected-bg: #7c9b68;
+  --selected-text: #ffffff;
+  --soft-border: #abc69d;
+  --glass-bg: color-mix(in srgb, #d8e7cd 86%, transparent);
+  --glass-strong: color-mix(in srgb, #f0ead0 90%, transparent);
+  --glass-border: color-mix(in srgb, #abc69d 76%, #ffffff);
+  --atmo-base:
+    linear-gradient(150deg, rgba(185, 212, 155, 0.38), transparent 36%),
+    linear-gradient(315deg, rgba(240, 234, 208, 0.64), transparent 48%);
+  --atmo-detail:
+    repeating-linear-gradient(125deg, rgba(73, 101, 63, 0.08) 0 7px, transparent 7px 38px);
+  --atmo-particles:
+    radial-gradient(ellipse at center, rgba(124, 155, 104, 0.28) 0 1.5px, transparent 2px);
+}
+
+.app.theme-ocean {
+  --bg: #e8f4f3;
+  --text: #23393d;
+  --card-bg: #cde6e4;
+  --header-card: #eef4df;
+  --button-bg: #4b9297;
+  --button-bg-hover: #377b81;
+  --btn-text: #ffffff;
+  --btn-hover: #effffe;
+  --link-text: #28676c;
+  --schedule-color: #b9d8d7;
+  --navi-bar-color: #23393d;
+  --navi-bar-text: #ecfbfa;
+  --accent-color-light: #dcefeb;
+  --accent-color-medium: #5daeb2;
+  --accent-color-dark: #327076;
+  --accent-color-darkest: #23393d;
+  --accent-color-green: #bed9c5;
+  --selected-bg: #5daeb2;
+  --selected-text: #ffffff;
+  --soft-border: #9ec9c9;
+  --glass-bg: color-mix(in srgb, #cde6e4 86%, transparent);
+  --glass-strong: color-mix(in srgb, #eef4df 90%, transparent);
+  --glass-border: color-mix(in srgb, #9ec9c9 76%, #ffffff);
+  --atmo-base:
+    linear-gradient(160deg, rgba(93, 174, 178, 0.22), transparent 42%),
+    linear-gradient(340deg, rgba(238, 244, 223, 0.62), transparent 48%);
+  --atmo-detail:
+    repeating-linear-gradient(175deg, rgba(50, 112, 118, 0.09) 0 3px, transparent 3px 30px);
+  --atmo-particles:
+    radial-gradient(ellipse at center, rgba(151, 220, 224, 0.32) 0 1px, transparent 2px);
+}
+
+.app.dark {
+  color-scheme: dark;
+  --bg: #2a1f1a;
+  --text: #fff7ef;
+  --link-text: #fff2e6;
+  --card-bg: #3a2620;
+  --header-card: #daa678;
+  --button-bg: #e0a07a;
+  --button-bg-hover: #c97a4c;
+  --btn-text: #2a1f1a;
+  --btn-hover: #ffffff;
+  --border-hover: #f5e9df;
+  --schedule-color: #4a322c;
+  --navi-bar-color: #f5e9df;
+  --navi-bar-text: #2a1f1a;
+  --accent-color-light: #e8c4ad;
+  --accent-color-medium: #e0a07a;
+  --accent-color-dark: #ffcfad;
+  --accent-color-darkest: #fff8f2;
+  --accent-color-green: #d9edc0;
+  --selected-bg: #e0a07a;
+  --selected-text: #2a1f1a;
+  --tab-text: #2a1f1a;
+  --soft-border: #d9aa89;
+  --shadow: 0 16px 34px rgba(0, 0, 0, 0.48);
+  --surface-shadow: 0 22px 48px rgba(0, 0, 0, 0.5);
+  --hover-shadow: 0 28px 58px rgba(0, 0, 0, 0.58);
+  --glass-bg: color-mix(in srgb, var(--card-bg) 72%, transparent);
+  --glass-strong: color-mix(in srgb, var(--header-card) 72%, transparent);
+  --glass-border: color-mix(in srgb, var(--soft-border) 68%, #ffffff);
+  --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  --atmo-base:
+    linear-gradient(135deg, rgba(224, 160, 122, 0.16), transparent 36%),
+    linear-gradient(315deg, rgba(92, 53, 39, 0.22), transparent 44%);
+  --atmo-detail:
+    repeating-linear-gradient(90deg, rgba(255, 247, 239, 0.035) 0 1px, transparent 1px 22px);
+  --atmo-particles:
+    radial-gradient(circle, rgba(255, 207, 173, 0.28) 0 1px, transparent 1.8px);
+}
+
+.app.theme-sunrise.dark {
+  --bg: #2b1c22;
+  --text: #fff5e8;
+  --card-bg: #482b31;
+  --header-card: #7d4e4f;
+  --button-bg: #f3c969;
+  --button-bg-hover: #e99875;
+  --btn-text: #2b1c22;
+  --schedule-color: #3a242a;
+  --navi-bar-color: #fff5e8;
+  --navi-bar-text: #2b1c22;
+  --accent-color-light: #5b363a;
+  --accent-color-medium: #f3a673;
+  --accent-color-dark: #ffd28a;
+  --accent-color-darkest: #fff9ee;
+  --selected-bg: #f3c969;
+  --selected-text: #2b1c22;
+  --tab-text: #fff5e8;
+  --soft-border: #bc7467;
+  --glass-bg: color-mix(in srgb, #482b31 76%, transparent);
+  --glass-strong: color-mix(in srgb, #7d4e4f 78%, transparent);
+  --glass-border: color-mix(in srgb, #bc7467 72%, #ffffff);
+  --atmo-base:
+    linear-gradient(115deg, rgba(243, 201, 105, 0.18), transparent 42%),
+    linear-gradient(300deg, rgba(233, 152, 117, 0.16), transparent 46%);
+  --atmo-detail:
+    repeating-linear-gradient(105deg, rgba(255, 210, 138, 0.12) 0 2px, transparent 2px 34px);
+}
+
+.app.theme-night.dark {
+  --bg: #121327;
+  --text: #f5f1ff;
+  --card-bg: #1f203d;
+  --header-card: #34305c;
+  --button-bg: #a7a1ef;
+  --button-bg-hover: #827adb;
+  --btn-text: #15142c;
+  --schedule-color: #191a33;
+  --navi-bar-color: #f5f1ff;
+  --navi-bar-text: #15142c;
+  --accent-color-light: #36335f;
+  --accent-color-medium: #b7b0ff;
+  --accent-color-dark: #d8d1ff;
+  --accent-color-darkest: #fbf8ff;
+  --selected-bg: #b7b0ff;
+  --selected-text: #15142c;
+  --tab-text: #f5f1ff;
+  --soft-border: #756fd1;
+  --glass-bg: color-mix(in srgb, #1f203d 76%, transparent);
+  --glass-strong: color-mix(in srgb, #34305c 78%, transparent);
+  --glass-border: color-mix(in srgb, #756fd1 72%, #ffffff);
+  --atmo-base:
+    linear-gradient(140deg, rgba(183, 176, 255, 0.14), transparent 38%),
+    linear-gradient(330deg, rgba(54, 51, 95, 0.24), transparent 48%);
+  --atmo-detail:
+    radial-gradient(circle, rgba(245, 241, 255, 0.3) 0 1px, transparent 1.6px);
+  --atmo-particles:
+    radial-gradient(circle, rgba(216, 209, 255, 0.72) 0 1px, transparent 1.7px);
+}
+
+.app.theme-garden.dark {
+  --bg: #142015;
+  --text: #f2f8e9;
+  --card-bg: #21351f;
+  --header-card: #506640;
+  --button-bg: #b9d49b;
+  --button-bg-hover: #91b778;
+  --btn-text: #142015;
+  --schedule-color: #1b2b1a;
+  --navi-bar-color: #f2f8e9;
+  --navi-bar-text: #142015;
+  --accent-color-light: #334d2e;
+  --accent-color-medium: #b9d49b;
+  --accent-color-dark: #dcebc6;
+  --accent-color-darkest: #fbfff6;
+  --selected-bg: #b9d49b;
+  --selected-text: #142015;
+  --tab-text: #f2f8e9;
+  --soft-border: #779762;
+  --glass-bg: color-mix(in srgb, #21351f 76%, transparent);
+  --glass-strong: color-mix(in srgb, #506640 78%, transparent);
+  --glass-border: color-mix(in srgb, #779762 72%, #ffffff);
+  --atmo-base:
+    linear-gradient(150deg, rgba(185, 212, 155, 0.12), transparent 40%),
+    linear-gradient(315deg, rgba(51, 77, 46, 0.26), transparent 48%);
+  --atmo-detail:
+    repeating-linear-gradient(125deg, rgba(220, 235, 198, 0.08) 0 7px, transparent 7px 40px);
+}
+
+.app.theme-ocean.dark {
+  --bg: #102326;
+  --text: #effffe;
+  --card-bg: #18363a;
+  --header-card: #416a6d;
+  --button-bg: #98dce0;
+  --button-bg-hover: #67c3c9;
+  --btn-text: #102326;
+  --schedule-color: #152d31;
+  --navi-bar-color: #effffe;
+  --navi-bar-text: #102326;
+  --accent-color-light: #25494d;
+  --accent-color-medium: #98dce0;
+  --accent-color-dark: #cef7f8;
+  --accent-color-darkest: #f5ffff;
+  --selected-bg: #98dce0;
+  --selected-text: #102326;
+  --tab-text: #effffe;
+  --soft-border: #5baeb4;
+  --glass-bg: color-mix(in srgb, #18363a 76%, transparent);
+  --glass-strong: color-mix(in srgb, #416a6d 78%, transparent);
+  --glass-border: color-mix(in srgb, #5baeb4 72%, #ffffff);
+  --atmo-base:
+    linear-gradient(160deg, rgba(152, 220, 224, 0.12), transparent 42%),
+    linear-gradient(340deg, rgba(37, 73, 77, 0.3), transparent 48%);
+  --atmo-detail:
+    repeating-linear-gradient(175deg, rgba(206, 247, 248, 0.09) 0 3px, transparent 3px 32px);
+}
+
+.app.dark input,
+.app.dark select,
+.app.dark textarea {
+  background: var(--schedule-color);
+  color: var(--text);
+}
+
+.app.dark .panel,
+.app.dark .entry-card,
+.app.dark .calendar-day,
+.app.dark .stat,
+.app.dark .support-note,
+.app.dark .activity-card,
+.app.dark .calendar-detail,
+.app.dark .about-section,
+.app.dark .features-section,
+.app.dark .newsletter-section,
+.app.dark .links-section,
+.app.dark .feature-card,
+.app.dark .resource-card,
+.app.dark .dashboard-card,
+.app.dark .lock-screen,
+.app.dark .chart-wrap,
+.app.dark .minigames-section,
+.app.dark .minigame-card,
+.app.dark .featured-game-section,
+.app.dark .standalone-game-panel,
+.app.dark .featured-game-card,
+.app.dark .reminder-menu,
+.app.dark .galaxy-section,
+.app.dark .collection-card,
+.app.dark .auth-panel,
+.app.dark .account-status {
+  border: 1px solid var(--soft-border);
+  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+}
+
+.app.dark p,
+.app.dark h1,
+.app.dark h2,
+.app.dark h3,
+.app.dark label,
+.app.dark strong {
+  color: var(--text);
+}
+
+.theme-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.atmosphere-layer,
+.atmosphere-particles {
+  position: absolute;
+  inset: -12%;
+  display: block;
+  opacity: 0.85;
+}
+
+.layer-one {
+  background: var(--atmo-base);
+}
+
+.layer-two {
+  background: var(--atmo-detail);
+  background-size: 220px 220px;
+  opacity: 0.46;
+  animation: atmosphere-drift 34s ease-in-out infinite alternate;
+}
+
+.layer-three {
+  background:
+    linear-gradient(180deg, transparent 0 55%, color-mix(in srgb, var(--accent-color-light) 20%, transparent) 100%);
+  opacity: 0.42;
+  animation: atmosphere-float 28s ease-in-out infinite alternate;
+}
+
+.atmosphere-particles {
+  background: var(--atmo-particles);
+  background-size: 76px 76px;
+  opacity: 0.24;
+  animation: atmosphere-drift 46s linear infinite;
+}
+
+.app.theme-night .atmosphere-particles,
+.app.theme-night.dark .atmosphere-particles {
+  opacity: 0.42;
+  background-size: 92px 92px;
+}
+
+.app.theme-ocean .layer-three,
+.app.theme-ocean.dark .layer-three {
+  background:
+    repeating-linear-gradient(176deg, transparent 0 36px, color-mix(in srgb, var(--accent-color-medium) 14%, transparent) 38px 42px);
+}
+
+.app.theme-garden .layer-three,
+.app.theme-garden.dark .layer-three {
+  background:
+    repeating-linear-gradient(128deg, transparent 0 44px, color-mix(in srgb, var(--accent-color-medium) 12%, transparent) 45px 50px);
+}
+
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+.reduced-motion .theme-atmosphere {
+  opacity: 0.58;
+}
+
+@keyframes atmosphere-drift {
+  from {
+    transform: translate3d(-1.5%, -1%, 0);
+  }
+
+  to {
+    transform: translate3d(1.5%, 1%, 0);
+  }
+}
+
+@keyframes atmosphere-float {
+  from {
+    transform: translateY(-10px);
+  }
+
+  to {
+    transform: translateY(14px);
+  }
+}

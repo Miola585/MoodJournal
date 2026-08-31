@@ -1,0 +1,96 @@
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 7px 10px;
+  border-top: 1px solid var(--glass-border);
+  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.footer a {
+  font-size: 0.88rem;
+}
+
+@media (max-width: 840px) {
+  .topbar,
+  .home-hero,
+  .success-box,
+  .profile-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  nav,
+  .header-actions {
+    justify-content: flex-start;
+  }
+
+  .reminder-widget,
+  .profile-menu {
+    width: 100%;
+  }
+
+  .bell-button {
+    width: 100%;
+  }
+
+  .profile-avatar {
+    width: 44px;
+  }
+
+  .reminder-menu,
+  .profile-dropdown {
+    right: auto;
+    left: 0;
+    width: 100%;
+  }
+
+  .header-link,
+  .body-tabs button {
+    flex: 1 1 140px;
+  }
+
+  .feature-cards,
+  .links-row,
+  .newsletter-grid,
+  .newsletter-form,
+  .activity-grid,
+  .dashboard-grid,
+  .minigame-grid,
+  .game-button-grid,
+  .collection-grid,
+  .settings-grid,
+  .two-col,
+  .three-col,
+  .toolbar,
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .month-grid {
+    grid-template-columns: repeat(7, minmax(38px, 1fr));
+    gap: 4px;
+  }
+
+  .calendar-cell {
+    min-height: 58px;
+    padding: 6px;
+  }
+
+  .bar {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-constellation {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-game-card {
+    grid-template-columns: 1fr;
+  }
+}
