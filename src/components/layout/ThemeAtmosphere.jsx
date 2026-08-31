@@ -1,4 +1,4 @@
-const cafeArtUrl = new URL('../../../img/Theme Img/vecteezy_coffee-glass-logo_11843208.jpg', import.meta.url).href;
+const cafeArtUrl = new URL('../../../img/Theme Img/coffecup.png', import.meta.url).href;
 
 export function ThemeAtmosphere() {
   return (

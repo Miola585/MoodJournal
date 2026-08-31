@@ -485,13 +485,12 @@
 }
 
 .theme-art-image {
-  width: 320px;
-  height: 320px;
-  inset: auto auto 4% 8%;
-  opacity: 0.16;
+  width: 360px;
+  height: 360px;
+  inset: auto auto 2% 6%;
+  opacity: 0.11;
   object-fit: contain;
-  mix-blend-mode: multiply;
-  filter: sepia(0.4) saturate(0.8);
+  filter: saturate(0.85);
   animation: atmosphere-float 34s ease-in-out infinite alternate;
 }
 
