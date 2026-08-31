@@ -40,6 +40,60 @@
   height: 38px;
 }
 
+.topnav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  gap: 8px;
+}
+
+.topnav-link,
+.more-nav-menu button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--navi-bar-text);
+}
+
+.topnav-link {
+  padding: 7px 10px;
+}
+
+.topnav-link:hover,
+.topnav-link.active,
+.more-nav-menu button:hover,
+.more-nav-menu button.active {
+  background: var(--secondary-nav-hover);
+  border-color: var(--glass-border);
+  color: var(--navi-bar-text);
+  transform: none;
+}
+
+.more-nav {
+  position: relative;
+}
+
+.more-nav-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 5;
+  display: grid;
+  width: min(220px, calc(100vw - 32px));
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--navi-bar-color) 92%, transparent);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+  backdrop-filter: blur(14px);
+}
+
+.more-nav-menu button {
+  width: 100%;
+  text-align: left;
+}
+
 .header-link {
   border: 1px solid transparent;
   background: transparent;
@@ -125,7 +179,7 @@ main {
   z-index: 1;
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 72px;
+  padding: 28px 0 42px;
 }
 
 .body-tabs {
@@ -180,16 +234,194 @@ main {
 }
 
 .home-hero {
-  display: flex;
+  display: grid;
   align-items: center;
   justify-content: center;
-  gap: 42px;
-  padding: 24px 0 30px;
+  gap: 12px;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 18px 0 8px;
   text-align: center;
 }
 
+.home-brand-lockup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
 .home-logo {
-  width: min(96px, 22vw);
+  width: min(86px, 20vw);
+}
+
+.home-hero h1 {
+  margin: 0;
+}
+
+.home-hero p {
+  max-width: 620px;
+  margin: 0 auto;
+  color: var(--muted-text);
+}
+
+.home-checkin-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.75fr);
+  align-items: stretch;
+  gap: 18px;
+}
+
+.home-checkin-card,
+.home-today-card,
+.calm-break-card {
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  background: var(--hero-surface);
+  box-shadow: var(--surface-shadow), var(--inner-highlight);
+  backdrop-filter: blur(10px);
+}
+
+.home-checkin-card {
+  display: grid;
+  gap: 20px;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--hero-accent-soft) 72%, transparent), transparent 58%),
+    var(--hero-surface);
+}
+
+.home-card-heading {
+  display: grid;
+  gap: 8px;
+}
+
+.home-card-heading span,
+.home-today-card > span,
+.calm-break-card > div > span {
+  color: var(--muted-text);
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+}
+
+.home-card-heading h2,
+.calm-break-card h2 {
+  margin: 0;
+  text-align: left;
+}
+
+.home-mood-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.home-mood-chip {
+  display: grid;
+  min-height: 78px;
+  place-items: center;
+  gap: 4px;
+  padding: 10px 8px;
+  border-color: color-mix(in srgb, var(--mood) 54%, var(--soft-border));
+  border-width: 2px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mood) 26%, transparent), transparent),
+    var(--mood-chip-bg);
+  color: var(--text);
+  box-shadow: var(--mood-chip-shadow), var(--inner-highlight);
+}
+
+.home-mood-chip span {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.home-mood-chip:hover,
+.home-mood-chip.selected {
+  background: color-mix(in srgb, var(--mood) 58%, var(--mood-chip-bg));
+  color: var(--text-on-light);
+  transform: translateY(-2px);
+}
+
+.home-mood-chip.selected {
+  border-color: var(--hero-accent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--mood) 30%, transparent),
+    var(--mood-chip-shadow),
+    var(--inner-highlight);
+  font-weight: 800;
+}
+
+.home-note-label textarea {
+  min-height: 112px;
+  background: var(--input-bg);
+}
+
+.home-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-save-button,
+.home-details-button {
+  padding: 10px 18px;
+}
+
+.home-save-button {
+  width: 100%;
+}
+
+.home-details-button {
+  background: transparent;
+  color: var(--hero-accent);
+}
+
+.home-details-button:hover {
+  background: color-mix(in srgb, var(--hero-accent-soft) 54%, transparent);
+  color: var(--text);
+  transform: none;
+}
+
+.home-today-card {
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  padding: 24px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--hero-surface) 46%, transparent), transparent 52%),
+    var(--hero-surface-strong);
+}
+
+.home-today-card.checked-in {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--selected-bg) 22%, transparent), transparent 54%),
+    var(--hero-surface-strong);
+}
+
+.home-today-card strong {
+  color: var(--hero-accent);
+  font-size: 1.8em;
+}
+
+.home-today-card p {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+.home-note-preview {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  color: var(--text);
+}
+
+.home-stats-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .dashboard-grid {
@@ -215,7 +447,7 @@ main {
   text-align: center;
 }
 
-.dashboard-card:first-child {
+.home-stats-grid .dashboard-card:first-child {
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--selected-bg) 22%, transparent), transparent 46%),
     var(--glass-strong);
@@ -228,6 +460,29 @@ main {
 .dashboard-card strong {
   color: var(--accent-color-dark);
   font-size: 1.8em;
+}
+
+.calm-break-card {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.8fr) minmax(260px, 0.9fr);
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  background: var(--calm-break-bg);
+}
+
+.calm-break-card p {
+  margin: 8px 0 0;
+  color: var(--muted-text);
+}
+
+.calm-break-card .video-container {
+  justify-content: end;
+  margin-bottom: 0;
+}
+
+.calm-break-card .video-container iframe {
+  width: min(420px, 100%);
 }
 
 .reminder-widget {

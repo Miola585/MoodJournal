@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
-import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isMissingEntryTypeError, normalizeReminder, normalizeUsername, readStorage, rowToEntry, viewFromPath } from './utils/journalUtils';
+import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isMissingEntryTypeError, normalizeReminder, normalizeUsername, readStorage, rowToEntry, todayKey, viewFromPath } from './utils/journalUtils';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 import { AppNav } from './components/layout/AppNav';
 import { ThemeAtmosphere } from './components/layout/ThemeAtmosphere';
@@ -278,7 +278,7 @@ function App() {
   const canUseApp = !authLoading && (!isSupabaseConfigured || user);
   const visibleViews = profile?.role === 'admin' ? [...appViews, 'admin'] : appViews;
   const journalIsHidden = Boolean(journalLockCode && !journalUnlocked);
-  const sectionNav = canUseApp && !locked && !passwordRecovery ? <AppNav activeView={view} views={visibleViews} onOpen={openApp} /> : null;
+  const appNav = canUseApp && !locked && !passwordRecovery ? <AppNav activeView={view} views={visibleViews} onOpen={openApp} variant="top" includeSettings /> : null;
 
   return (
     <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
@@ -288,13 +288,13 @@ function App() {
           <img src={logoUrl} alt="" />
           <span>Mood Journal</span>
         </button>
+        {appNav}
         <div className="header-actions">
           {!canUseApp && isSupabaseConfigured ? <>
             <button className={authMode === 'signin' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signin')} type="button">Log In</button>
             <button className={authMode === 'signup' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signup')} type="button">Sign Up</button>
           </> : <>
             <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => openApp('home')} type="button">Home</button>
-            {!user && <button className={view === 'settings' ? 'header-link active' : 'header-link'} onClick={() => openApp('settings')} type="button">Profile</button>}
           </>}
           <button className={theme === 'dark' ? 'toggle active' : 'toggle'} aria-label="Toggle dark mode" onClick={updateTheme} type="button"><span /></button>
           <button className={reduceMotion ? 'toggle motion active' : 'toggle motion'} aria-label="Toggle reduced motion" onClick={updateMotion} type="button"><span /></button>
@@ -310,18 +310,18 @@ function App() {
         {isSupabaseConfigured && <AccountStatus localEntries={localEntries} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />}
         <Suspense fallback={<section className="screen app-screen"><div className="panel auth-panel"><p>Loading page...</p></div></section>}>
         <Routes>
-          <Route path="/" element={<Home nav={sectionNav} entries={entries} onOpen={openApp} />} />
-          <Route path="/checkin" element={<CheckIn nav={sectionNav} onSave={saveEntry} />} />
-          <Route path="/activities" element={<Activities nav={sectionNav} entries={entries} />} />
-          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>} />
-          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={sectionNav} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>} />
-          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Entries nav={sectionNav} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
-          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Calendar nav={sectionNav} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
-          <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Summary nav={sectionNav} entries={entries} /></JournalPrivacyGate>} />
-          <Route path="/about" element={<About nav={sectionNav} />} />
-          <Route path="/newsletter" element={<Newsletter nav={sectionNav} />} />
-          <Route path="/admin" element={profile?.role === 'admin' ? <AdminPanel nav={sectionNav} /> : <Navigate to="/" replace />} />
-          <Route path="/settings" element={<Settings nav={sectionNav} user={user} profile={profile} entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} pin={pin} setPin={updatePin} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} />} />
+          <Route path="/" element={<Home entries={entries} onOpen={openApp} onSave={saveEntry} />} />
+          <Route path="/checkin" element={<CheckIn nav={null} onSave={saveEntry} />} />
+          <Route path="/activities" element={<Activities nav={null} entries={entries} />} />
+          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={null} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>} />
+          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Games nav={null} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} /></JournalPrivacyGate>} />
+          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Entries nav={null} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
+          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Calendar nav={null} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
+          <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} code={journalLockCode}><Summary nav={null} entries={entries} /></JournalPrivacyGate>} />
+          <Route path="/about" element={<About nav={null} />} />
+          <Route path="/newsletter" element={<Newsletter nav={null} />} />
+          <Route path="/admin" element={profile?.role === 'admin' ? <AdminPanel nav={null} /> : <Navigate to="/" replace />} />
+          <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} pin={pin} setPin={updatePin} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>

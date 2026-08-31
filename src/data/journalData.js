@@ -105,7 +105,8 @@ export const navLabels = {
   summary: 'Summary',
   about: 'About',
   newsletter: 'Newsletter',
-  admin: 'Admin'
+  admin: 'Admin',
+  settings: 'Settings'
 };
 export const localEntriesKey = 'journalEntriesV2';
 

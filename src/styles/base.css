@@ -21,6 +21,16 @@
   --selected-bg: #b7c7a3;
   --selected-text: #2a1f1a;
   --tab-text: var(--text);
+  --muted-text: #765f54;
+  --hero-surface: #fff3e6;
+  --hero-surface-strong: #f5d7bd;
+  --hero-accent: #a85e3b;
+  --hero-accent-soft: #f7e2d0;
+  --secondary-nav-bg: rgba(255, 250, 245, 0.14);
+  --secondary-nav-hover: rgba(255, 250, 245, 0.28);
+  --mood-chip-bg: #fffaf5;
+  --mood-chip-shadow: 0 10px 20px rgba(59, 47, 42, 0.1);
+  --calm-break-bg: #f1dcc8;
   --error-color: #f8c6c6;
   --error-color-border: #e06b6b;
   --soft-border: #d7b8a2;

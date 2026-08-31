@@ -1,24 +1,25 @@
 .footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  z-index: 20;
+  position: relative;
+  z-index: 1;
   display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 12px;
-  width: 100%;
-  padding: 7px 10px;
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto 18px;
+  padding: 14px 10px;
   border-top: 1px solid var(--glass-border);
-  background: color-mix(in srgb, var(--card-bg) 88%, transparent);
-  backdrop-filter: blur(12px);
+  background: transparent;
 }
 
 .footer a {
+  color: var(--muted-text);
   font-size: 0.88rem;
+  font-weight: 700;
 }
 
 @media (max-width: 840px) {
   .topbar,
-  .home-hero,
   .success-box,
   .profile-card {
     align-items: stretch;
@@ -26,8 +27,30 @@
   }
 
   nav,
+  .topnav,
   .header-actions {
     justify-content: flex-start;
+  }
+
+  .topnav {
+    flex-wrap: wrap;
+  }
+
+  .topnav-link {
+    flex: 1 1 130px;
+  }
+
+  .more-nav {
+    flex: 1 1 130px;
+  }
+
+  .more-nav > .topnav-link {
+    width: 100%;
+  }
+
+  .more-nav-menu {
+    right: auto;
+    left: 0;
   }
 
   .reminder-widget,
@@ -61,6 +84,9 @@
   .newsletter-form,
   .activity-grid,
   .dashboard-grid,
+  .home-checkin-layout,
+  .home-mood-row,
+  .calm-break-card,
   .minigame-grid,
   .game-button-grid,
   .collection-grid,
@@ -69,6 +95,19 @@
   .three-col,
   .toolbar,
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-brand-lockup {
+    flex-direction: column;
+  }
+
+  .home-card-heading h2,
+  .calm-break-card h2 {
+    text-align: center;
+  }
+
+  .home-action-row {
     grid-template-columns: 1fr;
   }
 
