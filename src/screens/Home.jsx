@@ -72,7 +72,8 @@ export function Home({ entries, onOpen, onSave }) {
             <button className="home-details-button" onClick={() => onOpen('checkin')} type="button">Add details</button>
           </div>
         </form>
-        <aside className={mainToday ? 'home-today-card checked-in' : 'home-today-card'}>
+        <aside className={mainToday ? 'home-today-card checked-in' : 'home-today-card'} style={{ '--today-mood': mood?.color || 'var(--selected-bg)' }}>
+          <div className="today-mark">{mainToday ? mood?.emoji : '...'}</div>
           <span>Today</span>
           <strong>{mainToday ? `${mood?.emoji || ''} ${mainToday.mood}` : 'No check-in yet'}</strong>
           {todayNotePreview ? <p className="home-note-preview">"{todayNotePreview}"</p> : <p>{mainToday ? 'You already made a little room for yourself today.' : 'Today can be day one.'}</p>}
@@ -81,17 +82,17 @@ export function Home({ entries, onOpen, onSave }) {
       </section>
       <section className="dashboard-grid home-stats-grid" aria-label="Journal snapshot">
         <article className="dashboard-card">
-          <span>Current streak</span>
+          <span><i aria-hidden="true">01</i> Current streak</span>
           <strong>{streak} day{streak === 1 ? '' : 's'}</strong>
           <p>{streak > 0 ? 'You have been showing up for yourself.' : 'No pressure. Start small.'}</p>
         </article>
         <article className="dashboard-card">
-          <span>Entries today</span>
+          <span><i aria-hidden="true">02</i> Entries today</span>
           <strong>{todayEntries.length}</strong>
           <p>{todayEntries.length > 0 ? 'Your day has a little record now.' : 'Nothing written yet.'}</p>
         </article>
         <article className="dashboard-card">
-          <span>Last mood</span>
+          <span><i aria-hidden="true">03</i> Last mood</span>
           <strong>{lastMood ? `${lastMood.emoji || ''} ${lastCheckIn.mood}` : 'None yet'}</strong>
           <p>{lastMood ? 'Your recent pattern starts here.' : 'Your journal is ready when you are.'}</p>
         </article>

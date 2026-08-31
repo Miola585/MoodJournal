@@ -26,6 +26,7 @@
   --secondary-nav-hover: rgba(236, 230, 255, 0.24);
   --mood-chip-bg: #fbf8ff;
   --calm-break-bg: #e5e0f5;
+  --theme-art-color: rgba(79, 74, 150, 0.22);
   --soft-border: #aeb4df;
   --glass-bg: color-mix(in srgb, #d8ddf4 86%, transparent);
   --glass-strong: color-mix(in srgb, #ece6ff 90%, transparent);
@@ -67,6 +68,7 @@
   --secondary-nav-hover: rgba(255, 241, 201, 0.28);
   --mood-chip-bg: #fffaf0;
   --calm-break-bg: #ffe2cf;
+  --theme-art-color: rgba(191, 95, 107, 0.2);
   --soft-border: #eec1a8;
   --glass-bg: color-mix(in srgb, #ffe0d3 86%, transparent);
   --glass-strong: color-mix(in srgb, #fff1c9 90%, transparent);
@@ -109,6 +111,7 @@
   --secondary-nav-hover: rgba(229, 237, 218, 0.24);
   --mood-chip-bg: #fffdf2;
   --calm-break-bg: #e4ecd8;
+  --theme-art-color: rgba(73, 101, 63, 0.22);
   --soft-border: #abc69d;
   --glass-bg: color-mix(in srgb, #d8e7cd 86%, transparent);
   --glass-strong: color-mix(in srgb, #f0ead0 90%, transparent);
@@ -150,6 +153,7 @@
   --secondary-nav-hover: rgba(220, 239, 235, 0.26);
   --mood-chip-bg: #f8fffc;
   --calm-break-bg: #d8ebe8;
+  --theme-art-color: rgba(50, 112, 118, 0.22);
   --soft-border: #9ec9c9;
   --glass-bg: color-mix(in srgb, #cde6e4 86%, transparent);
   --glass-strong: color-mix(in srgb, #eef4df 90%, transparent);
@@ -194,6 +198,7 @@
   --secondary-nav-hover: rgba(224, 160, 122, 0.22);
   --mood-chip-bg: #2f231e;
   --calm-break-bg: #3f2b24;
+  --theme-art-color: rgba(255, 207, 173, 0.18);
   --soft-border: #d9aa89;
   --shadow: 0 16px 34px rgba(0, 0, 0, 0.48);
   --surface-shadow: 0 22px 48px rgba(0, 0, 0, 0.5);
@@ -237,6 +242,7 @@
   --secondary-nav-hover: rgba(243, 201, 105, 0.24);
   --mood-chip-bg: #2f2025;
   --calm-break-bg: #482b31;
+  --theme-art-color: rgba(255, 210, 138, 0.2);
   --soft-border: #bc7467;
   --glass-bg: color-mix(in srgb, #482b31 76%, transparent);
   --glass-strong: color-mix(in srgb, #7d4e4f 78%, transparent);
@@ -274,6 +280,7 @@
   --secondary-nav-hover: rgba(183, 176, 255, 0.24);
   --mood-chip-bg: #17182f;
   --calm-break-bg: #222342;
+  --theme-art-color: rgba(216, 209, 255, 0.22);
   --soft-border: #756fd1;
   --glass-bg: color-mix(in srgb, #1f203d 76%, transparent);
   --glass-strong: color-mix(in srgb, #34305c 78%, transparent);
@@ -313,6 +320,7 @@
   --secondary-nav-hover: rgba(185, 212, 155, 0.22);
   --mood-chip-bg: #172516;
   --calm-break-bg: #21351f;
+  --theme-art-color: rgba(220, 235, 198, 0.2);
   --soft-border: #779762;
   --glass-bg: color-mix(in srgb, #21351f 76%, transparent);
   --glass-strong: color-mix(in srgb, #506640 78%, transparent);
@@ -350,6 +358,7 @@
   --secondary-nav-hover: rgba(152, 220, 224, 0.22);
   --mood-chip-bg: #11272b;
   --calm-break-bg: #18363a;
+  --theme-art-color: rgba(206, 247, 248, 0.2);
   --soft-border: #5baeb4;
   --glass-bg: color-mix(in srgb, #18363a 76%, transparent);
   --glass-strong: color-mix(in srgb, #416a6d 78%, transparent);
@@ -450,6 +459,46 @@
   animation: atmosphere-drift 46s linear infinite;
 }
 
+.theme-art,
+.theme-art-image {
+  position: absolute;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+}
+
+.theme-art {
+  width: 100%;
+  height: 100%;
+  color: var(--theme-art-color);
+  opacity: 0.68;
+  stroke-width: 5;
+  filter: drop-shadow(0 16px 26px color-mix(in srgb, var(--theme-art-color) 30%, transparent));
+  animation: atmosphere-float 32s ease-in-out infinite alternate;
+}
+
+.app.theme-ocean .theme-art-ocean,
+.app.theme-garden .theme-art-garden,
+.app.theme-night .theme-art-night,
+.app.theme-sunrise .theme-art-sunrise {
+  display: block;
+}
+
+.theme-art-image {
+  width: 320px;
+  height: 320px;
+  inset: auto auto 4% 8%;
+  opacity: 0.16;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: sepia(0.4) saturate(0.8);
+  animation: atmosphere-float 34s ease-in-out infinite alternate;
+}
+
+.app.theme-warm .theme-art-cafe-image {
+  display: block;
+}
+
 .app.theme-night .atmosphere-particles,
 .app.theme-night.dark .atmosphere-particles {
   opacity: 0.42;
@@ -477,6 +526,11 @@
 
 .reduced-motion .theme-atmosphere {
   opacity: 0.58;
+}
+
+.reduced-motion .theme-art,
+.reduced-motion .theme-art-image {
+  animation: none;
 }
 
 @keyframes atmosphere-drift {

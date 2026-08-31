@@ -100,6 +100,13 @@
 
   .home-brand-lockup {
     flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .home-page::before {
+    inset: 120px -16px auto;
+    height: 700px;
   }
 
   .home-card-heading h2,

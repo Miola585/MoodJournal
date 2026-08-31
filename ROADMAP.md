@@ -24,6 +24,7 @@ Use this private local file to dump raw ideas before deciding what should become
 - Activities UI polish: make the page feel like an interactive reset checklist, not a row of large timer cards. Keep one active activity at a time, show Pause/Done/Reset only on the active card, make completed activities visibly checked off, and remove developer-facing text from the user interface.
 - Check-In flow polish: convert the long form into a guided step-by-step check-in. Start with fewer main mood choices, reveal mood-specific feelings after a mood is chosen, keep journaling central, and move meals/water/sleep into optional body details.
 - Homepage polish: keep the first screen centered on quick daily check-in, with gentle selected/saved/empty states and secondary stats that support the journal instead of dominating it.
+- Homepage theme identity: add subtle theme-specific visuals so Cozy Cafe, Seafoam, Garden, Night, and Sunrise feel distinct without distracting from journaling. Use normal web assets such as JPG/PNG when they look better than hand-coded SVG line art.
 
 ## Later Theme Ideas
 

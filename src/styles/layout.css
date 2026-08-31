@@ -5,8 +5,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
-  padding: 8px 18px;
+  gap: 16px;
+  padding: 9px 18px;
   border-bottom: 1px solid var(--glass-border);
   background: color-mix(in srgb, var(--navi-bar-color) 88%, transparent);
   box-shadow: 0 10px 28px rgba(59, 47, 42, 0.12);
@@ -17,7 +17,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .brand {
@@ -45,7 +45,7 @@
   align-items: center;
   justify-content: center;
   flex: 1 1 auto;
-  gap: 8px;
+  gap: 6px;
 }
 
 .topnav-link,
@@ -56,7 +56,8 @@
 }
 
 .topnav-link {
-  padding: 7px 10px;
+  padding: 7px 11px;
+  border-radius: 999px;
 }
 
 .topnav-link:hover,
@@ -96,6 +97,7 @@
 
 .header-link {
   border: 1px solid transparent;
+  border-radius: 999px;
   background: transparent;
   color: var(--navi-bar-text);
 }
@@ -109,29 +111,31 @@
 
 .toggle {
   position: relative;
-  width: 48px;
-  height: 26px;
+  width: 40px;
+  height: 22px;
   padding: 0;
   border-radius: 999px;
   background: var(--toggle-bg);
 }
 
 .toggle::after {
-  content: "☀";
+  content: "";
   position: absolute;
-  right: 7px;
-  top: 3px;
-  color: var(--text-on-dark);
-  font-size: 0.82rem;
-  line-height: 1;
+  right: 8px;
+  top: 7px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--text-on-dark);
+  border-radius: 50%;
+  opacity: 0.72;
 }
 
 .toggle span {
   position: absolute;
   top: 3px;
   left: 4px;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff7ef;
   transition: transform 0.2s ease;
@@ -142,25 +146,29 @@
 }
 
 .toggle.active::after {
-  content: "☾";
-  left: 8px;
+  left: 9px;
   right: auto;
-  color: var(--selected-text);
+  width: 9px;
+  height: 9px;
+  border-color: var(--selected-text);
+  border-left-color: transparent;
 }
 
 .toggle.active span {
-  transform: translateX(20px);
+  transform: translateX(16px);
 }
 
 .toggle.motion::before {
-  content: "↝";
+  content: "";
   position: absolute;
   inset: auto;
-  right: 7px;
-  top: 2px;
-  border: 0;
-  color: var(--text-on-dark);
-  font-size: 1rem;
+  right: 8px;
+  top: 7px;
+  width: 10px;
+  height: 6px;
+  border-top: 2px solid var(--text-on-dark);
+  border-bottom: 2px solid var(--text-on-dark);
+  opacity: 0.72;
 }
 
 .toggle.motion::after {
@@ -168,10 +176,12 @@
 }
 
 .toggle.motion.active::before {
-  content: "∥";
   left: 8px;
   right: auto;
-  color: var(--selected-text);
+  width: 10px;
+  height: 8px;
+  border-top-color: var(--selected-text);
+  border-bottom-color: var(--selected-text);
 }
 
 main {
@@ -233,11 +243,30 @@ main {
   gap: 24px;
 }
 
+.home-page {
+  position: relative;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+.home-page::before {
+  content: "";
+  position: absolute;
+  inset: 90px -42px auto;
+  z-index: -1;
+  height: 520px;
+  border-top: 1px solid color-mix(in srgb, var(--glass-border) 62%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 44%, transparent);
+  background: var(--home-anchor-bg);
+  opacity: 0.8;
+}
+
 .home-hero {
   display: grid;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   max-width: 780px;
   margin: 0 auto;
   padding: 18px 0 8px;
@@ -248,7 +277,12 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 16px;
+  padding: 8px 18px;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 62%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--hero-surface) 70%, transparent);
+  box-shadow: var(--inner-highlight);
 }
 
 .home-logo {
@@ -256,7 +290,10 @@ main {
 }
 
 .home-hero h1 {
+  display: block;
   margin: 0;
+  padding: 0;
+  background: transparent;
 }
 
 .home-hero p {
@@ -267,7 +304,7 @@ main {
 
 .home-checkin-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 0.75fr);
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.75fr);
   align-items: stretch;
   gap: 18px;
 }
@@ -285,7 +322,7 @@ main {
 .home-checkin-card {
   display: grid;
   gap: 20px;
-  padding: 28px;
+  padding: 30px;
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--hero-accent-soft) 72%, transparent), transparent 58%),
     var(--hero-surface);
@@ -324,7 +361,8 @@ main {
   place-items: center;
   gap: 4px;
   padding: 10px 8px;
-  border-color: color-mix(in srgb, var(--mood) 54%, var(--soft-border));
+  border-radius: 14px;
+  border-color: color-mix(in srgb, var(--mood) 36%, var(--soft-border));
   border-width: 2px;
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--mood) 26%, transparent), transparent),
@@ -340,9 +378,9 @@ main {
 
 .home-mood-chip:hover,
 .home-mood-chip.selected {
-  background: color-mix(in srgb, var(--mood) 58%, var(--mood-chip-bg));
+  background: color-mix(in srgb, var(--mood) 48%, var(--mood-chip-bg));
   color: var(--text-on-light);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 .home-mood-chip.selected {
@@ -368,11 +406,22 @@ main {
 
 .home-save-button,
 .home-details-button {
-  padding: 10px 18px;
+  padding: 12px 18px;
 }
 
 .home-save-button {
   width: 100%;
+  border-color: color-mix(in srgb, var(--button-bg-hover) 70%, var(--soft-border));
+  background: var(--button-bg-hover);
+  color: var(--btn-text);
+  font-weight: 800;
+  box-shadow: 0 14px 26px color-mix(in srgb, var(--button-bg-hover) 26%, transparent);
+}
+
+.home-save-button:not(:disabled):hover {
+  background: var(--hero-accent);
+  color: var(--btn-text);
+  transform: translateY(-2px);
 }
 
 .home-details-button {
@@ -392,14 +441,28 @@ main {
   gap: 14px;
   padding: 24px;
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--hero-surface) 46%, transparent), transparent 52%),
+    linear-gradient(145deg, color-mix(in srgb, var(--today-mood, var(--selected-bg)) 14%, transparent), transparent 52%),
     var(--hero-surface-strong);
 }
 
 .home-today-card.checked-in {
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--selected-bg) 22%, transparent), transparent 54%),
+    linear-gradient(145deg, color-mix(in srgb, var(--today-mood) 34%, transparent), transparent 58%),
     var(--hero-surface-strong);
+}
+
+.today-mark {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--today-mood, var(--selected-bg)) 56%, var(--glass-border));
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--today-mood, var(--selected-bg)) 18%, var(--hero-surface));
+  color: var(--muted-text);
+  font-size: 1.45rem;
+  font-weight: 900;
+  box-shadow: var(--inner-highlight);
 }
 
 .home-today-card strong {
@@ -443,7 +506,7 @@ main {
 .dashboard-card {
   display: grid;
   gap: 12px;
-  padding: 20px;
+  padding: 18px;
   text-align: center;
 }
 
@@ -454,20 +517,36 @@ main {
 }
 
 .dashboard-card span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-weight: 800;
+}
+
+.dashboard-card span i {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--selected-bg) 34%, var(--hero-surface));
+  color: var(--hero-accent);
+  font-size: 0.72rem;
+  font-style: normal;
 }
 
 .dashboard-card strong {
   color: var(--accent-color-dark);
-  font-size: 1.8em;
+  font-size: 1.6em;
 }
 
 .calm-break-card {
   display: grid;
-  grid-template-columns: minmax(190px, 0.8fr) minmax(260px, 0.9fr);
+  grid-template-columns: minmax(210px, 1fr) minmax(240px, 0.65fr);
   align-items: center;
   gap: 18px;
-  padding: 18px;
+  padding: 16px;
   background: var(--calm-break-bg);
 }
 
@@ -482,7 +561,7 @@ main {
 }
 
 .calm-break-card .video-container iframe {
-  width: min(420px, 100%);
+  width: min(320px, 100%);
 }
 
 .reminder-widget {
@@ -493,8 +572,8 @@ main {
 }
 
 .bell-button {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   border-radius: 999px;
   border-color: var(--glass-border);
@@ -531,8 +610,8 @@ main {
 
 .profile-avatar {
   display: inline-grid;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   place-items: center;
   padding: 0;
   border-radius: 999px;
