@@ -111,77 +111,65 @@
 
 .toggle {
   position: relative;
-  width: 40px;
-  height: 22px;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 66px;
+  min-width: 66px;
+  height: 30px;
+  padding: 0 9px 0 30px;
   border-radius: 999px;
-  background: var(--toggle-bg);
+  background: color-mix(in srgb, var(--toggle-bg) 88%, transparent);
+  color: var(--text-on-dark);
+  font-size: 0.67rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .toggle::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  top: 7px;
-  width: 8px;
-  height: 8px;
-  border: 1px solid var(--text-on-dark);
-  border-radius: 50%;
-  opacity: 0.72;
+  content: attr(data-label);
+  opacity: 0.82;
 }
 
 .toggle span {
   position: absolute;
-  top: 3px;
-  left: 4px;
-  width: 16px;
-  height: 16px;
+  top: 4px;
+  left: 5px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: #fff7ef;
+  box-shadow: 0 2px 8px rgba(42, 31, 26, 0.24);
   transition: transform 0.2s ease;
 }
 
 .toggle.active {
   background: var(--selected-bg);
+  color: var(--selected-text);
+  justify-content: flex-start;
+  padding: 0 30px 0 9px;
 }
 
 .toggle.active::after {
-  left: 9px;
-  right: auto;
-  width: 9px;
-  height: 9px;
-  border-color: var(--selected-text);
-  border-left-color: transparent;
+  color: currentColor;
 }
 
 .toggle.active span {
-  transform: translateX(16px);
+  transform: translateX(36px);
 }
 
 .toggle.motion::before {
-  content: "";
-  position: absolute;
-  inset: auto;
-  right: 8px;
-  top: 7px;
-  width: 10px;
-  height: 6px;
-  border-top: 2px solid var(--text-on-dark);
-  border-bottom: 2px solid var(--text-on-dark);
-  opacity: 0.72;
+  content: attr(data-label);
+  opacity: 0.82;
 }
 
 .toggle.motion::after {
   content: "";
+  display: none;
 }
 
 .toggle.motion.active::before {
-  left: 8px;
-  right: auto;
-  width: 10px;
-  height: 8px;
-  border-top-color: var(--selected-text);
-  border-bottom-color: var(--selected-text);
+  color: currentColor;
 }
 
 main {
@@ -253,13 +241,22 @@ main {
 .home-page::before {
   content: "";
   position: absolute;
-  inset: 90px -42px auto;
+  inset: 78px -70px auto;
   z-index: -1;
-  height: 520px;
-  border-top: 1px solid color-mix(in srgb, var(--glass-border) 62%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 44%, transparent);
-  background: var(--home-anchor-bg);
-  opacity: 0.8;
+  height: 560px;
+  border-radius: 999px;
+  background:
+    radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--hero-surface) 54%, transparent), transparent 68%),
+    radial-gradient(ellipse at 50% 62%, color-mix(in srgb, var(--hero-accent-soft) 30%, transparent), transparent 74%);
+  opacity: 0.74;
+  filter: blur(2px);
+}
+
+.app.dark .home-page::before {
+  background:
+    radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--hero-accent-soft) 18%, transparent), transparent 66%),
+    radial-gradient(ellipse at 50% 68%, color-mix(in srgb, var(--hero-surface) 22%, transparent), transparent 76%);
+  opacity: 0.42;
 }
 
 .home-hero {

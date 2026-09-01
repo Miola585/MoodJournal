@@ -445,6 +445,15 @@
   animation: atmosphere-drift 34s ease-in-out infinite alternate;
 }
 
+.app.theme-warm .layer-two {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--theme-art-color) 28%, transparent) 0 1px, transparent 1.7px),
+    repeating-linear-gradient(0deg, transparent 0 38px, color-mix(in srgb, var(--theme-art-color) 16%, transparent) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 48px, color-mix(in srgb, var(--theme-art-color) 12%, transparent) 49px 50px);
+  background-size: 112px 112px, 250px 250px, 250px 250px;
+  opacity: 0.34;
+}
+
 .layer-three {
   background:
     linear-gradient(180deg, transparent 0 55%, color-mix(in srgb, var(--accent-color-light) 20%, transparent) 100%);
@@ -485,17 +494,46 @@
 }
 
 .theme-art-image {
-  width: 360px;
-  height: 360px;
-  inset: auto auto 2% 6%;
-  opacity: 0.11;
   object-fit: contain;
   filter: saturate(0.85);
   animation: atmosphere-float 34s ease-in-out infinite alternate;
 }
 
+.theme-art-cafe-image {
+  width: 220px;
+  height: 220px;
+  inset: auto auto 7% 2.5%;
+  opacity: 0.095;
+}
+
+.theme-art-cafe-notes {
+  width: 250px;
+  height: 196px;
+  inset: 10% 2.5% auto auto;
+  opacity: 0.038;
+  transform: rotate(-4deg);
+}
+
 .app.theme-warm .theme-art-cafe-image {
   display: block;
+}
+
+.app.theme-warm .theme-art-cafe-notes {
+  display: block;
+}
+
+.app.theme-warm.dark .layer-two {
+  opacity: 0.18;
+}
+
+.app.theme-warm.dark .theme-art-cafe-image {
+  opacity: 0.055;
+  filter: saturate(0.65) brightness(0.9);
+}
+
+.app.theme-warm.dark .theme-art-cafe-notes {
+  opacity: 0.024;
+  filter: saturate(0.6) brightness(0.88);
 }
 
 .app.theme-night .atmosphere-particles,

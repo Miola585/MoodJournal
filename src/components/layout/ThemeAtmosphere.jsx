@@ -1,4 +1,5 @@
 const cafeArtUrl = new URL('../../../img/Theme Img/coffecup.png', import.meta.url).href;
+const cafeNotesUrl = new URL('../../../img/Theme Img/notes.png', import.meta.url).href;
 
 export function ThemeAtmosphere() {
   return (
@@ -8,6 +9,7 @@ export function ThemeAtmosphere() {
       <span className="atmosphere-layer layer-three" />
       <span className="atmosphere-particles" />
       <img className="theme-art-image theme-art-cafe-image" src={cafeArtUrl} alt="" />
+      <img className="theme-art-image theme-art-cafe-notes" src={cafeNotesUrl} alt="" />
       <svg className="theme-art theme-art-ocean" viewBox="0 0 1200 720" preserveAspectRatio="none">
         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
           <path d="M84 548c62-42 124 42 186 0s124 42 186 0 124 42 186 0 124 42 186 0 124 42 186 0" />

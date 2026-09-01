@@ -296,8 +296,8 @@ function App() {
           </> : <>
             <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => openApp('home')} type="button">Home</button>
           </>}
-          <button className={theme === 'dark' ? 'toggle active' : 'toggle'} aria-label="Toggle dark mode" onClick={updateTheme} type="button"><span /></button>
-          <button className={reduceMotion ? 'toggle motion active' : 'toggle motion'} aria-label="Toggle reduced motion" onClick={updateMotion} type="button"><span /></button>
+          <button className={theme === 'dark' ? 'toggle active' : 'toggle'} aria-label="Toggle dark mode" data-label={theme === 'dark' ? 'Dark' : 'Light'} onClick={updateTheme} title="Toggle dark mode" type="button"><span /></button>
+          <button className={reduceMotion ? 'toggle motion active' : 'toggle motion'} aria-label="Toggle reduced motion" data-label={reduceMotion ? 'Still' : 'Move'} onClick={updateMotion} title="Toggle reduced motion" type="button"><span /></button>
           <ReminderBell reminder={reminder} setReminder={updateReminder} />
           {user && <ProfileMenu user={user} profile={profile} openApp={openApp} />}
         </div>
