@@ -3,7 +3,7 @@ import { navLabels } from '../../data/journalData';
 
 const primaryViews = ['checkin', 'entries', 'calendar', 'activities'];
 
-export function AppNav({ activeView, views, onOpen, variant = 'body', includeSettings = false }) {
+export function AppNav({ activeView, views, onOpen, variant = 'body', includeSettings = false, moreActions = null }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const viewSet = new Set(views);
   const primary = primaryViews.filter((item) => viewSet.has(item));
@@ -31,6 +31,7 @@ export function AppNav({ activeView, views, onOpen, variant = 'body', includeSet
                     {navLabels[item] || item}
                   </button>
                 ))}
+                {moreActions}
               </div>
             )}
           </div>

@@ -1,5 +1,15 @@
 const cafeArtUrl = new URL('../../../img/Theme Img/coffecup.png', import.meta.url).href;
 const cafeNotesUrl = new URL('../../../img/Theme Img/notes.png', import.meta.url).href;
+const cafeCatUrl = new URL('../../../img/Theme Img/vecteezy_cat-silhouette-simple_47705617.png', import.meta.url).href;
+const seafoamWaveUrl = new URL('../../../img/Theme Img/waves2.png', import.meta.url).href;
+const seafoamShellUrl = new URL('../../../img/Theme Img/clam shell.png', import.meta.url).href;
+const seafoamBubblesUrl = new URL('../../../img/Theme Img/bubbles.png', import.meta.url).href;
+const seafoamSeashellUrl = new URL('../../../img/Theme Img/seashell.png', import.meta.url).href;
+const seafoamFishUrl = new URL('../../../img/Theme Img/vecteezy_fish-clipart-design_26750628.png', import.meta.url).href;
+const nightCelestialUrl = new URL('../../../img/Theme Img/night-celestial-accent.png', import.meta.url).href;
+const nightLightMoonUrl = new URL('../../../img/Theme Img/night-moon-light-accent.png', import.meta.url).href;
+const nightStarFlareUrl = new URL('../../../img/Theme Img/star_flare.png', import.meta.url).href;
+const nightWhiteStarsUrl = new URL('../../../img/Theme Img/white_star.png', import.meta.url).href;
 
 export function ThemeAtmosphere() {
   return (
@@ -10,17 +20,16 @@ export function ThemeAtmosphere() {
       <span className="atmosphere-particles" />
       <img className="theme-art-image theme-art-cafe-image" src={cafeArtUrl} alt="" />
       <img className="theme-art-image theme-art-cafe-notes" src={cafeNotesUrl} alt="" />
-      <svg className="theme-art theme-art-ocean" viewBox="0 0 1200 720" preserveAspectRatio="none">
-        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M84 548c62-42 124 42 186 0s124 42 186 0 124 42 186 0 124 42 186 0 124 42 186 0" />
-          <path d="M150 604c42-28 84 28 126 0s84 28 126 0" />
-          <path d="M880 138c44 0 80 36 80 80 0 58-62 100-80 124-18-24-80-66-80-124 0-44 36-80 80-80z" />
-          <path d="M824 218c30 10 82 10 112 0M846 274c20 8 48 8 68 0" />
-          <circle cx="214" cy="172" r="18" />
-          <circle cx="292" cy="230" r="10" />
-          <circle cx="1028" cy="424" r="14" />
-        </g>
-      </svg>
+      <img className="theme-art-image theme-art-cafe-cat" src={cafeCatUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-wave" src={seafoamWaveUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-shell" src={seafoamShellUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-bubbles" src={seafoamBubblesUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-seashell" src={seafoamSeashellUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-fish" src={seafoamFishUrl} alt="" />
+      <img className="theme-art-image theme-art-night-celestial" src={nightCelestialUrl} alt="" />
+      <img className="theme-art-image theme-art-night-moon-light" src={nightLightMoonUrl} alt="" />
+      <img className="theme-art-image theme-art-night-star-flare" src={nightStarFlareUrl} alt="" />
+      <img className="theme-art-image theme-art-night-stars-dark" src={nightWhiteStarsUrl} alt="" />
       <svg className="theme-art theme-art-garden" viewBox="0 0 1200 720" preserveAspectRatio="none">
         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
           <path d="M156 626c24-90 66-156 128-198" />
@@ -33,7 +42,6 @@ export function ThemeAtmosphere() {
       </svg>
       <svg className="theme-art theme-art-night" viewBox="0 0 1200 720" preserveAspectRatio="none">
         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M906 122c-54 18-82 76-64 130s76 82 130 64c-50 56-144 34-166-40s26-150 100-154z" />
           <path d="M178 206h86l70 58 84-96 92 160 80-86" />
           <circle cx="178" cy="206" r="8" />
           <circle cx="264" cy="206" r="8" />
@@ -41,7 +49,9 @@ export function ThemeAtmosphere() {
           <circle cx="418" cy="168" r="8" />
           <circle cx="510" cy="328" r="8" />
           <circle cx="590" cy="242" r="8" />
-          <path d="M168 556h18M177 547v18M1042 466h22M1053 455v22M948 560h14M955 553v14" />
+          <path d="M86 610h24M98 598v24M216 676h16M224 668v16M336 508h18M345 499v18" />
+          <path d="M728 110h12M734 104v12M962 164h18M971 155v18M1106 342h22M1117 331v22" />
+          <path d="M776 602h14M783 595v14M1024 656h20M1034 646v20M112 382h12M118 376v12" />
         </g>
       </svg>
       <svg className="theme-art theme-art-sunrise" viewBox="0 0 1200 720" preserveAspectRatio="none">

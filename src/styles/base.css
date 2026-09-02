@@ -180,9 +180,10 @@ a:hover {
 
 .app {
   position: relative;
+  display: flex;
+  flex-direction: column;
   overflow-x: hidden;
   min-height: 100vh;
-  padding-bottom: 44px;
   background: var(--bg);
   font-size: calc(1rem * var(--font-scale, 1));
   transition: background-color 0.35s ease, color 0.35s ease;

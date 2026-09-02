@@ -102,6 +102,16 @@
   color: var(--navi-bar-text);
 }
 
+.header-link.icon-link {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  padding: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
 .header-link:hover,
 .header-link.active {
   background: var(--selected-bg);
@@ -172,9 +182,38 @@
   color: currentColor;
 }
 
+.toggle.icon-toggle {
+  justify-content: flex-end;
+  width: 54px;
+  min-width: 54px;
+  padding: 0 9px 0 30px;
+}
+
+.toggle.icon-toggle::after,
+.toggle.icon-toggle.motion::before {
+  content: none;
+}
+
+.toggle.icon-toggle.active {
+  justify-content: flex-start;
+  padding: 0 30px 0 9px;
+}
+
+.toggle-icon {
+  position: relative;
+  z-index: 1;
+  color: currentColor;
+  opacity: 0.9;
+}
+
+.toggle.icon-toggle.active span {
+  transform: translateX(24px);
+}
+
 main {
   position: relative;
   z-index: 1;
+  flex: 1 0 auto;
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0 42px;
@@ -331,7 +370,7 @@ main {
 }
 
 .home-card-heading span,
-.home-today-card > span,
+.home-today-content > span,
 .calm-break-card > div > span {
   color: var(--muted-text);
   font-weight: 800;
@@ -435,11 +474,20 @@ main {
 .home-today-card {
   display: grid;
   align-content: center;
-  gap: 14px;
   padding: 24px;
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--today-mood, var(--selected-bg)) 14%, transparent), transparent 52%),
     var(--hero-surface-strong);
+}
+
+.home-today-content {
+  display: grid;
+  gap: 14px;
+}
+
+.home-today-card:not(.checked-in) .home-today-content {
+  align-content: center;
+  min-height: 100%;
 }
 
 .home-today-card.checked-in {
@@ -568,6 +616,18 @@ main {
   text-align: center;
 }
 
+.reminder-widget-menu {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+}
+
+.reminder-menu-trigger {
+  width: 100%;
+  text-align: left;
+}
+
 .bell-button {
   width: 40px;
   height: 40px;
@@ -598,6 +658,14 @@ main {
   background: var(--glass-strong);
   box-shadow: var(--surface-shadow), var(--inner-highlight);
   backdrop-filter: blur(14px);
+}
+
+.reminder-widget-menu .reminder-menu {
+  position: static;
+  width: 100%;
+  margin-top: 0;
+  padding: 10px;
+  box-shadow: none;
 }
 
 .profile-menu {

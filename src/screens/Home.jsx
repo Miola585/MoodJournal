@@ -73,11 +73,13 @@ export function Home({ entries, onOpen, onSave }) {
           </div>
         </form>
         <aside className={mainToday ? 'home-today-card checked-in' : 'home-today-card'} style={{ '--today-mood': mood?.color || 'var(--selected-bg)' }}>
-          <div className="today-mark">{mainToday ? mood?.emoji : '...'}</div>
-          <span>Today</span>
-          <strong>{mainToday ? `${mood?.emoji || ''} ${mainToday.mood}` : 'No check-in yet'}</strong>
-          {todayNotePreview ? <p className="home-note-preview">"{todayNotePreview}"</p> : <p>{mainToday ? 'You already made a little room for yourself today.' : 'Today can be day one.'}</p>}
-          <button onClick={() => onOpen('checkin')} type="button">{mainToday ? 'Edit details' : 'Add details'}</button>
+          <div className="home-today-content">
+            <div className="today-mark">{mainToday ? mood?.emoji : '...'}</div>
+            <span>Today</span>
+            <strong>{mainToday ? `${mood?.emoji || ''} ${mainToday.mood}` : 'No check-in yet'}</strong>
+            {todayNotePreview ? <p className="home-note-preview">"{todayNotePreview}"</p> : <p>{mainToday ? 'You already made a little room for yourself today.' : 'Today can be day one.'}</p>}
+            <button onClick={() => onOpen('checkin')} type="button">{mainToday ? 'Edit details' : 'Add details'}</button>
+          </div>
         </aside>
       </section>
       <section className="dashboard-grid home-stats-grid" aria-label="Journal snapshot">

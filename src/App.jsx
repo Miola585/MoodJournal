@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Activity, BookOpen, ExternalLink, HomeIcon, Moon, Pause, Settings as SettingsIcon, Sun } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
 import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isMissingEntryTypeError, normalizeReminder, normalizeUsername, readStorage, rowToEntry, todayKey, viewFromPath } from './utils/journalUtils';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
@@ -278,7 +279,17 @@ function App() {
   const canUseApp = !authLoading && (!isSupabaseConfigured || user);
   const visibleViews = profile?.role === 'admin' ? [...appViews, 'admin'] : appViews;
   const journalIsHidden = Boolean(journalLockCode && !journalUnlocked);
-  const appNav = canUseApp && !locked && !passwordRecovery ? <AppNav activeView={view} views={visibleViews} onOpen={openApp} variant="top" includeSettings /> : null;
+  const ThemeToggleIcon = theme === 'dark' ? Moon : Sun;
+  const MotionToggleIcon = reduceMotion ? Pause : Activity;
+  const appNav = canUseApp && !locked && !passwordRecovery ? (
+    <AppNav
+      activeView={view}
+      views={visibleViews}
+      onOpen={openApp}
+      variant="top"
+      moreActions={<ReminderBell reminder={reminder} setReminder={updateReminder} variant="menu" />}
+    />
+  ) : null;
 
   return (
     <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
@@ -294,11 +305,11 @@ function App() {
             <button className={authMode === 'signin' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signin')} type="button">Log In</button>
             <button className={authMode === 'signup' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signup')} type="button">Sign Up</button>
           </> : <>
-            <button className={view === 'home' ? 'header-link active' : 'header-link'} onClick={() => openApp('home')} type="button">Home</button>
+            <button className={view === 'home' ? 'header-link icon-link active' : 'header-link icon-link'} aria-label="Home" onClick={() => openApp('home')} title="Home" type="button"><HomeIcon aria-hidden="true" size={18} strokeWidth={2.4} /></button>
+            <button className={view === 'settings' ? 'header-link icon-link active' : 'header-link icon-link'} aria-label="Settings" onClick={() => openApp('settings')} title="Settings" type="button"><SettingsIcon aria-hidden="true" size={18} strokeWidth={2.4} /></button>
           </>}
-          <button className={theme === 'dark' ? 'toggle active' : 'toggle'} aria-label="Toggle dark mode" data-label={theme === 'dark' ? 'Dark' : 'Light'} onClick={updateTheme} title="Toggle dark mode" type="button"><span /></button>
-          <button className={reduceMotion ? 'toggle motion active' : 'toggle motion'} aria-label="Toggle reduced motion" data-label={reduceMotion ? 'Still' : 'Move'} onClick={updateMotion} title="Toggle reduced motion" type="button"><span /></button>
-          <ReminderBell reminder={reminder} setReminder={updateReminder} />
+          <button className={theme === 'dark' ? 'toggle icon-toggle active' : 'toggle icon-toggle'} aria-label="Toggle dark mode" onClick={updateTheme} title={theme === 'dark' ? 'Dark mode' : 'Light mode'} type="button"><span /><ThemeToggleIcon aria-hidden="true" className="toggle-icon" size={15} strokeWidth={2.4} /></button>
+          <button className={reduceMotion ? 'toggle icon-toggle motion active' : 'toggle icon-toggle motion'} aria-label="Toggle reduced motion" onClick={updateMotion} title={reduceMotion ? 'Reduced motion on' : 'Motion on'} type="button"><span /><MotionToggleIcon aria-hidden="true" className="toggle-icon" size={15} strokeWidth={2.4} /></button>
           {user && <ProfileMenu user={user} profile={profile} openApp={openApp} />}
         </div>
       </header>
@@ -328,8 +339,25 @@ function App() {
         </>)}
       </main>
       <footer className="footer">
-        <a href="https://positivepsychology.com/benefits-of-journaling/" target="_blank" rel="noreferrer">Learn More</a>
-        <a href="https://www.choosingtherapy.com/journaling-for-mental-health/" target="_blank" rel="noreferrer">About Journaling</a>
+        <div className="footer-brand">
+          <img src={logoUrl} alt="" />
+          <div>
+            <strong>Mood Journal</strong>
+            <span>A quiet place to notice what is here.</span>
+          </div>
+        </div>
+        <nav className="footer-links" aria-label="Journaling resources">
+          <a href="https://positivepsychology.com/benefits-of-journaling/" target="_blank" rel="noreferrer">
+            <BookOpen aria-hidden="true" size={16} strokeWidth={2.2} />
+            Learn More
+            <ExternalLink aria-hidden="true" size={13} strokeWidth={2.4} />
+          </a>
+          <a href="https://www.choosingtherapy.com/journaling-for-mental-health/" target="_blank" rel="noreferrer">
+            <BookOpen aria-hidden="true" size={16} strokeWidth={2.2} />
+            About Journaling
+            <ExternalLink aria-hidden="true" size={13} strokeWidth={2.4} />
+          </a>
+        </nav>
       </footer>
     </div>
   );
