@@ -10,6 +10,14 @@ const nightCelestialUrl = new URL('../../../img/Theme Img/night-celestial-accent
 const nightLightMoonUrl = new URL('../../../img/Theme Img/night-moon-light-accent.png', import.meta.url).href;
 const nightStarFlareUrl = new URL('../../../img/Theme Img/star_flare.png', import.meta.url).href;
 const nightWhiteStarsUrl = new URL('../../../img/Theme Img/white_star.png', import.meta.url).href;
+const gardenFlowersUrl = new URL('../../../img/Theme Img/garden-flowers-accent.png', import.meta.url).href;
+const gardenLeavesUrl = new URL('../../../img/Theme Img/garden-leaves-accent.png', import.meta.url).href;
+const gardenDaisyUrl = new URL('../../../img/Theme Img/garden-daisy-accent.png', import.meta.url).href;
+const sunriseSunUrl = new URL('../../../img/Theme Img/sunrise-sun-accent.png', import.meta.url).href;
+const sunriseRedSunUrl = new URL('../../../img/Theme Img/sunrise-red-sun-accent.png', import.meta.url).href;
+const sunriseCloudUrl = new URL('../../../img/Theme Img/sunset_cloud.png', import.meta.url).href;
+const sunriseStarUrl = new URL('../../../img/Theme Img/yellow star.png', import.meta.url).href;
+const sunriseWaveUrl = new URL('../../../img/Theme Img/sunrise-wave-accent.png', import.meta.url).href;
 
 export function ThemeAtmosphere() {
   return (
@@ -30,6 +38,14 @@ export function ThemeAtmosphere() {
       <img className="theme-art-image theme-art-night-moon-light" src={nightLightMoonUrl} alt="" />
       <img className="theme-art-image theme-art-night-star-flare" src={nightStarFlareUrl} alt="" />
       <img className="theme-art-image theme-art-night-stars-dark" src={nightWhiteStarsUrl} alt="" />
+      <img className="theme-art-image theme-art-garden-flowers" src={gardenFlowersUrl} alt="" />
+      <img className="theme-art-image theme-art-garden-leaves" src={gardenLeavesUrl} alt="" />
+      <img className="theme-art-image theme-art-garden-daisy" src={gardenDaisyUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-sun" src={sunriseSunUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-red-sun" src={sunriseRedSunUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-cloud" src={sunriseCloudUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-star" src={sunriseStarUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-wave" src={sunriseWaveUrl} alt="" />
       <svg className="theme-art theme-art-garden" viewBox="0 0 1200 720" preserveAspectRatio="none">
         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
           <path d="M156 626c24-90 66-156 128-198" />
@@ -52,15 +68,6 @@ export function ThemeAtmosphere() {
           <path d="M86 610h24M98 598v24M216 676h16M224 668v16M336 508h18M345 499v18" />
           <path d="M728 110h12M734 104v12M962 164h18M971 155v18M1106 342h22M1117 331v22" />
           <path d="M776 602h14M783 595v14M1024 656h20M1034 646v20M112 382h12M118 376v12" />
-        </g>
-      </svg>
-      <svg className="theme-art theme-art-sunrise" viewBox="0 0 1200 720" preserveAspectRatio="none">
-        <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M196 562h320" />
-          <path d="M278 562a78 78 0 0 1 156 0" />
-          <path d="M356 420v-58M292 446l-42-42M420 446l42-42M246 514h-60M526 514h-60" />
-          <path d="M790 214c34-44 104-26 114 28 42-18 84 12 84 58H750c0-48 48-80 92-62" />
-          <path d="M738 384h272M786 436h164" />
         </g>
       </svg>
     </div>

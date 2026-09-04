@@ -487,8 +487,7 @@
 }
 
 .app.theme-garden .theme-art-garden,
-.app.theme-night .theme-art-night,
-.app.theme-sunrise .theme-art-sunrise {
+.app.theme-night .theme-art-night {
   display: block;
 }
 
@@ -609,6 +608,143 @@
   display: block;
   opacity: 0.38;
   filter: saturate(1.08) brightness(1.56);
+}
+
+.theme-art-garden-flowers {
+  width: min(360px, 28vw);
+  height: min(405px, 31vw);
+  inset: 8% 3% auto auto;
+  opacity: 0.14;
+  transform: rotate(5deg);
+  filter: saturate(0.88) brightness(1.04);
+}
+
+.theme-art-garden-leaves {
+  width: min(300px, 24vw);
+  height: min(300px, 24vw);
+  inset: auto auto 8% 3%;
+  opacity: 0.13;
+  transform: rotate(-10deg);
+  filter: saturate(0.86) brightness(0.98);
+}
+
+.theme-art-garden-daisy {
+  width: min(250px, 21vw);
+  height: min(300px, 25vw);
+  inset: auto 5% 10% auto;
+  opacity: 0.1;
+  transform: rotate(8deg);
+  filter: saturate(0.75) brightness(1.04);
+}
+
+.app.theme-garden .theme-art-garden-flowers,
+.app.theme-garden .theme-art-garden-leaves,
+.app.theme-garden .theme-art-garden-daisy {
+  display: block;
+}
+
+.app.theme-garden .theme-art-garden {
+  opacity: 0.4;
+}
+
+.app.theme-garden.dark .theme-art-garden-flowers {
+  opacity: 0.17;
+  filter: saturate(0.95) brightness(1.2);
+}
+
+.app.theme-garden.dark .theme-art-garden-leaves {
+  opacity: 0.16;
+  filter: saturate(0.9) brightness(1.16);
+}
+
+.app.theme-garden.dark .theme-art-garden-daisy {
+  opacity: 0.13;
+  filter: saturate(0.82) brightness(1.25);
+}
+
+.app.theme-garden.dark .theme-art-garden {
+  opacity: 0.32;
+}
+
+.theme-art-sunrise-sun {
+  width: min(310px, 24vw);
+  height: min(310px, 24vw);
+  inset: 8% 4% auto auto;
+  opacity: 0.16;
+  transform: rotate(-8deg);
+  filter: saturate(0.95) brightness(1.04);
+}
+
+.theme-art-sunrise-red-sun {
+  width: min(320px, 25vw);
+  height: min(320px, 25vw);
+  inset: auto auto 7% 3%;
+  opacity: 0.2;
+  transform: rotate(7deg);
+  filter: saturate(1.05) brightness(1.12);
+}
+
+.theme-art-sunrise-cloud {
+  width: min(480px, 38vw);
+  height: min(310px, 25vw);
+  inset: auto auto 3% 2%;
+  opacity: 0.2;
+  transform: rotate(-4deg);
+  filter: saturate(0.94) brightness(1.06);
+}
+
+.theme-art-sunrise-star {
+  width: min(320px, 25vw);
+  height: min(320px, 25vw);
+  inset: auto auto 4% 2%;
+  opacity: 0.2;
+  transform: rotate(-10deg);
+  filter: saturate(0.95) brightness(1.14);
+}
+
+.theme-art-sunrise-wave {
+  width: min(820px, 66vw);
+  height: min(338px, 27vw);
+  inset: auto 0 -5% auto;
+  opacity: 0.15;
+  object-fit: contain;
+  object-position: right bottom;
+  filter: saturate(0.9) brightness(1.04);
+}
+
+.app.theme-sunrise:not(.dark) .theme-art-sunrise-sun,
+.app.theme-sunrise:not(.dark) .theme-art-sunrise-cloud {
+  display: block;
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-sun {
+  display: none;
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-red-sun {
+  display: block;
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-star {
+  display: block;
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-wave {
+  display: block;
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-cloud {
+  display: none;
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-star {
+  opacity: 0.24;
+  filter: saturate(1) brightness(1.22);
+}
+
+.app.theme-sunrise.dark .theme-art-sunrise-wave {
+  opacity: 0.18;
+  filter: saturate(0.95) brightness(1.12);
 }
 
 .theme-art-night {
