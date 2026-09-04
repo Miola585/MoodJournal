@@ -1,23 +1,31 @@
 const cafeArtUrl = new URL('../../../img/Theme Img/coffecup.png', import.meta.url).href;
 const cafeNotesUrl = new URL('../../../img/Theme Img/notes.png', import.meta.url).href;
-const cafeCatUrl = new URL('../../../img/Theme Img/vecteezy_cat-silhouette-simple_47705617.png', import.meta.url).href;
+const cafeCatUrl = new URL('../../../img/Theme Img/cat_silhouette.png', import.meta.url).href;
+const cafePumpkinUrl = new URL('../../../img/Theme Img/cafe-pumpkin-accent.png', import.meta.url).href;
+const cafeLeafUrl = new URL('../../../img/Theme Img/cafe-fall-leaf-accent.png', import.meta.url).href;
 const seafoamWaveUrl = new URL('../../../img/Theme Img/waves2.png', import.meta.url).href;
-const seafoamShellUrl = new URL('../../../img/Theme Img/clam shell.png', import.meta.url).href;
+const seafoamShellUrl = new URL('../../../img/Theme Img/shell.png', import.meta.url).href;
+const seafoamMarineShellUrl = new URL('../../../img/Theme Img/marine_shell.png', import.meta.url).href;
 const seafoamBubblesUrl = new URL('../../../img/Theme Img/bubbles.png', import.meta.url).href;
 const seafoamSeashellUrl = new URL('../../../img/Theme Img/seashell.png', import.meta.url).href;
-const seafoamFishUrl = new URL('../../../img/Theme Img/vecteezy_fish-clipart-design_26750628.png', import.meta.url).href;
+const seafoamFishUrl = new URL('../../../img/Theme Img/fish.png', import.meta.url).href;
+const seafoamStarfishUrl = new URL('../../../img/Theme Img/starfish.png', import.meta.url).href;
+const seafoamCoralUrl = new URL('../../../img/Theme Img/coral.png', import.meta.url).href;
 const nightCelestialUrl = new URL('../../../img/Theme Img/night-celestial-accent.png', import.meta.url).href;
-const nightLightMoonUrl = new URL('../../../img/Theme Img/night-moon-light-accent.png', import.meta.url).href;
+const nightLightMoonUrl = new URL('../../../img/Theme Img/night-moon2-light-accent.png', import.meta.url).href;
 const nightStarFlareUrl = new URL('../../../img/Theme Img/star_flare.png', import.meta.url).href;
-const nightWhiteStarsUrl = new URL('../../../img/Theme Img/white_star.png', import.meta.url).href;
+const nightWhiteTwinkleUrl = new URL('../../../img/Theme Img/white_twinkle.png', import.meta.url).href;
+const nightBannerUrl = new URL('../../../img/Theme Img/night-banner-accent.png', import.meta.url).href;
+const nightSkyAccentUrl = new URL('../../../img/Theme Img/night-sky-accent-small.png', import.meta.url).href;
 const gardenFlowersUrl = new URL('../../../img/Theme Img/garden-flowers-accent.png', import.meta.url).href;
 const gardenLeavesUrl = new URL('../../../img/Theme Img/garden-leaves-accent.png', import.meta.url).href;
 const gardenDaisyUrl = new URL('../../../img/Theme Img/garden-daisy-accent.png', import.meta.url).href;
 const sunriseSunUrl = new URL('../../../img/Theme Img/sunrise-sun-accent.png', import.meta.url).href;
 const sunriseRedSunUrl = new URL('../../../img/Theme Img/sunrise-red-sun-accent.png', import.meta.url).href;
 const sunriseCloudUrl = new URL('../../../img/Theme Img/sunset_cloud.png', import.meta.url).href;
-const sunriseStarUrl = new URL('../../../img/Theme Img/yellow star.png', import.meta.url).href;
+const sunriseTwinkleUrl = new URL('../../../img/Theme Img/yellow_twinkle.png', import.meta.url).href;
 const sunriseWaveUrl = new URL('../../../img/Theme Img/sunrise-wave-accent.png', import.meta.url).href;
+const sunriseGradientUrl = new URL('../../../img/Theme Img/sunrise-gradient-accent.png', import.meta.url).href;
 
 export function ThemeAtmosphere() {
   return (
@@ -29,23 +37,32 @@ export function ThemeAtmosphere() {
       <img className="theme-art-image theme-art-cafe-image" src={cafeArtUrl} alt="" />
       <img className="theme-art-image theme-art-cafe-notes" src={cafeNotesUrl} alt="" />
       <img className="theme-art-image theme-art-cafe-cat" src={cafeCatUrl} alt="" />
+      <img className="theme-art-image theme-art-cafe-pumpkin" src={cafePumpkinUrl} alt="" />
+      <img className="theme-art-image theme-art-cafe-leaf" src={cafeLeafUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-wave" src={seafoamWaveUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-shell" src={seafoamShellUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-marine-shell" src={seafoamMarineShellUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-bubbles" src={seafoamBubblesUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-seashell" src={seafoamSeashellUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-fish" src={seafoamFishUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-starfish" src={seafoamStarfishUrl} alt="" />
+      <img className="theme-art-image theme-art-ocean-coral" src={seafoamCoralUrl} alt="" />
       <img className="theme-art-image theme-art-night-celestial" src={nightCelestialUrl} alt="" />
       <img className="theme-art-image theme-art-night-moon-light" src={nightLightMoonUrl} alt="" />
       <img className="theme-art-image theme-art-night-star-flare" src={nightStarFlareUrl} alt="" />
-      <img className="theme-art-image theme-art-night-stars-dark" src={nightWhiteStarsUrl} alt="" />
+      <img className="theme-art-image theme-art-night-twinkle-dark" src={nightWhiteTwinkleUrl} alt="" />
+      <img className="theme-art-image theme-art-night-banner-light" src={nightBannerUrl} alt="" />
+      <img className="theme-art-image theme-art-night-accent-dark" src={nightSkyAccentUrl} alt="" />
       <img className="theme-art-image theme-art-garden-flowers" src={gardenFlowersUrl} alt="" />
       <img className="theme-art-image theme-art-garden-leaves" src={gardenLeavesUrl} alt="" />
       <img className="theme-art-image theme-art-garden-daisy" src={gardenDaisyUrl} alt="" />
+      <img className="theme-art-image theme-art-garden-daisy-alt" src={gardenDaisyUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-sun" src={sunriseSunUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-red-sun" src={sunriseRedSunUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-cloud" src={sunriseCloudUrl} alt="" />
-      <img className="theme-art-image theme-art-sunrise-star" src={sunriseStarUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-twinkle" src={sunriseTwinkleUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-wave" src={sunriseWaveUrl} alt="" />
+      <img className="theme-art-image theme-art-sunrise-gradient" src={sunriseGradientUrl} alt="" />
       <svg className="theme-art theme-art-garden" viewBox="0 0 1200 720" preserveAspectRatio="none">
         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
           <path d="M156 626c24-90 66-156 128-198" />
