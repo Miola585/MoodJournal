@@ -3,7 +3,7 @@ import { createFreeWriteEntry, moods } from '../data/journalData';
 import { isVisibleJournalEntry } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
 
-export function Entries({ nav, entries, onCreate, onSave, onDelete, onPrimary }) {
+export function Entries({ nav, entries, onSave, onDelete, onPrimary }) {
   const [query, setQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('');
   const [tagFilter, setTagFilter] = useState('');
@@ -22,25 +22,50 @@ export function Entries({ nav, entries, onCreate, onSave, onDelete, onPrimary })
   if (editing) return <EditEntry entry={editing} onCancel={() => setEditing(null)} onSave={(entry) => { onSave(entry); setEditing(null); }} />;
   if (creatingFreeWrite) return <FreeWriteEntry nav={nav} onCancel={() => setCreatingFreeWrite(false)} onSave={(entry) => { onSave(entry, 'entries'); setCreatingFreeWrite(false); }} />;
   return (
-    <section className="screen app-screen">
-      <h1>Journal Entries</h1>
-      {nav}
-      <div className="entry-actions">
-        <button className="primary" onClick={() => setCreatingFreeWrite(true)} type="button">Create Free Write</button>
-        <button onClick={onCreate} type="button">Create Check-In</button>
-        <button onClick={() => setEditing(null)} type="button">View Previous Entries</button>
+    <section className="screen app-screen entries-screen">
+      <div className="archive-heading">
+        <div>
+          <h1>Journal Entries</h1>
+          <p>Search, revisit, or write freely.</p>
+        </div>
+        <button className="primary archive-primary-action" onClick={() => setCreatingFreeWrite(true)} type="button">Create Free Write</button>
       </div>
-      <div className="toolbar">
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Keyword search" />
-        <select value={moodFilter} onChange={(event) => setMoodFilter(event.target.value)}>
-          <option value="">All moods</option>
-          {moods.map((mood) => <option key={mood.key}>{mood.key}</option>)}
-        </select>
-        <input value={tagFilter} onChange={(event) => setTagFilter(event.target.value)} placeholder="Tag search" />
-        <input value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} type="date" />
+      {nav}
+      <div className="panel archive-toolbar" aria-label="Search and filter entries">
+        <label>Keyword search
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="note, feeling, next step" />
+        </label>
+        <label>Mood filter
+          <select value={moodFilter} onChange={(event) => setMoodFilter(event.target.value)}>
+            <option value="">All moods</option>
+            {moods.map((mood) => <option key={mood.key}>{mood.key}</option>)}
+          </select>
+        </label>
+        <label>Tag search
+          <input value={tagFilter} onChange={(event) => setTagFilter(event.target.value)} placeholder="school, family, tired" />
+        </label>
+        <label>Date filter
+          <input value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} type="date" />
+        </label>
       </div>
       <div className="entry-list">
-        {filtered.length === 0 && <p>No matching entries yet.</p>}
+        {filtered.length === 0 && (
+          <div className="panel archive-empty-state">
+            {journalEntries.length === 0 ? (
+              <>
+                <span className="archive-empty-mark" aria-hidden="true">Journal</span>
+                <h2>No saved entries yet.</h2>
+                <p>Your check-ins and free writes will appear here after you save them.</p>
+              </>
+            ) : (
+              <>
+                <span className="archive-empty-mark" aria-hidden="true">Search</span>
+                <h2>No entries match these filters.</h2>
+                <p>Try changing your search, mood, tag, or date.</p>
+              </>
+            )}
+          </div>
+        )}
         {filtered.map((entry) => <EntryCard entry={entry} key={entry.id} onEdit={() => setEditing(entry)} onDelete={() => onDelete(entry.id)} onPrimary={() => onPrimary(entry.id)} />)}
       </div>
     </section>

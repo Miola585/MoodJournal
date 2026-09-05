@@ -67,9 +67,9 @@ export const activities = {
     { title: 'Energy check', minutes: 4, detail: 'Choose what can wait until later.', steps: ['List one must-do', 'List one can-wait', 'Lower one expectation'] }
   ],
   default: [
-    { title: '10-minute walk', minutes: 10, detail: 'Walk outside or around your space without multitasking.', steps: ['Put on shoes', 'Walk for 10 minutes', 'Notice three things'] },
-    { title: 'Gratitude snapshot', minutes: 4, detail: 'Write three small things that went okay today.', steps: ['Write one person', 'Write one place', 'Write one small win'] },
-    { title: 'Warm drink pause', minutes: 7, detail: 'Make tea, cocoa, or water and drink it slowly.', steps: ['Make a drink', 'Sit down', 'Take five slow sips'] }
+    { title: 'Shoulder drop', minutes: 2, detail: 'Relax your jaw, lower your shoulders, and take a few slow breaths.', steps: ['Unclench your jaw', 'Drop your shoulders', 'Take three slow breaths'] },
+    { title: 'One good thing', minutes: 3, detail: 'Write one small thing that helped, even if the day was messy.', steps: ['Name one good thing', 'Add one detail', 'Let it be enough'] },
+    { title: 'Tiny next step', minutes: 4, detail: 'Pick one small action that would make the next few minutes easier.', steps: ['Name what feels heavy', 'Choose one small step', 'Start gently'] }
   ]
 };
 export const featureCards = [

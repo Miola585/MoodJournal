@@ -10,6 +10,18 @@
 
 .grounding-tools {
   margin-top: 28px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--hero-accent-soft) 40%, transparent), transparent 58%),
+    color-mix(in srgb, var(--schedule-color) 84%, transparent);
+}
+
+.grounding-tools > h2,
+.grounding-tools > p {
+  text-align: center;
+}
+
+.grounding-tools > h2 {
+  margin-top: 0;
 }
 
 .games-screen {
@@ -49,6 +61,7 @@
   display: grid;
   gap: 12px;
   align-content: start;
+  min-height: 100%;
   padding: 16px;
   border-radius: 10px;
   border: 1px solid var(--glass-border);
@@ -175,7 +188,7 @@
 
 .hunt-list {
   display: grid;
-  gap: 8px;
+  gap: 7px;
   text-align: left;
 }
 
@@ -183,13 +196,27 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 10px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--glass-border) 72%, transparent);
   border-radius: 999px;
-  background: var(--accent-color-light);
+  background: color-mix(in srgb, var(--accent-color-light) 74%, transparent);
+  color: var(--text);
+  font-weight: 700;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.hunt-list label.checked {
+  border-color: var(--selected-bg);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--hero-surface) 46%, transparent), transparent 70%),
+    color-mix(in srgb, var(--selected-bg) 22%, var(--accent-color-light));
+  transform: translateX(2px);
 }
 
 .hunt-list input {
   width: auto;
+  flex: 0 0 auto;
 }
 
 .breathing-game {
@@ -197,15 +224,106 @@
 }
 
 .breathing-bubble {
-  width: 96px;
+  display: grid;
+  width: 112px;
+  margin: 8px 0 14px;
   aspect-ratio: 1;
+  place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, var(--accent-color-light), var(--accent-color-medium));
-  box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent-color-light) 65%, transparent);
+  background:
+    radial-gradient(circle at 35% 30%, color-mix(in srgb, #ffffff 62%, var(--accent-color-light)), transparent 26%),
+    radial-gradient(circle, var(--accent-color-light), var(--accent-color-medium));
+  color: var(--accent-color-darkest);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-align: center;
+  box-shadow:
+    0 0 0 10px color-mix(in srgb, var(--accent-color-light) 58%, transparent),
+    0 18px 28px color-mix(in srgb, var(--accent-color-dark) 22%, transparent);
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
 }
 
 .breathing-bubble.active {
-  animation: breathe 4s ease-in-out infinite;
+  animation: breathe 16s ease-in-out infinite;
+}
+
+.breathing-bubble.phase-1,
+.breathing-bubble.phase-3 {
+  box-shadow:
+    0 0 0 14px color-mix(in srgb, var(--accent-color-light) 50%, transparent),
+    0 18px 30px color-mix(in srgb, var(--accent-color-dark) 24%, transparent);
+}
+
+.grounding-card-head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+}
+
+.grounding-card-head h3 {
+  margin: 0;
+}
+
+.grounding-card-head span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-color-light) 72%, transparent);
+  color: var(--accent-color-darkest);
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.grounding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.grounding-actions button,
+.minigame-card > button {
+  margin: 0;
+}
+
+.minigame-card > .subtle-control {
+  justify-self: center;
+  width: auto;
+  min-width: 0;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-color: color-mix(in srgb, var(--glass-border) 72%, transparent);
+  background: color-mix(in srgb, var(--glass-bg) 58%, transparent);
+  color: var(--muted-text);
+  font-size: 0.84rem;
+  box-shadow: none;
+  transform: none;
+}
+
+.minigame-card > .subtle-control:not(:disabled):hover {
+  border-color: color-mix(in srgb, var(--hero-accent) 48%, var(--glass-border));
+  background: color-mix(in srgb, var(--hero-surface) 54%, var(--glass-bg));
+  color: var(--hero-accent);
+  transform: translateY(-1px);
+}
+
+.senses-list label {
+  border-radius: 10px;
+}
+
+.grounding-complete {
+  justify-self: start;
+  margin: 0;
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--selected-bg) 60%, var(--glass-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hero-surface) 68%, var(--selected-bg) 12%);
+  color: var(--hero-accent);
+  font-weight: 900;
 }
 
 .star-map,
@@ -830,13 +948,18 @@
 }
 
 @keyframes breathe {
-  0%,
-  100% {
-    transform: scale(0.85);
+  0% {
+    transform: scale(0.86);
   }
 
+  25%,
   50% {
-    transform: scale(1.18);
+    transform: scale(1.16);
+  }
+
+  75%,
+  100% {
+    transform: scale(0.86);
   }
 }
 

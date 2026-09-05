@@ -64,11 +64,18 @@
   font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
 .footer a:hover {
-  background: var(--secondary-nav-hover);
-  color: var(--text);
+  background: var(--navi-bar-color);
+  border-color: color-mix(in srgb, var(--navi-bar-color) 82%, var(--glass-border));
+  color: var(--navi-bar-text);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 840px) {
@@ -142,11 +149,16 @@
   .newsletter-grid,
   .newsletter-form,
   .activity-grid,
-  .dashboard-grid,
-  .home-checkin-layout,
-  .home-mood-row,
-  .calm-break-card,
-  .minigame-grid,
+    .dashboard-grid,
+    .archive-toolbar,
+    .home-checkin-layout,
+    .home-mood-row,
+    .checkin-progress,
+    .checkin-mood-grid,
+    .intensity-grid,
+    .body-check-grid,
+    .calm-break-card,
+    .minigame-grid,
   .game-button-grid,
   .collection-grid,
   .settings-grid,
@@ -177,14 +189,130 @@
     grid-template-columns: 1fr;
   }
 
+  .archive-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .archive-heading h1 {
+    display: block;
+  }
+
+  .archive-primary-action {
+    width: 100%;
+  }
+
+  .entry-card-topline,
+  .entries-screen .entry-card > .entry-card-topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .checkin-screen {
+    padding-bottom: 96px;
+  }
+
+  .mood {
+    min-height: 70px;
+    padding: 8px;
+    border-radius: 12px;
+  }
+
+  .mood span {
+    font-size: 1.45rem;
+  }
+
+  .step-pill {
+    min-height: 40px;
+    padding: 8px;
+  }
+
+  .step-pill small {
+    display: none;
+  }
+
+  .choice-grid,
+  .body-card-options {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .checkin-step-content {
+    padding: 18px;
+  }
+
+  .checkin-action-bar {
+    bottom: 10px;
+    grid-template-columns: 1fr;
+  }
+
+  .checkin-action-bar .primary,
+  .checkin-action-bar .secondary {
+    min-height: 38px;
+  }
+
   .month-grid {
-    grid-template-columns: repeat(7, minmax(38px, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 4px;
+    padding: 6px;
+  }
+
+  .calendar-toolbar {
+    grid-template-columns: 36px 1fr 36px;
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .calendar-nav-button {
+    width: 32px;
+    min-height: 32px;
+  }
+
+  .calendar-heading {
+    padding: 12px;
+  }
+
+  .weekday {
+    padding: 4px 0;
+    font-size: 0.68rem;
   }
 
   .calendar-cell {
-    min-height: 58px;
-    padding: 6px;
+    min-height: 54px;
+    padding: 5px;
+    border-radius: 9px;
+    font-size: 0.82rem;
+  }
+
+  .calendar-entry-markers {
+    gap: 3px;
+  }
+
+  .calendar-entry-markers b {
+    font-size: 1rem;
+  }
+
+  .calendar-entry-markers small {
+    width: 4px;
+    height: 4px;
+  }
+
+  .calendar-cell em {
+    right: 4px;
+    bottom: 4px;
+    padding: 1px 5px;
+    font-size: 0.64rem;
+  }
+
+  .calendar-today-sticker {
+    top: 4px;
+    right: 4px;
+    width: 12px;
+    height: 12px;
+  }
+
+  .calendar-detail-empty {
+    align-items: flex-start;
   }
 
   .bar {
