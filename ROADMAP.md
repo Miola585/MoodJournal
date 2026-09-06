@@ -8,6 +8,10 @@ Use this private local file to capture future ideas before deciding what should 
 - Theme consistency pass: make Cozy Cafe, Sunset/Sunrise, Garden, Seafoam, and Night Sky feel distinct while keeping forms readable.
 - Image asset cleanup: keep only active theme assets plus protected game/sticker assets; compress large PNG/JPG files before commits.
 - Mobile visual check: verify that theme artwork, sticky action bars, and card layouts do not overlap or crowd small screens.
+- Shared button polish: improve primary, secondary, icon, pill, toolbar, card action, and navigation buttons so they feel consistent across all themes, with clear hover, focus, disabled, and mobile states.
+- Weekly Summary history: keep previous-week navigation clear, and later consider month/season summary views once there is enough data.
+- Performance pass: code-split heavier routes such as Summary charts and Games so Recharts/game assets do not all land in the first app bundle.
+- Legacy cleanup pass: review the old `legacy/` canvas prototypes before deleting or archiving anything useful.
 
 ## Sticker Book Ideas
 
@@ -77,6 +81,7 @@ Export each finished sticker as transparent PNG in both 512px and 256px versions
 ## Game And Reflection Spaces
 
 - Give featured games their own standalone cards so they do not feel mixed into everyday activities.
+- Doodle page: add a calm drawing space later with simple pen/eraser/color controls, optional mood-colored backgrounds, save-to-entry support, and export/download.
 - Create a dedicated constellation gallery where saved constellations can be revisited in a clear sky view.
 - Make the Memory Jar look like an actual glass jar, with theme-based overlays, lighting, particles, and sticker accents.
 - Let memory tags spread naturally inside the jar rather than stacking directly on top of each other.

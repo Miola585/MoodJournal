@@ -19,8 +19,9 @@ export function NightSkyGalaxy({ entries, moods, groupEntriesByDate, getPrimaryE
   return (
     <section className="galaxy-section">
       <div>
+        <span className="galaxy-eyebrow">Journal view</span>
         <h2>Personal Night Sky</h2>
-        <p>Each journal day becomes a star. Brighter stars reflect stronger entries.</p>
+        <p>Your saved journal days become stars here. Daily Constellation is a separate drawing game.</p>
       </div>
       <div className="galaxy-map">
         {stars.length === 0 && <p>Add journal entries to begin your sky.</p>}

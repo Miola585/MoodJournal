@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   buildMemoryView,
   detectMemoryCategory,
@@ -6,22 +6,8 @@ import {
   jarAssets
 } from './gameUtils';
 
-const jarLayerUrls = {
-  cafe: new URL('../../../img/Jar Layers/Cafe.png', import.meta.url).href,
-  garden: new URL('../../../img/Jar Layers/Garden.jpg', import.meta.url).href,
-  night: new URL('../../../img/Jar Layers/Night Background.png', import.meta.url).href,
-  ocean: new URL('../../../img/Jar Layers/Sea.png', import.meta.url).href,
-  sunset: new URL('../../../img/Jar Layers/Sunset.png', import.meta.url).href
-};
-
-const getJarLayer = (moodKey = '') => {
-  const key = moodKey.toLowerCase();
-  if (['calm', 'content', 'numb'].includes(key)) return jarLayerUrls.cafe;
-  if (['happy', 'grateful'].includes(key)) return jarLayerUrls.garden;
-  if (['sad', 'lonely', 'tired'].includes(key)) return jarLayerUrls.night;
-  if (['anxious', 'panic', 'overwhelmed'].includes(key)) return jarLayerUrls.ocean;
-  return jarLayerUrls.sunset;
-};
+const memoryStorageKey = 'gameMemoryJar';
+const marbleColors = ['#f3c969', '#e8b8c7', '#98dce0', '#b7b0ff', '#f0a7a0', '#b9d49b'];
 
 export function MemoryJarCollection({ entries, moods }) {
   const memories = entries
@@ -83,54 +69,144 @@ export function MemoryJarCollection({ entries, moods }) {
 export function MemoryJarGame({ mood, mainToday }) {
   const [memory, setMemory] = useState('');
   const [message, setMessage] = useState('');
-  const [memories, setMemories] = useState([]);
+  const [selectedMemory, setSelectedMemory] = useState(null);
+  const [memories, setMemories] = useState(() => readStoredList(memoryStorageKey));
   const memoryText = memory.trim();
   const duplicateToday = memoryText && memories.some((entry) => entry.text.toLowerCase() === memoryText.toLowerCase());
+
+  useEffect(() => {
+    if (!selectedMemory) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setSelectedMemory(null);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [selectedMemory]);
+
+  useEffect(() => {
+    if (!message) return undefined;
+    const timer = window.setTimeout(() => setMessage(''), 3200);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
   const addMemory = () => {
     if (!memoryText || duplicateToday) return;
     const category = detectMemoryCategory(memoryText);
-    setMemories((current) => [{
+    const nextIndex = memories.length;
+    const position = getMarblePosition(nextIndex);
+    const nextMemory = {
       id: crypto.randomUUID(),
       text: memoryText,
+      createdAt: new Date().toISOString(),
       category,
       mood: mood.key,
-      intensity: Number(mainToday?.intensity || mood.score || 5)
-    }, ...current].slice(0, 6));
+      intensity: Number(mainToday?.intensity || mood.score || 5),
+      color: marbleColors[nextIndex % marbleColors.length],
+      x: position.x,
+      y: position.y
+    };
+    setMemories((current) => {
+      const next = [nextMemory, ...current].slice(0, 24);
+      localStorage.setItem(memoryStorageKey, JSON.stringify(next));
+      return next;
+    });
+    setSelectedMemory(nextMemory);
     setMemory('');
-    setMessage('Memory added to this reflection jar.');
+    setMessage('Saved to jar.');
+  };
+  const removeMemory = (id) => {
+    if (!window.confirm('Remove this memory from the jar?')) return;
+    setMemories((current) => {
+      const next = current.filter((entry) => entry.id !== id);
+      localStorage.setItem(memoryStorageKey, JSON.stringify(next));
+      return next;
+    });
+    setSelectedMemory(null);
+    setMessage('');
   };
   return (
-    <article className="minigame-card memory-scrapbook-card">
-      <h3>Memory Jar</h3>
-      <p>Add small moments to this reflection jar. These stay on this page for now and do not create journal entries.</p>
-      <div
-        className="memory-scrapbook-jar"
-        style={{
-          '--jar-layer': `url("${getJarLayer(mood.key)}")`,
-          '--jar-light': mood.color
-        }}
-      >
-        <div className="memory-jar-glow" />
-        <div className="memory-jar-layer" />
-        <div className="memory-note-layer">
-          {memories.length === 0 && <span className="memory-note empty">A tiny good thing can live here.</span>}
-          {memories.map((entry, index) => (
-            <button
-              className="floating-memory-note"
-              key={entry.id}
-              style={{ '--note-index': index, '--note-color': mood.color }}
-              title={entry.text}
-              type="button"
-            >
-              {entry.text.slice(0, 28)}{entry.text.length > 28 ? '...' : ''}
-            </button>
-          ))}
+    <div className="game-surface memory-surface">
+      <div className="memory-count">{memories.length} memor{memories.length === 1 ? 'y' : 'ies'} saved</div>
+      <div className="memory-jar-scene" style={{ '--jar-light': mood.color }}>
+        <div className="css-memory-jar" aria-label="Memory jar">
+          <div className="jar-rim" />
+          <div className="jar-neck" />
+          <div className="jar-body">
+            <div className="jar-glare" />
+            <div className="jar-bottom" />
+            {memories.length === 0 && <span className="jar-empty-text">A tiny good thing can live here.</span>}
+            {memories.map((entry) => (
+              <button
+                aria-label={`Memory from ${formatMemoryDate(entry.createdAt)}`}
+                className="memory-marble"
+                key={entry.id}
+                onClick={() => setSelectedMemory(entry)}
+                style={{
+                  '--memory-color': entry.color,
+                  '--marble-x': `${entry.x}%`,
+                  '--marble-y': `${entry.y}%`
+                }}
+                title={entry.text}
+                type="button"
+              />
+            ))}
+          </div>
+          {selectedMemory && (
+            <article className="memory-popover" role="dialog" aria-label="Saved memory" aria-modal="false">
+              <span>{formatMemoryDate(selectedMemory.createdAt)}</span>
+              <p>{selectedMemory.text}</p>
+              <div className="game-action-row">
+                <button className="secondary" onClick={() => setSelectedMemory(null)} type="button">Close</button>
+                <button className="secondary" onClick={() => removeMemory(selectedMemory.id)} type="button">Remove</button>
+              </div>
+            </article>
+          )}
         </div>
       </div>
-      <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
-      {duplicateToday && <p className="form-error">That memory is already in today's jar.</p>}
-      {message && <p className="success-message">{message}</p>}
-      <button disabled={!memoryText || duplicateToday} onClick={addMemory} type="button">Add to jar</button>
-    </article>
+      <div className="memory-input-panel">
+        <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
+        <div className="memory-input-actions">
+          <button className="primary" disabled={!memoryText || duplicateToday} onClick={addMemory} type="button">Add to jar</button>
+          {duplicateToday && <p className="form-error">That memory is already in today's jar.</p>}
+          <div className="memory-feedback-slot" aria-live="polite">
+            {message && <p className="success-message">{message}</p>}
+          </div>
+        </div>
+      </div>
+    </div>
   );
+}
+
+function formatMemoryDate(value) {
+  return new Date(value).toLocaleDateString(undefined, { month: 'long', day: 'numeric' });
+}
+
+function getMarblePosition(index) {
+  const row = Math.floor(index / 6);
+  const column = index % 6;
+  const rowCounts = [1, 2, 3, 4, 5, 6];
+  const count = rowCounts[Math.min(row, rowCounts.length - 1)];
+  const rowColumn = column % count;
+  const spacing = count === 1 ? 0 : 56 / (count - 1);
+  const x = count === 1 ? 50 : 22 + spacing * rowColumn;
+  const y = Math.max(36, 85 - row * 7.4 - (rowColumn % 2) * 1.2);
+  return { x, y };
+}
+
+function readStoredList(key) {
+  try {
+    const value = JSON.parse(localStorage.getItem(key));
+    if (!Array.isArray(value)) return [];
+    return value.map((entry, index) => ({
+      ...entry,
+      id: entry.id || crypto.randomUUID(),
+      text: entry.text || '',
+      createdAt: entry.createdAt || new Date().toISOString(),
+      color: entry.color || marbleColors[index % marbleColors.length],
+      x: Number(entry.x) || getMarblePosition(index).x,
+      y: Number(entry.y) >= 68 ? Number(entry.y) : getMarblePosition(index).y
+    })).filter((entry) => entry.text);
+  } catch {
+    return [];
+  }
 }

@@ -169,6 +169,19 @@
     grid-template-columns: 1fr;
   }
 
+  .summary-stat-grid,
+  .summary-chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-chart-card {
+    padding: 14px;
+  }
+
+  .summary-chart-frame {
+    min-height: 240px;
+  }
+
   .home-brand-lockup {
     flex-direction: column;
     gap: 10px;
@@ -325,5 +338,126 @@
 
   .featured-game-card {
     grid-template-columns: 1fr;
+  }
+
+  .games-hub-header p {
+    font-size: 0.95rem;
+  }
+
+  .game-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-library-card {
+    min-height: 92px;
+  }
+
+  .standalone-game-screen {
+    width: min(100% - 16px, 100%);
+    min-height: auto;
+  }
+
+  .standalone-game-screen-constellation {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+
+  .game-route-header {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    gap: 12px;
+  }
+
+  .game-route-header .back-to-games {
+    justify-self: start;
+  }
+
+  .game-route-header h1 {
+    width: 100%;
+    padding-inline: 18px;
+  }
+
+  .game-route-shell {
+    min-height: auto;
+    padding: 12px;
+  }
+
+  .match-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reflection-card {
+    min-height: 96px;
+    font-size: 0.9rem;
+  }
+
+  .constellation-builder,
+  .garden-surface .garden-preview,
+  .orbit-surface .orbit-map {
+    min-height: 420px;
+  }
+
+  .garden-plant {
+    width: clamp(48px, 16vw, 82px);
+  }
+
+  .garden-detail-panel {
+    display: grid;
+    justify-items: start;
+  }
+
+  .planet {
+    width: min(var(--planet-size), 66px);
+    font-size: 0.68rem;
+  }
+
+  .orbit-center {
+    width: 58px;
+    font-size: 0.68rem;
+  }
+
+  .orbit-ring-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .orbit-ring-buttons button,
+  .finish-orbit {
+    width: 100%;
+  }
+
+  .constellation-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .constellation-toolbar button {
+    width: 100%;
+  }
+
+  .memory-jar-scene {
+    min-height: 430px;
+    padding-inline: 0;
+  }
+
+  .css-memory-jar {
+    width: min(350px, 92vw);
+    min-height: 390px;
+  }
+
+  .memory-popover {
+    right: 50%;
+    bottom: 6%;
+    transform: translateX(50%);
+  }
+
+  .memory-input-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .memory-input-actions button {
+    width: 100%;
   }
 }
