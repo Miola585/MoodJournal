@@ -1,5 +1,5 @@
 import { useId, useState } from 'react';
-import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowRight, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { moods } from '../../data/journalData';
 import { isCheckIn } from '../../utils/journalUtils';
 import { stripGameData } from '../games/gameUtils';
@@ -28,10 +28,20 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary }) {
       <h2>{isCheckIn(entry) ? `${mood?.emoji || ''} ${entry.mood || 'Check-In'}` : entry.specificFeeling || 'Untitled page'}</h2>
       {!showFullEntry && <p className="entry-closed-note"><BookOpen aria-hidden="true" size={16} />Page closed</p>}
       {showFullEntry && (
-        <div className="entry-page" id={pageId}>
-          <p className="entry-preview">{notePreview || 'No writing on this page.'}</p>
-          {entry.copingStep && <p className="next-step">Next step: {entry.copingStep}</p>}
-        </div>
+        <>
+          <div className="entry-page" id={pageId}>
+            <p className="entry-preview">{notePreview || 'No writing on this page.'}</p>
+          </div>
+          {entry.copingStep && (
+            <aside className="entry-next-step">
+              <span className="entry-next-step-icon" aria-hidden="true"><ArrowRight size={17} /></span>
+              <div>
+                <span>Next step</span>
+                <p>{entry.copingStep}</p>
+              </div>
+            </aside>
+          )}
+        </>
       )}
       <div className="meta">
         {entry.specificFeeling && isCheckIn(entry) && <span>{entry.specificFeeling}</span>}

@@ -1712,10 +1712,13 @@
   margin: 2px auto;
   padding: 7px 18px;
   border-radius: 4px;
-  border: 1px solid color-mix(in srgb, var(--soft-border) 48%, transparent);
-  background: color-mix(in srgb, var(--hero-accent-soft) 28%, var(--hero-surface));
+  border: 1px solid color-mix(in srgb, var(--hero-accent) 38%, var(--soft-border));
+  background: color-mix(in srgb, var(--hero-accent) 16%, var(--hero-surface));
   color: var(--text);
-  box-shadow: var(--inner-highlight);
+  box-shadow:
+    inset 0 -3px 0 color-mix(in srgb, var(--hero-accent) 38%, transparent),
+    0 4px 10px color-mix(in srgb, var(--accent-color-darkest) 8%, transparent),
+    var(--inner-highlight);
   text-align: center;
 }
 
@@ -1778,14 +1781,44 @@
   font-size: 0.86rem;
 }
 
-.next-step {
-  color: var(--accent-color-dark);
-  font-weight: 800;
+.entry-next-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: min(460px, 100%);
+  margin-top: 2px;
+  padding: 10px 4px;
+  border-top: 1px solid color-mix(in srgb, var(--soft-border) 46%, transparent);
 }
 
-.entry-page .next-step {
+.entry-next-step-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--hero-accent) 32%, var(--soft-border));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hero-accent-soft) 44%, var(--hero-surface));
+  color: var(--hero-accent);
+}
+
+.entry-next-step > div {
+  display: grid;
+  gap: 1px;
+}
+
+.entry-next-step > div > span {
+  color: var(--muted-text);
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.entry-next-step p {
   margin: 0;
-  line-height: 32px;
+  color: var(--text);
+  font-weight: 800;
 }
 
 .freewrite-screen {
@@ -2849,9 +2882,12 @@
   margin: 2px auto;
   padding: 7px 18px;
   border-radius: 4px;
-  border: 1px solid color-mix(in srgb, var(--soft-border) 48%, transparent);
-  background: color-mix(in srgb, var(--hero-accent-soft) 28%, var(--hero-surface));
+  border: 1px solid color-mix(in srgb, var(--hero-accent) 38%, var(--soft-border));
+  background: color-mix(in srgb, var(--hero-accent) 16%, var(--hero-surface));
   color: var(--text);
-  box-shadow: var(--inner-highlight);
+  box-shadow:
+    inset 0 -3px 0 color-mix(in srgb, var(--hero-accent) 38%, transparent),
+    0 4px 10px color-mix(in srgb, var(--accent-color-darkest) 8%, transparent),
+    var(--inner-highlight);
   text-align: center;
 }
