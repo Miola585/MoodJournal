@@ -2806,6 +2806,60 @@
   color: var(--selected-text);
 }
 
+.app.dark .calendar-board {
+  border-color: color-mix(in srgb, var(--soft-border) 48%, transparent);
+  background: color-mix(in srgb, var(--card-bg) 78%, var(--bg));
+  box-shadow: 0 18px 38px color-mix(in srgb, #000000 34%, transparent), var(--inner-highlight);
+}
+
+.app.dark .calendar-toolbar {
+  border-bottom-color: color-mix(in srgb, var(--soft-border) 38%, transparent);
+  background: color-mix(in srgb, var(--hero-surface) 46%, var(--card-bg));
+}
+
+.app.dark .month-grid {
+  background: color-mix(in srgb, var(--bg) 18%, transparent);
+}
+
+.app.dark .weekday {
+  color: color-mix(in srgb, var(--muted-text) 88%, var(--text));
+}
+
+.app.dark .calendar-cell {
+  border-color: color-mix(in srgb, var(--soft-border) 32%, transparent);
+  background: color-mix(in srgb, var(--schedule-color) 72%, var(--card-bg));
+  color: var(--text);
+}
+
+.app.dark .calendar-cell-day:hover {
+  border-color: color-mix(in srgb, var(--hero-accent) 58%, var(--soft-border));
+  background: color-mix(in srgb, var(--hero-accent-soft) 42%, var(--card-bg));
+  box-shadow: 0 7px 16px color-mix(in srgb, #000000 28%, transparent), var(--inner-highlight);
+}
+
+.app.dark .calendar-cell-empty {
+  background: color-mix(in srgb, var(--bg) 72%, var(--card-bg));
+}
+
+.app.dark .calendar-cell.has-entries {
+  border-color: color-mix(in srgb, var(--day-mood, var(--selected-bg)) 48%, var(--soft-border));
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--day-mood, var(--selected-bg)) 14%, transparent), transparent 66%),
+    color-mix(in srgb, var(--schedule-color) 62%, var(--card-bg));
+}
+
+.app.dark .calendar-cell.selected {
+  border-color: color-mix(in srgb, var(--selected-bg) 74%, var(--soft-border));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--selected-bg) 22%, transparent), transparent 70%),
+    color-mix(in srgb, var(--hero-accent-soft) 38%, var(--card-bg));
+  outline-color: color-mix(in srgb, var(--selected-bg) 26%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--hero-accent) 12%, transparent),
+    0 10px 22px color-mix(in srgb, #000000 32%, transparent),
+    var(--inner-highlight);
+}
+
 .calendar-detail {
   display: grid;
   gap: 14px;
