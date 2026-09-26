@@ -1786,32 +1786,28 @@
 
 .freewrite-writing-field {
   display: block;
-  padding: 14px 22px 18px 86px;
+  padding-left: 69px;
 }
 
 .freewrite-writing-field textarea {
   display: block;
   min-height: 440px;
   padding: 9px 24px 18px 17px;
-  border: 1px solid color-mix(in srgb, var(--notebook-rule-color) 58%, transparent);
-  border-radius: 3px;
+  border: 0;
+  border-radius: 0;
   outline: 0;
   background:
-    linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 34%, transparent) 15px 16px, transparent 16px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   background-attachment: local;
   color: var(--text);
   font-size: 1.02rem;
   line-height: 32px;
-  box-shadow:
-    0 4px 0 color-mix(in srgb, var(--soft-border) 18%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #ffffff 9%, transparent);
+  box-shadow: none;
 }
 
 .app.dark .freewrite-writing-field textarea {
   background:
-    linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 44%, transparent) 15px 16px, transparent 16px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   color: var(--text);
