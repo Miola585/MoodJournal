@@ -486,6 +486,13 @@
     padding-left: 24px;
   }
 
+  .calendar-detail-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    margin: -18px -14px 4px;
+    padding-left: 18px;
+  }
+
   .calendar-detail > .entry-card-compact .entry-compact-preview {
     width: 100%;
   }

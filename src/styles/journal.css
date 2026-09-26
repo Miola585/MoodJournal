@@ -2814,7 +2814,8 @@
 
 .app.dark .calendar-toolbar {
   border-bottom-color: color-mix(in srgb, var(--soft-border) 38%, transparent);
-  background: color-mix(in srgb, var(--hero-surface) 46%, var(--card-bg));
+  background: color-mix(in srgb, var(--hero-accent-soft) 34%, var(--card-bg));
+  box-shadow: 0 5px 14px color-mix(in srgb, #000000 16%, transparent);
 }
 
 .app.dark .month-grid {
@@ -2823,6 +2824,7 @@
 
 .app.dark .weekday {
   color: color-mix(in srgb, var(--muted-text) 88%, var(--text));
+  border-bottom: 1px solid color-mix(in srgb, var(--soft-border) 24%, transparent);
 }
 
 .app.dark .calendar-cell {
@@ -2871,10 +2873,23 @@
 }
 
 .calendar-detail-heading {
-  padding-left: 0;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin: -22px -22px 4px;
+  padding: 18px 22px 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--soft-border) 42%, transparent);
+  border-radius: 8px 8px 0 0;
+  background: color-mix(in srgb, var(--hero-accent-soft) 34%, transparent);
 }
 
-.calendar-detail-heading > span {
+.calendar-detail-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.calendar-detail-heading > div > span {
   color: var(--hero-accent);
   font-size: 0.74rem;
   font-weight: 900;
@@ -2886,11 +2901,19 @@
   text-align: left;
 }
 
-.calendar-detail-heading p {
-  margin: 2px 0 0;
+.calendar-detail-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--hero-accent) 24%, var(--soft-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--glass-bg) 62%, transparent);
   color: var(--muted-text);
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .calendar-detail-empty {
@@ -2979,6 +3002,10 @@
   width: min(620px, calc(100% - 104px));
   min-width: 0;
   margin-top: 2px;
+  padding: 9px 12px;
+  border-left: 3px solid color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 56%, var(--soft-border));
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--input-bg) 54%, var(--hero-surface));
 }
 
 .entry-compact-preview span {
@@ -2993,10 +3020,44 @@
 
 .calendar-detail > .entry-card-compact .entry-card-actions {
   gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--soft-border) 34%, transparent);
 }
 
 .calendar-detail > .entry-card-compact .entry-card-actions button {
   min-height: 30px;
   padding: 4px 8px;
   font-size: 0.78rem;
+}
+
+.app.dark .calendar-detail {
+  border-color: color-mix(in srgb, var(--soft-border) 46%, transparent);
+  background: color-mix(in srgb, var(--card-bg) 78%, var(--bg));
+  box-shadow: 0 18px 38px color-mix(in srgb, #000000 32%, transparent), var(--inner-highlight);
+}
+
+.app.dark .calendar-detail-heading {
+  border-bottom-color: color-mix(in srgb, var(--soft-border) 34%, transparent);
+  background: color-mix(in srgb, var(--hero-accent-soft) 34%, var(--card-bg));
+}
+
+.app.dark .calendar-detail-count {
+  border-color: color-mix(in srgb, var(--hero-accent) 30%, var(--soft-border));
+  background: color-mix(in srgb, var(--schedule-color) 62%, var(--card-bg));
+  color: var(--muted-text);
+}
+
+.app.dark .calendar-detail > .entry-card {
+  border-color: color-mix(in srgb, var(--soft-border) 38%, transparent);
+  background: color-mix(in srgb, var(--schedule-color) 58%, var(--card-bg));
+  box-shadow:
+    inset 12px 0 0 color-mix(in srgb, var(--navi-bar-color) 34%, var(--card-bg)),
+    inset 16px 0 0 color-mix(in srgb, var(--soft-border) 26%, transparent),
+    0 10px 24px color-mix(in srgb, #000000 22%, transparent),
+    var(--inner-highlight);
+}
+
+.app.dark .calendar-detail > .entry-card-compact .entry-compact-preview {
+  border-left-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 66%, var(--soft-border));
+  background: color-mix(in srgb, var(--hero-surface) 58%, var(--card-bg));
 }

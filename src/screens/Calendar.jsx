@@ -113,9 +113,16 @@ export function Calendar({ nav, entries, onPrimary }) {
       </div>
       <div className="calendar-detail">
         <div className="calendar-detail-heading">
-          <span>Selected day</span>
-          <h2>{formatFriendlyDate(selectedDate)}</h2>
-          {selectedEntries.length > 0 && <p>{selectedEntries.length} saved {selectedEntries.length === 1 ? 'entry' : 'entries'}</p>}
+          <div>
+            <span>Selected day</span>
+            <h2>{formatFriendlyDate(selectedDate)}</h2>
+          </div>
+          {selectedEntries.length > 0 && (
+            <p className="calendar-detail-count">
+              <CalendarDays aria-hidden="true" size={16} />
+              {selectedEntries.length} saved {selectedEntries.length === 1 ? 'entry' : 'entries'}
+            </p>
+          )}
         </div>
         {selectedEntries.length === 0 ? (
           <div className="calendar-detail-empty">
