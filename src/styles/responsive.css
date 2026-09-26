@@ -486,6 +486,10 @@
     padding-left: 24px;
   }
 
+  .calendar-detail > .entry-card-compact .entry-compact-preview {
+    width: 100%;
+  }
+
   .bar {
     grid-template-columns: 1fr;
   }

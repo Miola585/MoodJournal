@@ -125,7 +125,7 @@ export function Calendar({ nav, entries, onPrimary }) {
               <span>Check-ins and free writes will appear here when saved.</span>
             </div>
           </div>
-        ) : selectedEntries.map((entry) => <EntryCard entry={entry} key={entry.id} onPrimary={() => onPrimary(entry.id)} />)}
+        ) : selectedEntries.map((entry) => <EntryCard compact entry={entry} key={entry.id} onPrimary={() => onPrimary(entry.id)} />)}
       </div>
     </section>
   );
