@@ -257,8 +257,8 @@
 
   .freewrite-notebook {
     background:
-      linear-gradient(90deg, transparent 0 38px, color-mix(in srgb, var(--hero-accent) 20%, transparent) 38px 39px, transparent 39px),
-      color-mix(in srgb, var(--hero-surface) 86%, var(--glass-bg));
+      linear-gradient(90deg, transparent 0 37px, var(--notebook-divider-color) 37px 39px, transparent 39px),
+      var(--notebook-cover-surface);
   }
 
   .freewrite-notebook::before {

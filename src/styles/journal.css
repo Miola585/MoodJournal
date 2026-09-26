@@ -1719,12 +1719,13 @@
   --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 20%, var(--hero-surface));
   --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 7%, var(--input-bg));
   --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 28%, var(--soft-border));
+  --notebook-divider-color: color-mix(in srgb, var(--hero-accent) 54%, var(--soft-border));
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent);
   border-radius: 8px;
   background:
-    linear-gradient(90deg, transparent 0 68px, color-mix(in srgb, var(--hero-accent) 20%, transparent) 68px 69px, transparent 69px),
+    linear-gradient(90deg, transparent 0 67px, var(--notebook-divider-color) 67px 69px, transparent 69px),
     var(--notebook-cover-surface);
   box-shadow: var(--surface-shadow), var(--inner-highlight);
 }
@@ -1733,6 +1734,7 @@
   --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 24%, var(--hero-surface));
   --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 13%, var(--hero-surface-strong));
   --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 48%, var(--soft-border));
+  --notebook-divider-color: color-mix(in srgb, var(--hero-accent) 72%, var(--soft-border));
 }
 
 .journal-editor-notebook {
@@ -1797,6 +1799,7 @@
   border-radius: 0;
   outline: 0;
   background:
+    linear-gradient(to left, var(--notebook-cover-surface) 0 9px, transparent 9px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   background-attachment: local;
@@ -1808,6 +1811,7 @@
 
 .app.dark .freewrite-writing-field textarea {
   background:
+    linear-gradient(to left, var(--notebook-cover-surface) 0 9px, transparent 9px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   color: var(--text);
