@@ -1420,12 +1420,6 @@
   gap: 12px;
 }
 
-.entry-card > div:first-child span {
-  color: var(--text);
-  font-size: 0.9rem;
-  opacity: 0.78;
-}
-
 .entries-screen {
   max-width: 1120px;
   margin: 0 auto;
@@ -1725,10 +1719,10 @@
 }
 
 .entry-card-freewrite .entry-type-badge {
-  border: 1px solid color-mix(in srgb, var(--accent-color-green) 64%, var(--soft-border));
-  background: color-mix(in srgb, var(--accent-color-green) 84%, var(--selected-bg));
-  color: var(--text-on-light);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-color-green) 58%, var(--soft-border));
+  background: color-mix(in srgb, var(--accent-color-green) 30%, var(--hero-surface));
+  color: var(--text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 16%, transparent);
 }
 
 .entries-screen .entry-card h2 {
