@@ -223,7 +223,8 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
           )}
         </div>
         <label className="activity-complete-check">
-          <input checked={done} onChange={(event) => onDoneChange(event.target.checked)} type="checkbox" />
+          <input className="journal-checkbox-input" checked={done} onChange={(event) => onDoneChange(event.target.checked)} type="checkbox" />
+          <span className="journal-checkbox-mark" aria-hidden="true"><Sparkles size={14} strokeWidth={2.5} /></span>
           <span>Mark complete</span>
         </label>
       </footer>

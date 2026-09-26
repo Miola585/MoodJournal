@@ -1,4 +1,4 @@
-import { CheckCircle2, ListChecks, Pause, Play, RotateCcw, Search, Waves } from 'lucide-react';
+import { CheckCircle2, ListChecks, Pause, Play, RotateCcw, Search, Sparkles, Waves } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { scavengerSets } from './gameUtils';
 
@@ -157,8 +157,9 @@ export function DailyGroundingTools({ todayKey }) {
             <div className="hunt-list">
               {huntItems.map((item) => (
                 <label className={huntDone.includes(item) ? 'checked' : ''} key={item}>
-                  <input checked={huntDone.includes(item)} onChange={() => toggleHuntItem(item)} type="checkbox" />
-                  {item}
+                  <input className="journal-checkbox-input" checked={huntDone.includes(item)} onChange={() => toggleHuntItem(item)} type="checkbox" />
+                  <span className="journal-checkbox-mark" aria-hidden="true"><Sparkles size={14} strokeWidth={2.5} /></span>
+                  <span>{item}</span>
                 </label>
               ))}
             </div>
@@ -185,8 +186,9 @@ export function DailyGroundingTools({ todayKey }) {
             <div className="hunt-list senses-list">
               {groundingSteps.map((item) => (
                 <label className={sensesDone.includes(item) ? 'checked' : ''} key={item}>
-                  <input checked={sensesDone.includes(item)} onChange={() => toggleSensesStep(item)} type="checkbox" />
-                  {item}
+                  <input className="journal-checkbox-input" checked={sensesDone.includes(item)} onChange={() => toggleSensesStep(item)} type="checkbox" />
+                  <span className="journal-checkbox-mark" aria-hidden="true"><Sparkles size={14} strokeWidth={2.5} /></span>
+                  <span>{item}</span>
                 </label>
               ))}
             </div>

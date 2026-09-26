@@ -1131,8 +1131,73 @@
 }
 
 .activity-complete-check input {
-  width: auto;
   flex: 0 0 auto;
+}
+
+.journal-checkbox-input {
+  position: absolute;
+  width: 1px !important;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.journal-checkbox-mark {
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--hero-accent) 52%, var(--glass-border));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--hero-surface) 82%, var(--glass-bg));
+  color: var(--selected-text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 24%, transparent);
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.journal-checkbox-mark svg {
+  opacity: 0;
+  transform: rotate(-18deg) scale(0.55);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.journal-checkbox-input:checked + .journal-checkbox-mark {
+  border-color: color-mix(in srgb, var(--selected-bg) 76%, var(--hero-accent));
+  background: color-mix(in srgb, var(--selected-bg) 74%, var(--hero-accent-soft));
+  transform: rotate(3deg);
+}
+
+.journal-checkbox-input:checked + .journal-checkbox-mark svg {
+  opacity: 1;
+  transform: rotate(-3deg) scale(1);
+}
+
+.activity-complete-check:hover .journal-checkbox-mark,
+.grounding-workspace .hunt-list label:hover .journal-checkbox-mark {
+  border-color: var(--hero-accent);
+  background: color-mix(in srgb, var(--hero-accent-soft) 58%, var(--glass-bg));
+}
+
+.activity-complete-check:hover .journal-checkbox-input:checked + .journal-checkbox-mark,
+.grounding-workspace .hunt-list label:hover .journal-checkbox-input:checked + .journal-checkbox-mark {
+  border-color: color-mix(in srgb, var(--selected-bg) 84%, var(--hero-accent));
+  background: color-mix(in srgb, var(--selected-bg) 80%, var(--hero-accent-soft));
+}
+
+.app.dark .journal-checkbox-mark {
+  background: color-mix(in srgb, var(--hero-surface-strong) 48%, var(--hero-surface));
+  color: var(--selected-text);
+}
+
+.app.dark .journal-checkbox-input:checked + .journal-checkbox-mark {
+  background: color-mix(in srgb, var(--selected-bg) 72%, var(--hero-accent-soft));
+  color: var(--selected-text);
 }
 
 .completed-today {
