@@ -2560,7 +2560,8 @@
 
 .calendar-cell-day:hover {
   border-color: color-mix(in srgb, var(--hero-accent) 54%, var(--glass-border));
-  background: color-mix(in srgb, var(--hero-accent-soft) 54%, var(--card-bg));
+  background: color-mix(in srgb, var(--hero-accent) 10%, var(--hero-surface));
+  color: var(--text);
   transform: translateY(-1px);
   box-shadow: 0 7px 16px color-mix(in srgb, var(--accent-color-darkest) 11%, transparent), var(--inner-highlight);
 }
@@ -2835,7 +2836,8 @@
 
 .app.dark .calendar-cell-day:hover {
   border-color: color-mix(in srgb, var(--hero-accent) 58%, var(--soft-border));
-  background: color-mix(in srgb, var(--hero-accent-soft) 42%, var(--card-bg));
+  background: color-mix(in srgb, var(--hero-accent) 14%, var(--calendar-day-surface));
+  color: var(--text);
   box-shadow: 0 7px 16px color-mix(in srgb, #000000 28%, transparent), var(--inner-highlight);
 }
 
@@ -3055,6 +3057,22 @@
     inset 16px 0 0 color-mix(in srgb, var(--soft-border) 26%, transparent),
     0 10px 24px color-mix(in srgb, #000000 22%, transparent),
     var(--inner-highlight);
+}
+
+.app.dark .calendar-detail > .entry-card .entry-page {
+  border-color: color-mix(in srgb, var(--soft-border) 34%, transparent);
+  background:
+    linear-gradient(90deg, transparent 0 30px, color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 22%, transparent) 30px 31px, transparent 31px),
+    repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--soft-border) 20%, transparent) 31px 32px),
+    color-mix(in srgb, var(--hero-surface-strong) 34%, var(--hero-surface));
+  color: var(--text);
+  box-shadow:
+    0 3px 0 color-mix(in srgb, var(--soft-border) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
+.app.dark .calendar-detail > .entry-card .entry-preview {
+  color: var(--text);
 }
 
 .app.dark .calendar-detail > .entry-card-compact .entry-compact-preview {
