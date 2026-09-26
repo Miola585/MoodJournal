@@ -1035,6 +1035,7 @@
   max-width: 640px;
   margin: 0;
   padding-left: 24px;
+  color: var(--text);
 }
 
 .activity-step-list li {
@@ -1070,7 +1071,24 @@
   padding: 0 12px;
   border-color: color-mix(in srgb, var(--glass-border) 64%, transparent);
   background: color-mix(in srgb, var(--input-bg) 18%, transparent);
+  color: var(--text);
   line-height: 32px;
+}
+
+.app.dark .activity-sheet-date,
+.app.dark .activity-note-field small,
+.app.dark .activity-timer span {
+  color: color-mix(in srgb, var(--text) 82%, var(--hero-accent));
+}
+
+.app.dark .activity-note-field textarea {
+  border-color: color-mix(in srgb, var(--soft-border) 56%, transparent);
+  background: color-mix(in srgb, var(--hero-surface-strong) 34%, var(--hero-surface));
+}
+
+.app.dark .activity-note-field textarea::placeholder {
+  color: color-mix(in srgb, var(--text) 72%, var(--muted-text));
+  opacity: 1;
 }
 
 .activity-note-field textarea:focus-visible {
@@ -1670,6 +1688,11 @@
 .entry-card-topline time span:last-child {
   font-size: 0.7rem;
   opacity: 0.82;
+}
+
+.app.dark .entry-card-topline time,
+.app.dark .entry-compact-preview {
+  color: color-mix(in srgb, var(--text) 84%, var(--hero-accent));
 }
 
 .entries-screen .entry-card > .entry-card-topline time,
