@@ -1718,6 +1718,7 @@
 .freewrite-notebook {
   --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 20%, var(--hero-surface));
   --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 7%, var(--input-bg));
+  --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 28%, var(--soft-border));
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent);
@@ -1731,6 +1732,7 @@
 .app.dark .freewrite-notebook {
   --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 24%, var(--hero-surface));
   --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 13%, var(--hero-surface-strong));
+  --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 48%, var(--soft-border));
 }
 
 .journal-editor-notebook {
@@ -1784,23 +1786,33 @@
 
 .freewrite-writing-field {
   display: block;
-  padding-left: 69px;
+  padding: 14px 22px 18px 69px;
 }
 
 .freewrite-writing-field textarea {
   display: block;
   min-height: 440px;
   padding: 9px 24px 18px 17px;
-  border: 0;
-  border-radius: 0;
+  border: 1px solid color-mix(in srgb, var(--notebook-rule-color) 58%, transparent);
+  border-radius: 3px;
   outline: 0;
   background:
-    repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--soft-border) 32%, transparent) 31px 32px),
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   background-attachment: local;
   color: var(--text);
   font-size: 1.02rem;
   line-height: 32px;
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--soft-border) 18%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 9%, transparent);
+}
+
+.app.dark .freewrite-writing-field textarea {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
+    var(--notebook-paper-surface);
+  color: var(--text);
 }
 
 .freewrite-title-field input::placeholder,
