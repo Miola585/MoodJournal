@@ -3059,7 +3059,7 @@
     var(--inner-highlight);
 }
 
-.app.dark .calendar-detail > .entry-card .entry-page {
+.app.dark .entry-card .entry-page {
   border-color: color-mix(in srgb, var(--soft-border) 34%, transparent);
   background:
     linear-gradient(90deg, transparent 0 30px, color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 22%, transparent) 30px 31px, transparent 31px),
@@ -3071,7 +3071,7 @@
     inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
 }
 
-.app.dark .calendar-detail > .entry-card .entry-preview {
+.app.dark .entry-card .entry-preview {
   color: var(--text);
 }
 
