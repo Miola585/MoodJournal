@@ -1786,7 +1786,7 @@
 
 .freewrite-writing-field {
   display: block;
-  padding: 14px 22px 18px 69px;
+  padding: 14px 22px 18px 86px;
 }
 
 .freewrite-writing-field textarea {
@@ -1797,6 +1797,7 @@
   border-radius: 3px;
   outline: 0;
   background:
+    linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 34%, transparent) 15px 16px, transparent 16px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   background-attachment: local;
@@ -1810,6 +1811,7 @@
 
 .app.dark .freewrite-writing-field textarea {
   background:
+    linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 44%, transparent) 15px 16px, transparent 16px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   color: var(--text);
