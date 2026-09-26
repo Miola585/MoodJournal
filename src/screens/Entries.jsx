@@ -115,6 +115,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary }) {
 function FreeWriteEntry({ nav, onSave, onCancel }) {
   const [draft, setDraft] = useState(createFreeWriteEntry());
   const setField = (field, value) => setDraft((current) => ({ ...current, [field]: value }));
+  const mood = moods.find((item) => item.key === draft.mood);
   const entryDate = new Date(draft.created).toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'long',
@@ -133,7 +134,7 @@ function FreeWriteEntry({ nav, onSave, onCancel }) {
         event.preventDefault();
         onSave({ ...draft, tags: Array.from(new Set([...(draft.tags || []), 'free-write'])) });
       }}>
-        <div className="freewrite-notebook">
+        <div className="freewrite-notebook journal-editor-notebook" style={mood ? { '--entry-accent': mood.color } : undefined}>
           <div className="freewrite-page-heading">
             <label className="freewrite-title-field">Title
               <input maxLength={100} required value={draft.specificFeeling} onChange={(event) => setField('specificFeeling', event.target.value)} placeholder="Give this page a title" />
@@ -156,6 +157,7 @@ function FreeWriteEntry({ nav, onSave, onCancel }) {
               <input value={draft.copingStep || ''} onChange={(event) => setField('copingStep', event.target.value)} placeholder="Something to return to later" />
             </label>
           </div>
+          <span className="notebook-page-corner" aria-hidden="true" />
         </div>
         <div className="actions freewrite-actions">
           <button className="primary" type="submit"><Save aria-hidden="true" size={17} />Save page</button>
@@ -191,7 +193,7 @@ function EditEntry({ entry, onSave, onCancel }) {
           : Array.from(new Set([...(draft.tags || []), 'free-write']));
         onSave({ ...draft, tags });
       }}>
-        <div className="freewrite-notebook edit-entry-notebook" style={mood ? { '--entry-accent': mood.color } : undefined}>
+        <div className="freewrite-notebook journal-editor-notebook edit-entry-notebook" style={mood ? { '--entry-accent': mood.color } : undefined}>
           <div className="freewrite-page-heading">
             {!checkIn ? (
               <label className="freewrite-title-field">Title
@@ -229,6 +231,7 @@ function EditEntry({ entry, onSave, onCancel }) {
               </label>
             )}
           </div>
+          <span className="notebook-page-corner" aria-hidden="true" />
         </div>
         <div className="actions freewrite-actions edit-entry-actions">
           <button className="primary" type="submit"><Save aria-hidden="true" size={17} />Save changes</button>

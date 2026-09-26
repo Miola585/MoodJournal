@@ -19,6 +19,13 @@ Use this private local file to capture future ideas before deciding what should 
 ## Sticker Book Ideas
 
 - Sticker Book: collect simple theme-matching stickers users can earn, place, or use as decorative journal rewards later.
+- Add an `Add sticker` tool to new and editable journal pages once the sticker collection is functional. It should open the user's unlocked stickers without leaving the page.
+- Let users place, move, resize, rotate, and remove stickers on the notebook page. Keep stickers away from writing by default, but allow intentional overlap after placement.
+- Save sticker ID, position, size, rotation, and layer order with the journal entry so the decorated page looks the same in Entries, Calendar, and monthly history.
+- Add a dedicated Sticker Book view for browsing unlocked, undiscovered, seasonal, theme, frog, bird, and achievement stickers.
+- Show locked stickers as gentle silhouettes or empty collection spaces without emotionally demanding unlock instructions.
+- Keep journal stickers decorative and optional. They must never affect mood summaries, streaks, achievements, or access to writing tools.
+- Protect synced sticker ownership and entry placement data with Supabase Row Level Security tied to `auth.uid()`.
 - Night Sky purple flame sticker: moonlight-fire palette with deep violet outer flame, lavender middle flame, pale moon-white center, and tiny muted-gold sparks.
 - Night Sky beginner stickers: crescent moon with sleepy face, lavender star, twinkle cluster, cloud with moon, potion bottle with stars, ringed planet, shooting star, mini constellation, sleepy candle flame, and open journal with stars.
 - Sticker creation workflow: trace the outer shape first, close the outline, bucket-fill it, then add middle/inner shapes and sparkles on separate layers.

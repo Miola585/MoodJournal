@@ -1836,6 +1836,14 @@
   box-shadow: var(--surface-shadow), var(--inner-highlight);
 }
 
+.journal-editor-notebook {
+  box-shadow:
+    inset -7px 0 0 color-mix(in srgb, var(--soft-border) 30%, transparent),
+    inset -9px 0 0 color-mix(in srgb, var(--glass-border) 38%, transparent),
+    var(--surface-shadow),
+    var(--inner-highlight);
+}
+
 .freewrite-notebook::before {
   content: "";
   position: absolute;
@@ -1915,11 +1923,7 @@
   gap: 20px;
 }
 
-.edit-entry-notebook {
-  border-top: 5px solid color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 66%, var(--hero-surface));
-}
-
-.edit-entry-notebook::after {
+.journal-editor-notebook::after {
   content: "";
   position: absolute;
   top: 0;
@@ -1929,6 +1933,21 @@
   background: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 78%, var(--accent-color-darkest));
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
   opacity: 0.82;
+  pointer-events: none;
+}
+
+.notebook-page-corner {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border-top: 1px solid color-mix(in srgb, var(--soft-border) 54%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--soft-border) 54%, transparent);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--hero-surface) 82%, var(--glass-bg)) 0 48%, color-mix(in srgb, var(--soft-border) 26%, var(--hero-surface)) 50% 100%);
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+  opacity: 0.72;
   pointer-events: none;
 }
 
