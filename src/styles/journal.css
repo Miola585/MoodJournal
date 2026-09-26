@@ -1720,6 +1720,7 @@
   --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 7%, var(--input-bg));
   --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 28%, var(--soft-border));
   --notebook-divider-color: color-mix(in srgb, var(--hero-accent) 54%, var(--soft-border));
+  --notebook-edge-color: color-mix(in srgb, var(--hero-accent) 18%, #f4eee5);
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent);
@@ -1732,15 +1733,15 @@
 
 .app.dark .freewrite-notebook {
   --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 24%, var(--hero-surface));
-  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 13%, var(--hero-surface-strong));
-  --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 48%, var(--soft-border));
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 12%, #272c2f);
+  --notebook-rule-color: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 34%, #9ba3a2);
   --notebook-divider-color: color-mix(in srgb, var(--hero-accent) 72%, var(--soft-border));
+  --notebook-edge-color: color-mix(in srgb, var(--hero-accent) 28%, #dbe3e1);
 }
 
 .journal-editor-notebook {
+  border-right: 9px solid var(--notebook-edge-color);
   box-shadow:
-    inset -7px 0 0 color-mix(in srgb, var(--soft-border) 30%, transparent),
-    inset -9px 0 0 color-mix(in srgb, var(--glass-border) 38%, transparent),
     var(--surface-shadow),
     var(--inner-highlight);
 }
@@ -1799,7 +1800,6 @@
   border-radius: 0;
   outline: 0;
   background:
-    linear-gradient(to left, var(--notebook-cover-surface) 0 9px, transparent 9px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   background-attachment: local;
@@ -1811,7 +1811,6 @@
 
 .app.dark .freewrite-writing-field textarea {
   background:
-    linear-gradient(to left, var(--notebook-cover-surface) 0 9px, transparent 9px),
     repeating-linear-gradient(180deg, transparent 0 31px, var(--notebook-rule-color) 31px 32px),
     var(--notebook-paper-surface);
   color: var(--text);
