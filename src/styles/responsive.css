@@ -215,10 +215,57 @@
     width: 100%;
   }
 
+  .archive-filter-status {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .archive-results-heading {
+    align-items: flex-start;
+  }
+
   .entry-card-topline,
   .entries-screen .entry-card > .entry-card-topline {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .entry-page {
+    padding: 9px 12px 23px 38px;
+  }
+
+  .freewrite-page-heading,
+  .freewrite-page-footer {
+    grid-template-columns: 1fr;
+    padding-left: 56px;
+  }
+
+  .freewrite-writing-field {
+    padding-left: 39px;
+  }
+
+  .freewrite-writing-field textarea {
+    min-height: 360px;
+    padding-right: 14px;
+  }
+
+  .freewrite-notebook {
+    background:
+      linear-gradient(90deg, transparent 0 38px, color-mix(in srgb, var(--hero-accent) 20%, transparent) 38px 39px, transparent 39px),
+      color-mix(in srgb, var(--hero-surface) 86%, var(--glass-bg));
+  }
+
+  .freewrite-notebook::before {
+    left: 8px;
+  }
+
+  .freewrite-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .freewrite-actions button {
+    justify-content: center;
   }
 
   .checkin-screen {
@@ -264,6 +311,66 @@
     min-height: 38px;
   }
 
+  .activities-screen {
+    gap: 26px;
+  }
+
+  .activity-selector,
+  .grounding-tool-tabs {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .activity-journal-sheet {
+    min-height: 0;
+    padding: 22px 18px;
+    background: color-mix(in srgb, var(--hero-surface) 82%, var(--glass-bg));
+  }
+
+  .activity-writing-area {
+    padding-inline: 18px 8px;
+    background-position: 5px 0, 0 0;
+  }
+
+  .activity-sheet-heading {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .activity-sheet-status {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .activity-sheet-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-complete-check {
+    justify-self: stretch;
+  }
+
+  .completed-today {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .completed-chip-row {
+    justify-content: flex-start;
+  }
+
+  .grounding-workspace {
+    min-height: 0;
+    padding: 22px 16px;
+  }
+
+  .grounding-workspace-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .grounding-workspace-footer .subtle-control {
+    width: 100%;
+  }
+
   .month-grid {
     grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 4px;
@@ -271,9 +378,9 @@
   }
 
   .calendar-toolbar {
-    grid-template-columns: 36px 1fr 36px;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
     gap: 6px;
-    padding: 8px;
+    padding: 10px;
   }
 
   .calendar-nav-button {
@@ -281,8 +388,30 @@
     min-height: 32px;
   }
 
+  .calendar-toolbar-actions {
+    gap: 4px;
+  }
+
+  .calendar-today-button {
+    width: 32px;
+    min-height: 32px;
+    overflow: hidden;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    font-size: 0;
+  }
+
+  .calendar-month-heading h2 {
+    font-size: 1.2rem;
+  }
+
+  .calendar-month-heading span {
+    font-size: 0.72rem;
+  }
+
   .calendar-heading {
-    padding: 12px;
+    padding: 12px 4px 4px;
   }
 
   .weekday {
@@ -293,8 +422,13 @@
   .calendar-cell {
     min-height: 54px;
     padding: 5px;
-    border-radius: 9px;
+    border-radius: 5px;
     font-size: 0.82rem;
+  }
+
+  .calendar-day-number {
+    width: 23px;
+    height: 23px;
   }
 
   .calendar-entry-markers {
@@ -324,8 +458,24 @@
     height: 12px;
   }
 
+  .calendar-today-label {
+    display: none;
+  }
+
   .calendar-detail-empty {
     align-items: flex-start;
+    margin-left: 0;
+  }
+
+  .calendar-detail {
+    padding: 18px 14px;
+    background: color-mix(in srgb, var(--hero-surface) 78%, var(--glass-bg));
+  }
+
+  .calendar-detail-heading,
+  .calendar-detail > .entry-card {
+    margin-left: 0;
+    padding-left: 24px;
   }
 
   .bar {

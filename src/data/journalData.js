@@ -132,7 +132,7 @@ export const createFreeWriteEntry = () => ({
   ...createEntry(),
   type: 'journal',
   mood: 'Content',
-  specificFeeling: 'Present',
+  specificFeeling: '',
   intensity: 5,
   tags: ['free-write']
 });

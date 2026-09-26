@@ -9,19 +9,156 @@
 }
 
 .grounding-tools {
-  margin-top: 28px;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--hero-accent-soft) 40%, transparent), transparent 58%),
-    color-mix(in srgb, var(--schedule-color) 84%, transparent);
+  display: grid;
+  gap: 12px;
+  width: min(900px, 100%);
+  margin: 0 auto;
 }
 
-.grounding-tools > h2,
-.grounding-tools > p {
+.grounding-tools-heading {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
   text-align: center;
 }
 
-.grounding-tools > h2 {
-  margin-top: 0;
+.grounding-tools-heading h2,
+.grounding-tools-heading p {
+  margin: 0;
+}
+
+.grounding-tools-heading p {
+  color: var(--muted-text);
+  font-weight: 700;
+}
+
+.grounding-tool-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.grounding-tool-tab {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 3px 9px;
+  min-height: 62px;
+  padding: 9px 11px;
+  border-color: color-mix(in srgb, var(--glass-border) 74%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--glass-bg) 62%, transparent);
+  color: var(--text);
+  box-shadow: none;
+  text-align: left;
+}
+
+.grounding-tool-tab svg {
+  grid-row: span 2;
+  color: var(--hero-accent);
+}
+
+.grounding-tool-tab span {
+  font-weight: 900;
+}
+
+.grounding-tool-tab small {
+  color: var(--muted-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.grounding-tool-tab:hover {
+  border-color: var(--hero-accent);
+  background: color-mix(in srgb, var(--hero-accent-soft) 60%, var(--glass-bg));
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.grounding-tool-tab.selected {
+  border-color: color-mix(in srgb, var(--hero-accent) 74%, var(--glass-border));
+  background: color-mix(in srgb, var(--hero-surface) 78%, var(--glass-bg));
+  box-shadow: inset 0 -3px 0 color-mix(in srgb, var(--hero-accent) 76%, transparent), var(--inner-highlight);
+}
+
+.grounding-tool-tab:focus-visible,
+.grounding-workspace button:focus-visible,
+.grounding-workspace label:has(input:focus-visible) {
+  outline: 2px solid color-mix(in srgb, var(--hero-accent) 72%, #ffffff);
+  outline-offset: 2px;
+}
+
+.grounding-workspace {
+  min-height: 350px;
+  padding: clamp(22px, 4vw, 36px);
+  border: 1px solid color-mix(in srgb, var(--glass-border) 78%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--hero-surface) 78%, var(--glass-bg));
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--accent-color-darkest) 11%, transparent), var(--inner-highlight);
+}
+
+.grounding-tool-content {
+  display: grid;
+  gap: 18px;
+  width: min(650px, 100%);
+  margin-inline: auto;
+}
+
+.grounding-tool-content > header {
+  display: grid;
+  gap: 5px;
+  text-align: center;
+}
+
+.grounding-tool-content h3,
+.grounding-tool-content p {
+  margin: 0;
+}
+
+.grounding-tool-content h3 {
+  color: var(--text);
+  font-family: Georgia, "Trebuchet MS", serif;
+  font-size: 1.35rem;
+}
+
+.breathing-tool-content {
+  justify-items: center;
+}
+
+.grounding-workspace .hunt-list {
+  gap: 2px;
+}
+
+.grounding-workspace .hunt-list label {
+  min-height: 54px;
+  padding: 10px 14px;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  background: transparent;
+}
+
+.grounding-workspace .hunt-list label.checked {
+  border-color: color-mix(in srgb, var(--selected-bg) 72%, var(--glass-border));
+  background: color-mix(in srgb, var(--selected-bg) 18%, transparent);
+  transform: none;
+}
+
+.grounding-workspace-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.grounding-workspace .subtle-control {
+  min-height: 32px;
+  margin: 0;
+  padding: 5px 10px;
+  border-color: color-mix(in srgb, var(--glass-border) 72%, transparent);
+  background: color-mix(in srgb, var(--glass-bg) 58%, transparent);
+  color: var(--muted-text);
+  box-shadow: none;
 }
 
 .games-screen {

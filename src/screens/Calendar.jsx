@@ -22,9 +22,27 @@ export function Calendar({ nav, entries, onPrimary }) {
   const month = monthDate.getMonth();
   const currentTodayKey = todayKey();
   const grouped = useMemo(() => groupEntriesByDate(entries), [entries]);
-  const days = useMemo(() => buildCalendarDays(year, month), [year, month]);
+  const days = useMemo(() => {
+    const monthDays = buildCalendarDays(year, month);
+    const trailingDays = (7 - (monthDays.length % 7)) % 7;
+    return [...monthDays, ...Array(trailingDays).fill(null)];
+  }, [year, month]);
   const selectedEntries = grouped[selectedDate] || [];
-  const moveMonth = (change) => setMonthDate(new Date(year, month + change, 1));
+  const monthEntryCount = days.reduce((total, day) => {
+    if (!day) return total;
+    const key = formatDateKey(new Date(year, month, day));
+    return total + (grouped[key]?.length || 0);
+  }, 0);
+  const moveMonth = (change) => {
+    const nextMonth = new Date(year, month + change, 1);
+    setMonthDate(nextMonth);
+    setSelectedDate(formatDateKey(nextMonth));
+  };
+  const returnToToday = () => {
+    const today = new Date();
+    setMonthDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDate(currentTodayKey);
+  };
   const monthLabel = monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' });
 
   return (
@@ -36,51 +54,69 @@ export function Calendar({ nav, entries, onPrimary }) {
         </div>
       </div>
       {nav}
-      <div className="calendar-toolbar">
-        <button aria-label="Previous month" className="calendar-nav-button" onClick={() => moveMonth(-1)} type="button">
-          <ChevronLeft aria-hidden="true" size={22} />
-        </button>
-        <h2>{monthLabel}</h2>
-        <button aria-label="Next month" className="calendar-nav-button" onClick={() => moveMonth(1)} type="button">
-          <ChevronRight aria-hidden="true" size={22} />
-        </button>
-      </div>
-      <div className="month-grid">
-        {weekDays.map((day) => <strong className="weekday" key={day}>{day}</strong>)}
-        {days.map((day, index) => {
-          const key = day ? formatDateKey(new Date(year, month, day)) : '';
-          const dayEntries = key ? grouped[key] || [] : [];
-          const mainEntry = getPrimaryEntry(dayEntries);
-          const firstMood = mainEntry ? moods.find((mood) => mood.key === mainEntry.mood) : null;
-          const isSelected = key === selectedDate;
-          const isToday = key === currentTodayKey;
-          const hasEntries = dayEntries.length > 0;
-          const cellClass = [
-            'calendar-cell',
-            day ? 'calendar-cell-day' : 'calendar-cell-empty',
-            isSelected ? 'selected' : '',
-            isToday ? 'today' : '',
-            hasEntries ? 'has-entries' : ''
-          ].filter(Boolean).join(' ');
-          return (
-            <button className={cellClass} disabled={!day} key={key || `blank-${index}`} onClick={() => setSelectedDate(key)} style={firstMood ? { '--day-mood': firstMood.color } : undefined} type="button">
-              {day && <span>{day}</span>}
-              {isToday && <i className="calendar-today-sticker" aria-hidden="true" />}
-              {firstMood && (
-                <div className="calendar-entry-markers" aria-label={`${dayEntries.length} saved ${dayEntries.length === 1 ? 'entry' : 'entries'}`}>
-                  <b>{firstMood.emoji}</b>
-                  <span>
-                    {dayEntries.slice(0, 3).map((entry) => <small key={entry.id || entry.created} />)}
-                  </span>
-                </div>
-              )}
-              {dayEntries.length > 1 && <em>{dayEntries.length}</em>}
+      <div className="calendar-board">
+        <div className="calendar-toolbar">
+          <button aria-label="Previous month" className="calendar-nav-button" onClick={() => moveMonth(-1)} type="button">
+            <ChevronLeft aria-hidden="true" size={22} />
+          </button>
+          <div className="calendar-month-heading">
+            <h2>{monthLabel}</h2>
+            <span>{monthEntryCount} saved {monthEntryCount === 1 ? 'entry' : 'entries'}</span>
+          </div>
+          <div className="calendar-toolbar-actions">
+            <button className="calendar-today-button" onClick={returnToToday} type="button">
+              <CalendarDays aria-hidden="true" size={17} />
+              Today
             </button>
-          );
-        })}
+            <button aria-label="Next month" className="calendar-nav-button" onClick={() => moveMonth(1)} type="button">
+              <ChevronRight aria-hidden="true" size={22} />
+            </button>
+          </div>
+        </div>
+        <div className="month-grid">
+          {weekDays.map((day) => <strong className="weekday" key={day}>{day}</strong>)}
+          {days.map((day, index) => {
+            const key = day ? formatDateKey(new Date(year, month, day)) : '';
+            const dayEntries = key ? grouped[key] || [] : [];
+            const mainEntry = getPrimaryEntry(dayEntries);
+            const firstMood = mainEntry ? moods.find((mood) => mood.key === mainEntry.mood) : null;
+            const isSelected = key === selectedDate;
+            const isToday = key === currentTodayKey;
+            const hasEntries = dayEntries.length > 0;
+            const cellClass = [
+              'calendar-cell',
+              day ? 'calendar-cell-day' : 'calendar-cell-empty',
+              isSelected ? 'selected' : '',
+              isToday ? 'today' : '',
+              hasEntries ? 'has-entries' : ''
+            ].filter(Boolean).join(' ');
+            const dayLabel = day
+              ? `${formatFriendlyDate(key)}${isToday ? ', today' : ''}${hasEntries ? `, ${dayEntries.length} saved ${dayEntries.length === 1 ? 'entry' : 'entries'}` : ', no saved entries'}`
+              : 'Empty calendar day';
+            return (
+              <button aria-label={dayLabel} aria-pressed={isSelected} className={cellClass} disabled={!day} key={key || `blank-${index}`} onClick={() => setSelectedDate(key)} style={firstMood ? { '--day-mood': firstMood.color } : undefined} type="button">
+                {day && <span className="calendar-day-number">{day}</span>}
+                {isToday && <span className="calendar-today-label">Today</span>}
+                {firstMood && (
+                  <span className="calendar-entry-markers" aria-hidden="true">
+                    <b>{firstMood.emoji}</b>
+                    <span>
+                      {dayEntries.slice(0, 3).map((entry) => <small key={entry.id || entry.created} />)}
+                    </span>
+                  </span>
+                )}
+                {dayEntries.length > 1 && <em aria-hidden="true">{dayEntries.length}</em>}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="calendar-detail">
-        <h2>{formatFriendlyDate(selectedDate)}</h2>
+        <div className="calendar-detail-heading">
+          <span>Selected day</span>
+          <h2>{formatFriendlyDate(selectedDate)}</h2>
+          {selectedEntries.length > 0 && <p>{selectedEntries.length} saved {selectedEntries.length === 1 ? 'entry' : 'entries'}</p>}
+        </div>
         {selectedEntries.length === 0 ? (
           <div className="calendar-detail-empty">
             <CalendarDays aria-hidden="true" size={34} />
