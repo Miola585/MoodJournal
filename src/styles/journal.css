@@ -1725,8 +1725,10 @@
 }
 
 .entry-card-freewrite .entry-type-badge {
-  background: color-mix(in srgb, var(--accent-color-green) 82%, var(--glass-bg));
+  border: 1px solid color-mix(in srgb, var(--accent-color-green) 64%, var(--soft-border));
+  background: color-mix(in srgb, var(--accent-color-green) 84%, var(--selected-bg));
   color: var(--text-on-light);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 24%, transparent);
 }
 
 .entries-screen .entry-card h2 {
