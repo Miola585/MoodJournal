@@ -12,6 +12,7 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary }) {
   const notePreview = stripGameData(entry.note || '').trim();
   const canToggle = Boolean(onEdit || onDelete);
   const showFullEntry = expanded || !canToggle;
+  const createdAt = new Date(entry.created);
   return (
     <article className={`${isCheckIn(entry) ? 'entry-card entry-card-checkin' : 'entry-card entry-card-freewrite'}${showFullEntry ? ' entry-card-open' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
       <div className="entry-card-topline">
@@ -19,7 +20,10 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary }) {
           <span className="entry-type-badge">{entryLabel}</span>
           {entry.primary ? <span className="primary-marker">Main</span> : null}
         </div>
-        <time dateTime={entry.created}>{new Date(entry.created).toLocaleString()}</time>
+        <time dateTime={entry.created}>
+          <span>{createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <span>{createdAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</span>
+        </time>
       </div>
       <h2>{isCheckIn(entry) ? `${mood?.emoji || ''} ${entry.mood || 'Check-In'}` : entry.specificFeeling || 'Untitled page'}</h2>
       {!showFullEntry && <p className="entry-closed-note"><BookOpen aria-hidden="true" size={16} />Page closed</p>}
