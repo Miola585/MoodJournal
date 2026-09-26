@@ -1739,6 +1739,26 @@
   --notebook-edge-color: color-mix(in srgb, var(--hero-accent) 28%, #dbe3e1);
 }
 
+.app.theme-warm.dark .freewrite-notebook {
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 10%, #392f35);
+}
+
+.app.theme-sunrise.dark .freewrite-notebook {
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 10%, #44313e);
+}
+
+.app.theme-night.dark .freewrite-notebook {
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 10%, #292c48);
+}
+
+.app.theme-garden.dark .freewrite-notebook {
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 8%, #3d3833);
+}
+
+.app.theme-ocean.dark .freewrite-notebook {
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 10%, #264247);
+}
+
 .journal-editor-notebook {
   border-right: 9px solid var(--notebook-edge-color);
   box-shadow:
