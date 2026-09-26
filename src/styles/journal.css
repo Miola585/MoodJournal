@@ -256,6 +256,22 @@
   transform: rotate(-10deg) scale(1.18);
 }
 
+.app.dark .mood {
+  border-color: color-mix(in srgb, var(--mood, var(--accent-color-light)) 68%, var(--soft-border));
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mood, var(--accent-color-light)) 30%, transparent), transparent),
+    color-mix(in srgb, var(--mood, var(--accent-color-light)) 18%, var(--mood-chip-bg));
+}
+
+.app.dark .mood:hover {
+  border-color: color-mix(in srgb, var(--mood, var(--accent-color-light)) 82%, #ffffff);
+  background: color-mix(in srgb, var(--mood, var(--accent-color-light)) 44%, var(--mood-chip-bg));
+  color: var(--text);
+  box-shadow:
+    0 10px 22px color-mix(in srgb, var(--mood, var(--accent-color-light)) 22%, transparent),
+    var(--inner-highlight);
+}
+
 .mood.selected {
   border-color: var(--hero-accent);
   background: color-mix(in srgb, var(--mood, var(--accent-color-light)) 54%, var(--mood-chip-bg));
