@@ -1485,7 +1485,11 @@
   right: 24px;
   width: 22px;
   height: 42px;
-  background: color-mix(in srgb, var(--entry-accent, var(--accent-color-light)) 44%, var(--mood-chip-bg));
+  background: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--entry-accent, var(--accent-color-light)) 44%, var(--mood-chip-bg)) 86%,
+    #000000
+  );
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
   opacity: 1;
   pointer-events: none;
@@ -1877,7 +1881,11 @@
   right: 28px;
   width: 20px;
   height: 38px;
-  background: color-mix(in srgb, var(--entry-accent, var(--accent-color-light)) 44%, var(--mood-chip-bg));
+  background: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--entry-accent, var(--accent-color-light)) 44%, var(--mood-chip-bg)) 86%,
+    #000000
+  );
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
   opacity: 1;
   pointer-events: none;
