@@ -148,7 +148,6 @@
   .links-row,
   .newsletter-grid,
   .newsletter-form,
-  .activity-grid,
     .dashboard-grid,
     .archive-toolbar,
     .home-checkin-layout,
@@ -163,7 +162,6 @@
   .collection-grid,
   .settings-grid,
   .two-col,
-  .three-col,
   .toolbar,
   .stats-grid {
     grid-template-columns: 1fr;
@@ -457,13 +455,6 @@
     bottom: 4px;
     padding: 1px 5px;
     font-size: 0.64rem;
-  }
-
-  .calendar-today-sticker {
-    top: 4px;
-    right: 4px;
-    width: 12px;
-    height: 12px;
   }
 
   .calendar-today-label {

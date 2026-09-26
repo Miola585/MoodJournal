@@ -48,15 +48,6 @@
   font-size: 0.92em;
 }
 
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
-}
-
-.about-section,
-.features-section,
 .newsletter-section,
 .links-section,
 .panel,
@@ -71,8 +62,6 @@
   backdrop-filter: blur(10px);
 }
 
-.about-section,
-.features-section,
 .newsletter-section,
 .links-section {
   padding: 24px;
@@ -119,8 +108,7 @@
 
 .feature-card:hover,
 .resource-card:hover,
-.entry-card:hover,
-.activity-card:hover {
+.entry-card:hover {
   border-color: var(--selected-bg);
   transform: translateY(-5px);
   box-shadow: var(--hover-shadow), var(--inner-highlight);
@@ -231,13 +219,6 @@
   background: color-mix(in srgb, var(--glass-bg) 62%, #d9827b 8%);
   box-shadow: none;
   font-size: 0.94rem;
-}
-
-.recommendation-note {
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: var(--accent-color-light);
-  font-weight: 700;
 }
 
 .mood-grid {
@@ -569,10 +550,6 @@
   opacity: 0.72;
 }
 
-.prompt-chip-grid .choice-button {
-  min-width: 112px;
-}
-
 .body-check-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -748,7 +725,6 @@
 .entry-card,
 .calendar-day,
 .stat,
-.activity-card,
 .calendar-detail {
   padding: 16px;
   border: 1px solid var(--glass-border);
@@ -759,7 +735,6 @@
 }
 
 .two-col,
-.three-col,
 .toolbar {
   display: grid;
   gap: 14px;
@@ -781,7 +756,6 @@
   margin: 0 0 16px;
 }
 
-.three-col,
 .stats-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -794,8 +768,7 @@
 .chips,
 .meta,
 .actions,
-.settings-list,
-.timer-row {
+.settings-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -830,15 +803,12 @@
   margin-inline: auto;
 }
 
-.activities-heading,
-.section-kicker {
+.activities-heading {
   text-align: center;
 }
 
 .activities-heading h1,
-.activities-heading p,
-.section-kicker h2,
-.section-kicker p {
+.activities-heading p {
   margin: 0;
 }
 
@@ -848,8 +818,7 @@
   justify-items: center;
 }
 
-.activities-heading p,
-.section-kicker p {
+.activities-heading p {
   color: var(--muted-text);
   font-weight: 700;
 }
@@ -1167,135 +1136,10 @@
   text-align: left;
 }
 
-.activities-group {
-  display: grid;
-  gap: 14px;
-}
-
-.activity-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.activity-card {
-  position: relative;
-  display: grid;
-  align-content: space-between;
-  gap: 10px;
-  min-height: 210px;
-  overflow: hidden;
-  border-radius: 10px;
-  background:
-    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--accent-color-medium) 24%, transparent), transparent 22%),
-    linear-gradient(145deg, color-mix(in srgb, var(--accent-color-light) 28%, transparent), transparent 54%),
-    var(--glass-bg);
-  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
-}
-
-.activity-card::after {
-  position: absolute;
-  right: 14px;
-  bottom: 12px;
-  width: 34px;
-  height: 16px;
-  border: 2px solid color-mix(in srgb, var(--accent-color-dark) 34%, transparent);
-  border-top: 0;
-  border-radius: 0 0 999px 999px;
-  content: "";
-  opacity: 0.22;
-}
-
-.activity-card-top {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.activity-icon {
-  display: inline-grid;
-  grid-row: span 2;
-  width: 44px;
-  aspect-ratio: 1;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--glass-border) 72%, #ffffff);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--hero-surface) 72%, var(--accent-color-light));
-  color: var(--hero-accent);
-  box-shadow: var(--inner-highlight);
-}
-
-.activity-duration {
-  justify-self: start;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-color-light) 66%, transparent);
-  color: var(--accent-color-darkest);
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.activity-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.activity-check input {
-  width: auto;
-  flex: 0 0 auto;
-}
-
-.activity-card h2 {
-  margin: 0;
-  font-size: 1.08rem;
-  line-height: 1.2;
-  text-align: left;
-}
-
-.activity-card p {
-  margin: 0;
-}
-
-.activity-card.done {
-  border-color: color-mix(in srgb, var(--selected-bg) 82%, var(--glass-border));
-  outline: 3px solid color-mix(in srgb, var(--selected-bg) 32%, transparent);
-  background:
-    radial-gradient(circle at 92% 12%, color-mix(in srgb, var(--selected-bg) 30%, transparent), transparent 22%),
-    linear-gradient(145deg, color-mix(in srgb, var(--hero-surface) 42%, transparent), transparent 54%),
-    var(--glass-bg);
-}
-
-.activity-card.done::before {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 10px;
-  aspect-ratio: 1;
-  border-radius: 999px;
-  background: var(--selected-bg);
-  box-shadow:
-    16px 8px 0 color-mix(in srgb, var(--selected-bg) 68%, transparent),
-    -12px 18px 0 color-mix(in srgb, var(--selected-bg) 46%, transparent);
-  content: "";
-}
-
-.timer-row {
-  align-items: center;
-}
-
-.timer-row strong {
-  min-width: 64px;
-  font-size: 1.25rem;
-}
-
 .timer-action,
 .timer-reset,
 .grounding-actions button,
 .completed-chip,
-.done-note,
 .grounding-complete {
   display: inline-flex;
   align-items: center;
@@ -1303,7 +1147,6 @@
   gap: 6px;
 }
 
-.done-note,
 .grounding-complete {
   justify-content: flex-start;
   color: var(--hero-accent);
@@ -1411,13 +1254,6 @@
 .entry-card {
   display: grid;
   gap: 10px;
-}
-
-.entry-card > div:first-child {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
 }
 
 .entries-screen {
@@ -1880,14 +1716,21 @@
 }
 
 .freewrite-notebook {
+  --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 20%, var(--hero-surface));
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 7%, var(--input-bg));
   position: relative;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--glass-border) 70%, transparent);
   border-radius: 8px;
   background:
     linear-gradient(90deg, transparent 0 68px, color-mix(in srgb, var(--hero-accent) 20%, transparent) 68px 69px, transparent 69px),
-    color-mix(in srgb, var(--hero-surface) 86%, var(--glass-bg));
+    var(--notebook-cover-surface);
   box-shadow: var(--surface-shadow), var(--inner-highlight);
+}
+
+.app.dark .freewrite-notebook {
+  --notebook-cover-surface: color-mix(in srgb, var(--hero-accent-soft) 24%, var(--hero-surface));
+  --notebook-paper-surface: color-mix(in srgb, var(--entry-accent, var(--hero-accent)) 13%, var(--hero-surface-strong));
 }
 
 .journal-editor-notebook {
@@ -1922,7 +1765,15 @@
 .freewrite-page-heading input,
 .freewrite-page-heading select,
 .freewrite-page-footer input {
-  background: color-mix(in srgb, var(--input-bg) 78%, transparent);
+  background: color-mix(in srgb, var(--notebook-paper-surface) 82%, var(--notebook-cover-surface));
+  color: var(--text);
+}
+
+.app.dark .freewrite-page-heading input,
+.app.dark .freewrite-page-heading select,
+.app.dark .freewrite-page-footer input {
+  border-color: color-mix(in srgb, var(--soft-border) 52%, transparent);
+  background: color-mix(in srgb, var(--notebook-paper-surface) 82%, var(--notebook-cover-surface));
 }
 
 .freewrite-title-field input {
@@ -1944,10 +1795,19 @@
   border-radius: 0;
   outline: 0;
   background:
-    repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--soft-border) 32%, transparent) 31px 32px);
+    repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--soft-border) 32%, transparent) 31px 32px),
+    var(--notebook-paper-surface);
   background-attachment: local;
+  color: var(--text);
   font-size: 1.02rem;
   line-height: 32px;
+}
+
+.freewrite-title-field input::placeholder,
+.freewrite-writing-field textarea::placeholder,
+.freewrite-page-footer input::placeholder {
+  color: color-mix(in srgb, var(--text) 68%, var(--hero-accent));
+  opacity: 1;
 }
 
 .freewrite-writing-field textarea:focus-visible {
@@ -1960,7 +1820,7 @@
   gap: 16px;
   padding: 18px 22px 22px 86px;
   border-top: 1px solid color-mix(in srgb, var(--soft-border) 42%, transparent);
-  background: color-mix(in srgb, var(--hero-accent-soft) 22%, transparent);
+  background: var(--notebook-cover-surface);
 }
 
 .freewrite-actions {
@@ -2031,7 +1891,7 @@
   padding: 9px 12px;
   border: 1px solid color-mix(in srgb, var(--soft-border) 52%, transparent);
   border-radius: 7px;
-  background: color-mix(in srgb, var(--input-bg) 68%, transparent);
+  background: color-mix(in srgb, var(--notebook-paper-surface) 72%, var(--notebook-cover-surface));
 }
 
 .edit-entry-actions {
@@ -2067,33 +1927,6 @@
   display: block;
   height: 100%;
   background: var(--accent-color-dark);
-}
-
-.chart-wrap {
-  padding: 16px;
-}
-
-.chart-wrap svg {
-  width: 100%;
-  height: 180px;
-  overflow: visible;
-  border-left: 2px solid var(--soft-border);
-  border-bottom: 2px solid var(--soft-border);
-}
-
-.chart-wrap polyline {
-  fill: none;
-  stroke: var(--accent-color-dark);
-  stroke-width: 4;
-  vector-effect: non-scaling-stroke;
-}
-
-.chart-labels {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 8px;
-  font-weight: 800;
 }
 
 .summary-screen {
@@ -2250,18 +2083,6 @@
 .summary-tooltip span {
   color: var(--muted-text);
   font-weight: 800;
-}
-
-.empty-chart-message {
-  position: absolute;
-  inset: auto 18px 18px;
-  margin: 0;
-  padding: 8px 11px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--hero-surface) 72%, transparent);
-  color: var(--muted-text);
-  font-weight: 900;
-  text-align: center;
 }
 
 .empty-analytics-frame {
@@ -2662,145 +2483,6 @@
   font-style: normal;
   font-weight: 900;
   font-size: 0.74rem;
-}
-
-.calendar-cell.today::after,
-.calendar-today-sticker {
-  position: absolute;
-  pointer-events: none;
-}
-
-.calendar-today-sticker {
-  top: 8px;
-  right: 8px;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--hero-accent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--selected-bg) 78%, var(--glass-bg));
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--hero-accent-soft) 72%, transparent),
-    var(--inner-highlight);
-}
-
-.calendar-today-sticker::before,
-.calendar-today-sticker::after {
-  content: "";
-  position: absolute;
-}
-
-.calendar-today-sticker::before {
-  inset: -5px auto auto 2px;
-  width: 8px;
-  height: 4px;
-  border-top: 2px solid var(--hero-accent);
-  border-radius: 50%;
-}
-
-.calendar-today-sticker::after {
-  right: -5px;
-  bottom: 1px;
-  width: 5px;
-  height: 6px;
-  border: 2px solid var(--hero-accent);
-  border-left: 0;
-  border-radius: 0 999px 999px 0;
-}
-
-.app.theme-sunrise .calendar-today-sticker,
-.app.theme-sunrise.dark .calendar-today-sticker {
-  border-radius: 50%;
-  background: var(--selected-bg);
-}
-
-.app.theme-sunrise .calendar-today-sticker::before,
-.app.theme-sunrise .calendar-today-sticker::after,
-.app.theme-sunrise.dark .calendar-today-sticker::before,
-.app.theme-sunrise.dark .calendar-today-sticker::after {
-  inset: auto;
-  top: 50%;
-  left: 50%;
-  width: 24px;
-  height: 2px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--hero-accent);
-  transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.app.theme-sunrise .calendar-today-sticker::after,
-.app.theme-sunrise.dark .calendar-today-sticker::after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-}
-
-.app.theme-garden .calendar-today-sticker,
-.app.theme-garden.dark .calendar-today-sticker {
-  border-radius: 70% 30% 70% 30%;
-  transform: rotate(-12deg);
-}
-
-.app.theme-garden .calendar-today-sticker::before,
-.app.theme-garden.dark .calendar-today-sticker::before {
-  inset: 3px auto auto -6px;
-  width: 11px;
-  height: 9px;
-  border: 2px solid var(--hero-accent);
-  border-radius: 70% 30% 70% 30%;
-  background: color-mix(in srgb, var(--selected-bg) 44%, transparent);
-}
-
-.app.theme-garden .calendar-today-sticker::after,
-.app.theme-garden.dark .calendar-today-sticker::after {
-  display: none;
-}
-
-.app.theme-ocean .calendar-today-sticker,
-.app.theme-ocean.dark .calendar-today-sticker {
-  border-radius: 999px 999px 45% 45%;
-}
-
-.app.theme-ocean .calendar-today-sticker::before,
-.app.theme-ocean.dark .calendar-today-sticker::before {
-  inset: 3px 2px auto;
-  width: 11px;
-  height: 5px;
-  border: 0;
-  border-bottom: 2px solid var(--hero-accent);
-  border-radius: 50%;
-}
-
-.app.theme-ocean .calendar-today-sticker::after,
-.app.theme-ocean.dark .calendar-today-sticker::after {
-  right: -5px;
-  top: -4px;
-  width: 7px;
-  height: 7px;
-  border: 2px solid var(--hero-accent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--selected-bg) 34%, transparent);
-}
-
-.app.theme-night .calendar-today-sticker,
-.app.theme-night.dark .calendar-today-sticker {
-  background: transparent;
-  box-shadow:
-    inset -5px 0 0 var(--selected-bg),
-    0 0 0 3px color-mix(in srgb, var(--hero-accent-soft) 72%, transparent);
-}
-
-.app.theme-night .calendar-today-sticker::before,
-.app.theme-night.dark .calendar-today-sticker::before {
-  inset: 3px auto auto -8px;
-  width: 5px;
-  height: 5px;
-  border: 0;
-  border-radius: 50%;
-  background: var(--hero-accent);
-}
-
-.app.theme-night .calendar-today-sticker::after,
-.app.theme-night.dark .calendar-today-sticker::after {
-  display: none;
 }
 
 .calendar-cell.selected {
