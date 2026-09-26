@@ -6,19 +6,19 @@ export const journalUrl = new URL('../../img/Journal.png', import.meta.url).href
 export const yogaUrl = new URL('../../img/Yoga.png', import.meta.url).href;
 export const sunshineUrl = new URL('../../img/sunshine.png', import.meta.url).href;
 export const moods = [
-  { key: 'Happy', emoji: '😊', color: '#ffd166', feelings: ['Joyful', 'Proud', 'Playful', 'Hopeful', 'Loved'], score: 8 },
-  { key: 'Content', emoji: '🙂', color: '#f4a261', feelings: ['Settled', 'Comfortable', 'Balanced', 'Safe', 'Present'], score: 7 },
-  { key: 'Excited', emoji: '🤩', color: '#ff9f1c', feelings: ['Eager', 'Inspired', 'Energized', 'Curious', 'Motivated'], score: 8 },
-  { key: 'Calm', emoji: '😌', color: '#8ecae6', feelings: ['Peaceful', 'Relaxed', 'Grounded', 'Clear', 'Relieved'], score: 7 },
-  { key: 'Anxious', emoji: '😰', color: '#f28482', feelings: ['Worried', 'Nervous', 'Unsure', 'Restless', 'Scared'], score: 4 },
-  { key: 'Sad', emoji: '😢', color: '#90a4ae', feelings: ['Disappointed', 'Hurt', 'Grieving', 'Discouraged', 'Heavy'], score: 3 },
-  { key: 'Angry', emoji: '😡', color: '#ff6b6b', feelings: ['Frustrated', 'Irritated', 'Resentful', 'Betrayed', 'Defensive'], score: 4 },
-  { key: 'Lonely', emoji: '😔', color: '#bdb2ff', feelings: ['Left out', 'Disconnected', 'Unseen', 'Homesick', 'Isolated'], score: 3 },
-  { key: 'Grateful', emoji: '🙏', color: '#b7c7a3', feelings: ['Thankful', 'Appreciative', 'Touched', 'Lucky', 'Supported'], score: 8 },
-  { key: 'Tired', emoji: '😴', color: '#a8dadc', feelings: ['Drained', 'Sleepy', 'Burned out', 'Foggy', 'Low energy'], score: 4 },
-  { key: 'Overwhelmed', emoji: '😵', color: '#ffb4a2', feelings: ['Stressed', 'Pressured', 'Scattered', 'Stuck', 'Flooded'], score: 3 },
-  { key: 'Panic', emoji: '😱', color: '#ff8fa3', feelings: ['Terrified', 'Shaky', 'Trapped', 'Racing', 'Unsafe'], score: 2 },
-  { key: 'Numb', emoji: '😶', color: '#cfd8dc', feelings: ['Blank', 'Detached', 'Flat', 'Distant', 'Frozen'], score: 3 }
+  { key: 'Happy', emoji: '😊', color: '#f2c94c', feelings: ['Joyful', 'Proud', 'Playful', 'Hopeful', 'Loved'], score: 8 },
+  { key: 'Content', emoji: '🙂', color: '#43a66b', feelings: ['Settled', 'Comfortable', 'Balanced', 'Safe', 'Present'], score: 7 },
+  { key: 'Excited', emoji: '🤩', color: '#f27a24', feelings: ['Eager', 'Inspired', 'Energized', 'Curious', 'Motivated'], score: 8 },
+  { key: 'Calm', emoji: '😌', color: '#2aafa1', feelings: ['Peaceful', 'Relaxed', 'Grounded', 'Clear', 'Relieved'], score: 7 },
+  { key: 'Anxious', emoji: '😰', color: '#9b5de5', feelings: ['Worried', 'Nervous', 'Unsure', 'Restless', 'Scared'], score: 4 },
+  { key: 'Sad', emoji: '😢', color: '#3f6fb5', feelings: ['Disappointed', 'Hurt', 'Grieving', 'Discouraged', 'Heavy'], score: 3 },
+  { key: 'Angry', emoji: '😡', color: '#d63c3c', feelings: ['Frustrated', 'Irritated', 'Resentful', 'Betrayed', 'Defensive'], score: 4 },
+  { key: 'Lonely', emoji: '😔', color: '#6657a8', feelings: ['Left out', 'Disconnected', 'Unseen', 'Homesick', 'Isolated'], score: 3 },
+  { key: 'Grateful', emoji: '🙏', color: '#8da63f', feelings: ['Thankful', 'Appreciative', 'Touched', 'Lucky', 'Supported'], score: 8 },
+  { key: 'Tired', emoji: '😴', color: '#8b7868', feelings: ['Drained', 'Sleepy', 'Burned out', 'Foggy', 'Low energy'], score: 4 },
+  { key: 'Overwhelmed', emoji: '😵', color: '#d1498b', feelings: ['Stressed', 'Pressured', 'Scattered', 'Stuck', 'Flooded'], score: 3 },
+  { key: 'Panic', emoji: '😱', color: '#8e294f', feelings: ['Terrified', 'Shaky', 'Trapped', 'Racing', 'Unsafe'], score: 2 },
+  { key: 'Numb', emoji: '😶', color: '#89939b', feelings: ['Blank', 'Detached', 'Flat', 'Distant', 'Frozen'], score: 3 }
 ];
 export const factors = ['Sleep', 'School', 'Work', 'Friends', 'Family', 'Body', 'Food', 'Money', 'Social media', 'Weather', 'Health', 'Identity'];
 export const prompts = [
