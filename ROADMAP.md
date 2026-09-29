@@ -57,7 +57,7 @@ Export each finished sticker as transparent PNG in both 512px and 256px versions
 
 - [x] Sun doodle: source `sun_doodle.webp`. Palette: outline `#BF5F6B`, main fill `#F3C969`, shadow `#E88672`, highlight `#FFF8ED`, accent/details `#FFD28A`.
 - [ ] Simple sun: source `sun_variety.webp`; choose one face or clean ray shape. Palette: outline `#6B3B46`, main fill `#F3C969`, shadow `#F4A261`, highlight `#FFF1C9`, accent/details `#E88672`, face `#3F302A`.
-- [ ] Soft cloud: source `clouds.webp`. Palette: outline `#BF5F6B`, main fill `#FFF8ED`, shadow `#FFE0D3`, highlight `#FFFFFF`, accent/details `#CDE6E4`.
+- [x] Soft cloud sticker: completed transparent exports `cloud_sticker.png` and `cloud_sticker_256.png` in `img/Sticker_book/sunset_inProg/`.
 - [ ] Sun and cloud: source `sun_and_clud.webp`; simplify the rainbow if needed. Palette: outline `#6B3B46`, main fill `#FFF8ED`, shadow `#D8D1FF`, highlight `#FFFFFF`, accent/details `#F3C969`, rainbow peach `#E88672`, rainbow gold `#FFD28A`, rainbow aqua `#98DCE0`.
 - [ ] Wave or horizon badge: source existing sunrise wave/horizon assets. Palette: outline `#6B3B46`, main fill `#FFE0D3`, shadow `#BF5F6B`, highlight `#FFF8ED`, accent/details `#F3C969`, coral band `#E88672`.
 
@@ -98,6 +98,7 @@ Export each finished sticker as transparent PNG in both 512px and 256px versions
 - Archive each completed month as a read-only garden using saved flower data and positions. Render the archive as a scene first; add downloadable image snapshots later.
 - Upgrade the building through cumulative active days: simple cottage, larger shed, then detailed workshop. Missing a day must not reset progress.
 - Build the environment in layers: sky, distant scenery, building, ground, garden bed, plants, creatures, weather, and lighting.
+- Use the completed clouds in `img/Sticker_book/Game_Inprog/`: two wind variants for weather, the moving cloud for the sky layer, and the wide background cloud behind the building layer. Normalize the background-cloud filenames when integrated.
 - Add dawn, day, sunset, and night states. Keep the cottage transparent and separate from the sky so the scene can change with local time.
 - Add seasonal scenery much later using layered backgrounds rather than redrawing every building combination. Keep spring, summer, autumn, and winter scenery behind the transparent cottage/shed/workshop layer.
 - Keep seasonal ground layers separate from distant scenery so snow patches, fallen leaves, blossoms, the garden bed, plants, and creatures can overlap correctly.

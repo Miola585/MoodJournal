@@ -1,0 +1,140 @@
+SUNSET / SUNRISE STICKER GUIDE
+==============================
+
+SOURCE REVIEW
+-------------
+Source                                      Decision  Use
+Geometric sun.jpg                           KEEP      Standard geometric sun
+smiling_sun.jpg                             KEEP      Friendly character sun
+special_sun.jpg                             KEEP      Detailed or special sun
+sun_and_clud.webp                           HOLD      Not part of the current cloud set
+white clouds icon pixel art Stock Vector.jpg ADAPT    Use middle-right compact cloud
+
+The Adobe Stock cloud image is a watermarked reference. Redraw the cloud unless
+the original artwork is licensed. The small sun JPGs are also references; redraw
+them instead of enlarging the source pixels.
+
+
+CANVAS AND EXPORT
+-----------------
+Sticker             Art area on 512 canvas  Export files
+Geometric sun       About 390x390           geometric_sun_512.png / _256.png
+Smiling sun         About 400x400           smiling_sun_512.png / _256.png
+Special sun         About 420x420           special_sun_512.png / _256.png
+Soft cloud          About 400x260           soft_cloud_512.png / _256.png
+
+Use a 512x512 transparent canvas for every sticker. Export transparent PNGs at
+512x512 and 256x256. Keep about 40-50px of clear space around the 512px artwork.
+
+Main outline at 512px: 12-16px
+Interior details at 512px: 7-10px
+White sticker border at 512px: 18-24px
+
+
+SUN PALETTES FROM THE REFERENCE PICTURES
+----------------------------------------
+The three suns should not share one yellow palette. These colors were sampled
+from each picture. Minor pale JPEG edge colors were left out.
+
+Geometric sun - clear lemon yellow
+Use                         Color
+Circle and large rays       #F9D412
+Lower or edge shadow        #EAD85C
+Small highlight             #FAF2A2
+Optional pixel outline      #C79B08
+
+Smiling sun - friendly golden yellow
+Use                         Color
+Face center                 #FCD215
+Outer rays                  #EFA622
+Ray shadow                  #DDAE57
+Soft highlight              #F6DFA6
+Eyes and mouth              #815200
+
+Special sun - bright center with vivid orange flame rays
+Use                         Color
+Center                      #FBD509
+Center edge                 #FDCC23
+Main flame rays             #F09818
+Light flame sections        #EDAC15
+Warm flame variation        #EDA82F
+Flame shadow and outline    #D89734
+Deepest small accents       #D39A4B
+
+Do not use every color in equal amounts. The first color in each list is the
+main fill; shadows and highlights should cover smaller areas.
+
+
+CLOUD CHOICES FROM THE VECTOR SHEET
+-----------------------------------
+Position                     Use
+Top-left curled cloud        Optional windy-weather detail
+Top-right curled cloud       Optional stronger windy-weather detail
+Middle-left layered cloud    In-game scenery cloud; calm and horizontal
+Middle-right compact cloud   Standalone cloud sticker
+Bottom wide cloud bank       Future background or horizon layer only
+
+The vector sheet is watermarked, so redraw these shapes rather than exporting
+them directly.
+
+
+COMPLETED CLOUD EXPORTS
+-----------------------
+Asset                 512 file                         256 file                         Use
+Cloud sticker         cloud_sticker.png                cloud_sticker_256.png            Sticker Book
+Wind cloud 1          wind_cloud_1_512.png             wind_cloud_1_256.png             Light wind
+Wind cloud 2          windy_cloud_2_512.png            windy_cloud_2_256.png            Strong wind
+Moving cloud          moving_cloud_512.png             moving_cloud_256.png             Moving sky layer
+Background cloud      bckground_cloud_512.png          backgroud_cloud_256.png          Distant cloud bank
+
+All ten files are transparent PNGs on 512x512 or 256x256 canvases. The cloud
+sticker belongs in `sunset_inProg`; the other four pairs belong in
+`Game_Inprog`. Keep the wide background cloud behind buildings and plants.
+
+Naming note: the two background filenames are spelled differently. Rename both
+to `background_cloud_512.png` and `background_cloud_256.png` when integrated.
+
+
+IN-GAME AND STANDALONE CLOUD PALETTE
+------------------------------------
+Use                         Color
+Main white                  #FCFFFF
+Light blue shadow           #C4DFEA
+Secondary shadow            #92B3C0
+Blue outline                #5689A3
+Deep outline accents        #3D7999
+Sticker border              #FFFFFF
+
+For the in-game cloud, omit the sticker border and keep the secondary shadow
+small. For the standalone sticker, keep the blue outline and add a white outer
+sticker border.
+
+
+STICKER-SPECIFIC NOTES
+----------------------
+Geometric sun
+  Use mostly lemon yellow. Add only a narrow muted-gold lower shadow and one
+  small pale-yellow highlight. This should be the cleanest, simplest sun.
+  Keep the large triangular rays because they remain readable when small.
+
+Smiling sun
+  Keep the face bright gold, the rays visibly orange, and the facial details
+  brown. Use the pale cream only as a soft highlight around the face edge.
+  Keep the eyes and mouth simple enough to read at 64-96px in the sticker book.
+
+Special sun
+  Keep the center almost entirely bright yellow, with a narrow golden edge.
+  Build the flames from vivid orange and amber, then use muted ochre only on
+  their shadow edges and tips. The source does not use a cream flame highlight.
+
+Soft cloud
+  Use the middle-right compact cloud from the vector reference for the standalone
+  sticker. Use the middle-left layered cloud as the quieter in-game sky element.
+  Simplify small interior lines and use solid pixel-art fills.
+
+DRAWING ORDER
+-------------
+1. Geometric sun
+2. Smiling sun
+3. Special sun
+4. Soft cloud
