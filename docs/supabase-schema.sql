@@ -77,20 +77,45 @@ drop constraint if exists profiles_role_check;
 alter table public.profiles
 add constraint profiles_role_check check (role in ('user', 'admin'));
 
+alter table public.profiles
+drop constraint if exists profiles_username_length_check;
+
+alter table public.profiles
+add constraint profiles_username_length_check check (char_length(username) between 3 and 30);
+
 alter table public.profiles enable row level security;
 
+create or replace function public.current_user_is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where user_id = auth.uid() and role = 'admin'
+  );
+$$;
+
+revoke all on function public.current_user_is_admin() from public;
+grant execute on function public.current_user_is_admin() to authenticated;
+
 drop policy if exists "Anyone can read profile usernames" on public.profiles;
-create policy "Anyone can read profile usernames"
+drop policy if exists "Users can read their own profile" on public.profiles;
+create policy "Users can read their own profile"
 on public.profiles
 for select
-using (true);
+to authenticated
+using (auth.uid() = user_id or public.current_user_is_admin());
 
 drop policy if exists "Users can create their own profile" on public.profiles;
 create policy "Users can create their own profile"
 on public.profiles
 for insert
 to authenticated
-with check (auth.uid() = user_id);
+with check (auth.uid() = user_id and role = 'user');
 
 drop policy if exists "Users can update their own profile" on public.profiles;
 create policy "Users can update their own profile"
@@ -99,6 +124,11 @@ for update
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+-- RLS identifies which rows may be updated; column grants prevent users from
+-- promoting their own profile to admin or changing ownership metadata.
+revoke update on table public.profiles from anon, authenticated;
+grant update (username) on table public.profiles to authenticated;
 
 drop policy if exists "Admins can read all journal entries" on public.journal_entries;
 

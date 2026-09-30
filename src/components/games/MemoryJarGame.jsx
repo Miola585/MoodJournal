@@ -5,9 +5,12 @@ import {
   groupMemoriesByMonth,
   jarAssets
 } from './gameUtils';
+import { MemoryJarSvg } from './MemoryJarSvg';
+import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
 
 const memoryStorageKey = 'gameMemoryJar';
-const marbleColors = ['#f3c969', '#e8b8c7', '#98dce0', '#b7b0ff', '#f0a7a0', '#b9d49b'];
+const marbleColors = ['#e6ad35', '#d95f6d', '#329a9f', '#7868d4', '#df7841', '#6f9f4f', '#c9589c', '#397dbd'];
+const marbleTilts = [-5, 4, -2, 6, 2, -6, 3, -3];
 
 export function MemoryJarCollection({ entries, moods }) {
   const memories = entries
@@ -66,11 +69,16 @@ export function MemoryJarCollection({ entries, moods }) {
   );
 }
 
-export function MemoryJarGame({ mood, mainToday }) {
+export function MemoryJarGame({ mood, mainToday, privateStorage }) {
   const [memory, setMemory] = useState('');
   const [message, setMessage] = useState('');
   const [selectedMemory, setSelectedMemory] = useState(null);
-  const [memories, setMemories] = useState(() => readStoredList(memoryStorageKey));
+  const [memories, setMemories, storageError] = usePrivateStorageState(
+    privateStorage,
+    memoryStorageKey,
+    [],
+    normalizeStoredMemories
+  );
   const memoryText = memory.trim();
   const duplicateToday = memoryText && memories.some((entry) => entry.text.toLowerCase() === memoryText.toLowerCase());
 
@@ -92,23 +100,16 @@ export function MemoryJarGame({ mood, mainToday }) {
   const addMemory = () => {
     if (!memoryText || duplicateToday) return;
     const category = detectMemoryCategory(memoryText);
-    const nextIndex = memories.length;
-    const position = getMarblePosition(nextIndex);
     const nextMemory = {
       id: crypto.randomUUID(),
       text: memoryText,
       createdAt: new Date().toISOString(),
       category,
       mood: mood.key,
-      intensity: Number(mainToday?.intensity || mood.score || 5),
-      color: marbleColors[nextIndex % marbleColors.length],
-      x: position.x,
-      y: position.y
+      intensity: Number(mainToday?.intensity || mood.score || 5)
     };
     setMemories((current) => {
-      const next = [nextMemory, ...current].slice(0, 24);
-      localStorage.setItem(memoryStorageKey, JSON.stringify(next));
-      return next;
+      return layoutMemories([nextMemory, ...current].slice(0, 24));
     });
     setSelectedMemory(nextMemory);
     setMemory('');
@@ -117,9 +118,7 @@ export function MemoryJarGame({ mood, mainToday }) {
   const removeMemory = (id) => {
     if (!window.confirm('Remove this memory from the jar?')) return;
     setMemories((current) => {
-      const next = current.filter((entry) => entry.id !== id);
-      localStorage.setItem(memoryStorageKey, JSON.stringify(next));
-      return next;
+      return layoutMemories(current.filter((entry) => entry.id !== id));
     });
     setSelectedMemory(null);
     setMessage('');
@@ -129,22 +128,21 @@ export function MemoryJarGame({ mood, mainToday }) {
       <div className="memory-count">{memories.length} memor{memories.length === 1 ? 'y' : 'ies'} saved</div>
       <div className="memory-jar-scene" style={{ '--jar-light': mood.color }}>
         <div className="css-memory-jar" aria-label="Memory jar">
-          <div className="jar-rim" />
-          <div className="jar-neck" />
+          <MemoryJarSvg />
           <div className="jar-body">
-            <div className="jar-glare" />
-            <div className="jar-bottom" />
             {memories.length === 0 && <span className="jar-empty-text">A tiny good thing can live here.</span>}
             {memories.map((entry) => (
               <button
                 aria-label={`Memory from ${formatMemoryDate(entry.createdAt)}`}
-                className="memory-marble"
+                aria-pressed={selectedMemory?.id === entry.id}
+                className={selectedMemory?.id === entry.id ? 'memory-marble selected' : 'memory-marble'}
                 key={entry.id}
                 onClick={() => setSelectedMemory(entry)}
                 style={{
                   '--memory-color': entry.color,
                   '--marble-x': `${entry.x}%`,
-                  '--marble-y': `${entry.y}%`
+                  '--marble-y': `${entry.y}%`,
+                  '--marble-tilt': `${entry.tilt}deg`
                 }}
                 title={entry.text}
                 type="button"
@@ -173,6 +171,7 @@ export function MemoryJarGame({ mood, mainToday }) {
           </div>
         </div>
       </div>
+      {storageError && <p className="form-error" role="alert">{storageError}</p>}
     </div>
   );
 }
@@ -182,31 +181,50 @@ function formatMemoryDate(value) {
 }
 
 function getMarblePosition(index) {
-  const row = Math.floor(index / 6);
-  const column = index % 6;
-  const rowCounts = [1, 2, 3, 4, 5, 6];
-  const count = rowCounts[Math.min(row, rowCounts.length - 1)];
-  const rowColumn = column % count;
-  const spacing = count === 1 ? 0 : 56 / (count - 1);
-  const x = count === 1 ? 50 : 22 + spacing * rowColumn;
-  const y = Math.max(36, 85 - row * 7.4 - (rowColumn % 2) * 1.2);
-  return { x, y };
+  const rows = [
+    { y: 88, x: [20, 40, 60, 80] },
+    { y: 77, x: [29, 50, 71] },
+    { y: 66, x: [20, 40, 60, 80] },
+    { y: 55, x: [29, 50, 71] },
+    { y: 44, x: [20, 40, 60, 80] },
+    { y: 33, x: [29, 50, 71] },
+    { y: 22, x: [29, 50, 71] }
+  ];
+  let remaining = index % 24;
+  for (const row of rows) {
+    if (remaining < row.x.length) return { x: row.x[remaining], y: row.y };
+    remaining -= row.x.length;
+  }
+  return { x: 50, y: 22 };
 }
 
-function readStoredList(key) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key));
-    if (!Array.isArray(value)) return [];
-    return value.map((entry, index) => ({
+function layoutMemories(entries) {
+  const slotById = new Map(
+    [...entries]
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      .map((entry, index) => [entry.id, index])
+  );
+  return entries.map((entry) => {
+    const slot = slotById.get(entry.id) ?? 0;
+    const position = getMarblePosition(slot);
+    return {
       ...entry,
-      id: entry.id || crypto.randomUUID(),
-      text: entry.text || '',
-      createdAt: entry.createdAt || new Date().toISOString(),
-      color: entry.color || marbleColors[index % marbleColors.length],
-      x: Number(entry.x) || getMarblePosition(index).x,
-      y: Number(entry.y) >= 68 ? Number(entry.y) : getMarblePosition(index).y
-    })).filter((entry) => entry.text);
-  } catch {
-    return [];
-  }
+      slot,
+      color: marbleColors[slot % marbleColors.length],
+      tilt: marbleTilts[slot % marbleTilts.length],
+      x: position.x,
+      y: position.y
+    };
+  });
+}
+
+function normalizeStoredMemories(value) {
+  if (!Array.isArray(value)) return [];
+  const normalized = value.map((entry) => ({
+    ...entry,
+    id: entry.id || crypto.randomUUID(),
+    text: entry.text || '',
+    createdAt: entry.createdAt || new Date().toISOString()
+  })).filter((entry) => entry.text).slice(0, 24);
+  return layoutMemories(normalized);
 }

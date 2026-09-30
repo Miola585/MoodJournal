@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Coffee, Flower2, Sun, Sunset, Waves } from 'lucide-react';
 import { matchPairs } from './gameUtils';
 
 export function EmotionalMatchGame() {
@@ -55,15 +56,22 @@ export function EmotionalMatchGame() {
           const isMatched = matched.includes(card.id);
           return (
             <button
-              aria-label={visible ? card.label : 'Hidden card'}
-              className={`match-card reflection-card ${visible ? 'visible' : ''} ${isMatched ? 'matched' : ''} ${wrongPair.includes(card.id) ? 'wrong' : ''}`}
+              aria-disabled={isMatched}
+              aria-label={isMatched ? `${card.label}, matched` : visible ? card.label : 'Hidden card'}
+              className={`match-card reflection-card ${visible ? 'visible' : ''} ${wrongPair.includes(card.id) ? 'wrong' : ''}`}
               key={card.id}
               onClick={() => chooseCard(card)}
+              tabIndex={isMatched ? -1 : 0}
               type="button"
             >
-              <span className="card-back-symbol" aria-hidden="true" />
+              <span className="card-back-symbol" aria-hidden="true">
+                <Coffee className="card-back-icon card-back-icon-cafe" />
+                <Flower2 className="card-back-icon card-back-icon-garden" />
+                <Sun className="card-back-icon card-back-icon-sunrise" />
+                <Sunset className="card-back-icon card-back-icon-sunset" />
+                <Waves className="card-back-icon card-back-icon-ocean" />
+              </span>
               <span className="card-face">{visible ? card.label : ''}</span>
-              {isMatched && <span className="matched-marker">Matched</span>}
             </button>
           );
         })}

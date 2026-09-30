@@ -3,23 +3,21 @@ import { useEffect, useMemo, useState } from 'react';
 import { DailyGroundingTools } from '../components/games/DailyGroundingTools';
 import { activities } from '../data/journalData';
 import { todayKey } from '../utils/journalUtils';
+import { PageHeader } from '../components/layout/PageHeader';
+import { usePrivateStorageState } from '../hooks/usePrivateStorageState';
 
-export function Activities({ nav }) {
+export function Activities({ nav, privateStorage }) {
   const list = activities.default;
   const today = todayKey();
   const storageKey = `activityCompletions:${today}`;
   const notesStorageKey = `activityNotes:${today}`;
   const [completed, setCompleted] = useState(() => readStoredObject(storageKey));
-  const [notes, setNotes] = useState(() => readStoredObject(notesStorageKey));
+  const [notes, setNotes, notesStorageError] = usePrivateStorageState(privateStorage, notesStorageKey, {});
   const [selectedTitle, setSelectedTitle] = useState(list[0]?.title || '');
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(completed));
   }, [completed, storageKey]);
-
-  useEffect(() => {
-    localStorage.setItem(notesStorageKey, JSON.stringify(notes));
-  }, [notes, notesStorageKey]);
 
   const completedActivities = useMemo(
     () => list.filter((activity) => completed[activity.title]),
@@ -36,14 +34,11 @@ export function Activities({ nav }) {
 
   return (
     <section className="screen app-screen activities-screen">
-      <header className="activities-heading">
-        <span className="activities-date">{formatActivityDate(today)}</span>
-        <h1>Quick Activities</h1>
-        <p>Choose a small pause for right now.</p>
-      </header>
+      <PageHeader align="center" eyebrow={formatActivityDate(today)} title="Quick Activities" subtitle="Choose a small pause for right now." />
       {nav}
 
       <section className="activities-focus" aria-labelledby="activity-picker-title">
+        {notesStorageError && <p className="form-error" role="alert">{notesStorageError}</p>}
         <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
         <div className="activity-selector" role="tablist" aria-label="Quick activities">
           {list.map((activity) => {

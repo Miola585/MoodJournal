@@ -3,6 +3,9 @@ dist/
 .env
 .env.local
 npm-debug.log*
+.edge-*
+.visual-check/
+.visual-e2ee*/
 AGENTS.md
 ROADMAP.md
 UPDATES.md

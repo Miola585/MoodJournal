@@ -1,9 +1,10 @@
 import { featureCards, resourceLinks } from '../data/journalData';
+import { PageHeader } from '../components/layout/PageHeader';
 
 export function About({ nav }) {
   return (
     <section className="screen app-screen">
-      <h1>About the App</h1>
+      <PageHeader title="About Mood Journal" subtitle="A personal place for reflection, emotional awareness, and gentle support." />
       {nav}
       <div className="feature-cards">
         {featureCards.map((card) => (

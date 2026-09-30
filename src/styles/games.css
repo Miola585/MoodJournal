@@ -696,84 +696,34 @@
   inset: 0;
   display: grid;
   place-items: center;
+  color: var(--hero-accent);
 }
 
-.card-back-symbol::before {
-  width: 30px;
-  height: 22px;
-  border: 3px solid var(--hero-accent);
-  border-top-width: 7px;
-  border-radius: 5px 5px 11px 11px;
-  content: "";
-  opacity: 0.7;
-}
-
-.card-back-symbol::after {
-  position: absolute;
-  width: 12px;
-  height: 13px;
-  margin-left: 28px;
-  border: 3px solid var(--hero-accent);
-  border-left: 0;
-  border-radius: 0 999px 999px 0;
-  content: "";
-  opacity: 0.62;
-}
-
-.app.theme-sunrise .card-back-symbol::before {
-  width: 32px;
-  height: 32px;
-  border-width: 3px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--selected-bg) 74%, transparent);
-}
-
-.app.theme-sunrise .card-back-symbol::after {
-  width: 48px;
-  height: 3px;
-  margin-left: 0;
-  border: 0;
-  border-radius: 999px;
-  background: var(--hero-accent);
-  box-shadow: 0 -18px 0 -1px var(--hero-accent), 0 18px 0 -1px var(--hero-accent);
-  transform: rotate(45deg);
-}
-
-.app.theme-garden .card-back-symbol::before {
-  width: 34px;
-  height: 24px;
-  border-width: 3px;
-  border-radius: 80% 20% 80% 20%;
-  background: color-mix(in srgb, var(--selected-bg) 28%, transparent);
-  transform: rotate(-18deg);
-}
-
-.app.theme-garden .card-back-symbol::after {
+.card-back-icon {
   display: none;
+  width: 38px;
+  height: 38px;
+  stroke-width: 1.9;
+  filter: drop-shadow(0 3px 5px color-mix(in srgb, var(--hero-accent) 20%, transparent));
+  opacity: 0.86;
 }
 
-.app.theme-ocean .card-back-symbol::before {
-  width: 42px;
-  height: 20px;
-  border-width: 0 0 4px;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.app.theme-ocean .card-back-symbol::after {
-  display: none;
+.app.theme-warm .card-back-icon-cafe,
+.app.theme-garden .card-back-icon-garden,
+.app.theme-sunrise:not(.dark) .card-back-icon-sunrise,
+.app.theme-sunrise.dark .card-back-icon-sunset,
+.app.theme-ocean .card-back-icon-ocean {
+  display: block;
 }
 
 .app.theme-night .card-back-symbol::before {
+  content: "";
   width: 38px;
   height: 38px;
-  border: 0;
   background: var(--hero-accent);
   clip-path: polygon(50% 0, 61% 36%, 100% 50%, 61% 64%, 50% 100%, 39% 64%, 0 50%, 39% 36%);
-}
-
-.app.theme-night .card-back-symbol::after {
-  display: none;
+  filter: drop-shadow(0 3px 7px color-mix(in srgb, var(--hero-accent) 34%, transparent));
+  opacity: 0.86;
 }
 
 .reflection-card.visible .card-back-symbol {
@@ -787,24 +737,12 @@
   line-height: 1.25;
 }
 
-.matched-marker {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  z-index: 1;
-  padding: 3px 7px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--hero-surface) 68%, transparent);
-  color: var(--selected-text);
-  font-size: 0.7rem;
-  font-weight: 900;
+.reflection-card[aria-disabled="true"] {
+  cursor: default;
 }
 
-.reflection-card.matched {
-  border-style: double;
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--selected-bg) 24%, transparent),
-    var(--inner-highlight);
+.reflection-card[aria-disabled="true"]:hover {
+  transform: none;
 }
 
 .reflection-card.wrong {
@@ -1658,124 +1596,69 @@
   min-height: 382px;
 }
 
-.jar-rim,
-.jar-neck,
-.jar-body {
+.memory-jar-illustration {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.jar-rim {
-  top: 18px;
-  z-index: 3;
-  width: 48%;
-  height: 36px;
-  border: 3px solid color-mix(in srgb, var(--jar-light) 42%, #ffffff);
-  border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.2)),
-    color-mix(in srgb, var(--jar-light) 18%, transparent);
-  box-shadow: var(--inner-highlight), 0 7px 14px rgba(35, 28, 24, 0.08);
-}
-
-.jar-neck {
-  top: 40px;
-  z-index: 2;
-  width: 43%;
-  height: 78px;
-  border: 3px solid color-mix(in srgb, var(--jar-light) 38%, #ffffff);
-  border-top: 0;
-  border-radius: 0 0 32px 32px;
-  background:
-    linear-gradient(95deg, rgba(255, 255, 255, 0.28), transparent 42%),
-    color-mix(in srgb, var(--jar-light) 8%, transparent);
-}
-
-.jar-neck::before,
-.jar-neck::after {
-  position: absolute;
-  bottom: -24px;
-  width: 34px;
-  height: 48px;
-  border-bottom: 3px solid color-mix(in srgb, var(--jar-light) 32%, #ffffff);
-  content: "";
-}
-
-.jar-neck::before {
-  left: -28px;
-  border-left: 3px solid color-mix(in srgb, var(--jar-light) 32%, #ffffff);
-  border-radius: 0 0 0 34px;
-  transform: rotate(-17deg);
-}
-
-.jar-neck::after {
-  right: -28px;
-  border-right: 3px solid color-mix(in srgb, var(--jar-light) 32%, #ffffff);
-  border-radius: 0 0 34px 0;
-  transform: rotate(17deg);
-}
-
-.jar-body {
-  top: 98px;
-  width: 84%;
-  height: calc(100% - 118px);
-  overflow: hidden;
-  border: 4px solid color-mix(in srgb, var(--jar-light) 40%, #ffffff);
-  border-radius: 38% 38% 24% 24% / 13% 13% 18% 18%;
-  background:
-    linear-gradient(90deg, color-mix(in srgb, var(--jar-light) 16%, rgba(20, 18, 26, 0.16)), transparent 16% 84%, color-mix(in srgb, var(--jar-light) 18%, rgba(20, 18, 26, 0.18))),
-    radial-gradient(ellipse at 50% 92%, color-mix(in srgb, var(--jar-light) 22%, transparent), transparent 43%),
-    color-mix(in srgb, var(--hero-surface) 10%, transparent);
-  box-shadow:
-    inset 18px 0 24px rgba(38, 29, 31, 0.08),
-    inset -18px 0 24px rgba(38, 29, 31, 0.1),
-    inset 0 -24px 34px color-mix(in srgb, var(--jar-light) 15%, rgba(38, 29, 31, 0.08)),
-    inset 0 1px 22px rgba(255, 255, 255, 0.22),
-    0 22px 36px color-mix(in srgb, var(--accent-color-darkest) 14%, transparent);
-}
-
-.jar-body::before {
-  position: absolute;
-  top: 15%;
-  left: 17%;
-  z-index: 4;
-  width: 7%;
-  height: 42%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.44), rgba(255, 255, 255, 0.05));
-  content: "";
-  opacity: 0.46;
-  transform: rotate(10deg);
-}
-
-.jar-glare {
-  position: absolute;
-  top: 15%;
-  right: 14%;
-  z-index: 4;
-  width: 22%;
-  height: 16%;
-  border-top: 3px solid rgba(255, 255, 255, 0.38);
-  border-right: 2px solid rgba(255, 255, 255, 0.16);
-  border-radius: 50%;
-  opacity: 0.58;
-  pointer-events: none;
-  transform: rotate(-19deg);
-}
-
-.jar-bottom {
-  position: absolute;
-  right: 12%;
-  bottom: 7%;
-  left: 12%;
+  inset: 0;
   z-index: 1;
-  height: 15%;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--jar-light) 12%, transparent);
-  box-shadow: inset 0 -8px 18px color-mix(in srgb, var(--accent-color-darkest) 8%, transparent);
-  filter: blur(0.5px);
-  opacity: 0.62;
+  width: 100%;
+  height: 100%;
+  color: color-mix(in srgb, var(--jar-light) 46%, var(--interactive-accent));
+  overflow: visible;
+  filter: drop-shadow(0 18px 22px color-mix(in srgb, var(--accent-color-darkest) 15%, transparent));
+  pointer-events: none;
+}
+
+.memory-jar-svg-body {
+  fill: color-mix(in srgb, var(--jar-light) 10%, var(--hero-surface) 14%);
+  stroke: currentColor;
+  stroke-width: 4;
+}
+
+.memory-jar-svg-rim {
+  fill: color-mix(in srgb, var(--jar-light) 17%, var(--surface-major));
+  stroke: currentColor;
+  stroke-width: 4;
+}
+
+.memory-jar-svg-rim-line,
+.memory-jar-svg-base {
+  fill: none;
+  stroke: color-mix(in srgb, currentColor 74%, var(--text-primary));
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.memory-jar-svg-panel {
+  fill: color-mix(in srgb, var(--jar-light) 5%, transparent);
+  stroke: color-mix(in srgb, currentColor 36%, transparent);
+  stroke-width: 2;
+}
+
+.memory-jar-svg-highlight,
+.memory-jar-svg-glint {
+  fill: none;
+  stroke: color-mix(in srgb, #ffffff 68%, var(--jar-light));
+  stroke-linecap: round;
+  stroke-width: 9;
+  opacity: 0.55;
+}
+
+.memory-jar-svg-glint {
+  stroke-width: 5;
+  opacity: 0.4;
+}
+
+.jar-body {
+  position: absolute;
+  top: 98px;
+  left: 50%;
+  z-index: 2;
+  width: 72%;
+  height: calc(100% - 110px);
+  overflow: hidden;
+  border-radius: 36% 36% 25% 25% / 14% 14% 18% 18%;
+  background: transparent;
+  transform: translateX(-50%);
 }
 
 .jar-empty-text {
@@ -1796,29 +1679,47 @@
   left: var(--marble-x);
   top: var(--marble-y);
   z-index: 3;
-  width: clamp(32px, 4.7vw, 48px);
+  width: clamp(30px, 4vw, 42px);
   aspect-ratio: 1;
   margin: 0;
   padding: 0;
-  border: 2px solid color-mix(in srgb, var(--memory-color) 62%, #ffffff);
+  border: 2px solid color-mix(in srgb, var(--memory-color) 58%, #ffffff);
   border-radius: 50%;
   background:
-    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.9) 0 10%, transparent 12%),
-    radial-gradient(circle at 62% 72%, color-mix(in srgb, var(--memory-color) 62%, #2a1f1a), var(--memory-color));
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.95) 0 8%, transparent 10%),
+    radial-gradient(circle at 34% 30%, color-mix(in srgb, var(--memory-color) 60%, #ffffff) 0 12%, transparent 28%),
+    radial-gradient(circle at 68% 74%, color-mix(in srgb, var(--memory-color) 74%, #17131b), var(--memory-color) 68%);
   box-shadow:
-    inset -5px -7px 12px rgba(35, 28, 24, 0.14),
-    0 8px 14px color-mix(in srgb, var(--memory-color) 38%, transparent);
-  transform: translate(-50%, -50%);
+    inset -6px -8px 12px rgba(25, 20, 24, 0.24),
+    inset 3px 3px 7px rgba(255, 255, 255, 0.24),
+    0 5px 9px color-mix(in srgb, var(--memory-color) 42%, transparent);
+  transform: translate(-50%, -50%) rotate(var(--marble-tilt, 0deg));
   cursor: pointer;
+  transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease, filter 170ms ease;
 }
 
 .memory-marble:hover,
 .memory-marble:focus-visible {
-  transform: translate(-50%, calc(-50% - 7px)) scale(1.08);
+  z-index: 5;
+  border-color: #ffffff;
+  filter: saturate(1.2) brightness(1.08);
+  transform: translate(-50%, calc(-50% - 9px)) rotate(0deg) scale(1.14);
   box-shadow:
-    inset -5px -7px 12px rgba(35, 28, 24, 0.12),
-    0 0 24px color-mix(in srgb, var(--memory-color) 78%, transparent),
-    0 12px 18px color-mix(in srgb, var(--memory-color) 32%, transparent);
+    inset -6px -8px 12px rgba(25, 20, 24, 0.18),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.32),
+    0 0 0 4px color-mix(in srgb, var(--memory-color) 24%, transparent),
+    0 0 26px color-mix(in srgb, var(--memory-color) 82%, transparent),
+    0 13px 18px color-mix(in srgb, var(--memory-color) 34%, transparent);
+}
+
+.memory-marble.selected {
+  z-index: 5;
+  border-color: #ffffff;
+  box-shadow:
+    inset -6px -8px 12px rgba(25, 20, 24, 0.18),
+    inset 3px 3px 8px rgba(255, 255, 255, 0.32),
+    0 0 0 4px color-mix(in srgb, var(--memory-color) 42%, transparent),
+    0 0 22px color-mix(in srgb, var(--memory-color) 68%, transparent);
 }
 
 .memory-popover {

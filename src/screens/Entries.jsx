@@ -3,6 +3,7 @@ import { BookOpen, PenLine, RotateCcw, Save, Search, X } from 'lucide-react';
 import { createFreeWriteEntry, moods } from '../data/journalData';
 import { isCheckIn, isVisibleJournalEntry } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
+import { PageHeader } from '../components/layout/PageHeader';
 
 export function Entries({ nav, entries, onSave, onDelete, onPrimary }) {
   const [query, setQuery] = useState('');
@@ -31,16 +32,12 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary }) {
   if (creatingFreeWrite) return <FreeWriteEntry nav={nav} onCancel={() => setCreatingFreeWrite(false)} onSave={(entry) => { onSave(entry, 'entries'); setCreatingFreeWrite(false); }} />;
   return (
     <section className="screen app-screen entries-screen">
-      <div className="archive-heading">
-        <div>
-          <h1>Journal Entries</h1>
-          <p>Search, revisit, or write freely.</p>
-        </div>
-        <button className="primary archive-primary-action" onClick={() => setCreatingFreeWrite(true)} type="button">
+      <PageHeader title="Journal Entries" subtitle="Search, revisit, or write freely." actions={(
+        <button className="primary-button archive-primary-action" onClick={() => setCreatingFreeWrite(true)} type="button">
           <PenLine aria-hidden="true" size={18} />
           New free write
         </button>
-      </div>
+      )} />
       {nav}
       <div className="panel archive-toolbar" aria-label="Search and filter entries">
         <label className="archive-keyword-field">Keyword search
@@ -124,41 +121,13 @@ function FreeWriteEntry({ nav, onSave, onCancel }) {
   });
   return (
     <section className="screen app-screen freewrite-screen">
-      <header className="freewrite-heading">
-        <span>New journal page</span>
-        <h1>Free Write</h1>
-        <p>{entryDate}</p>
-      </header>
+      <PageHeader eyebrow="New journal page" title="Free Write" subtitle={entryDate} />
       {nav}
       <form className="freewrite-form" onSubmit={(event) => {
         event.preventDefault();
         onSave({ ...draft, tags: Array.from(new Set([...(draft.tags || []), 'free-write'])) });
       }}>
-        <div className="freewrite-notebook journal-editor-notebook" style={mood ? { '--entry-accent': mood.color } : undefined}>
-          <div className="freewrite-page-heading">
-            <label className="freewrite-title-field">Title
-              <input maxLength={100} required value={draft.specificFeeling} onChange={(event) => setField('specificFeeling', event.target.value)} placeholder="Give this page a title" />
-            </label>
-            <label>Mood
-              <select value={draft.mood} onChange={(event) => setField('mood', event.target.value)}>
-                {moods.map((mood) => <option key={mood.key}>{mood.key}</option>)}
-              </select>
-            </label>
-          </div>
-          <label className="freewrite-writing-field">
-            <span className="visually-hidden">Journal entry</span>
-            <textarea required value={draft.note} onChange={(event) => setField('note', event.target.value)} placeholder="Start writing here..." />
-          </label>
-          <div className="freewrite-page-footer">
-            <label>Tags
-              <input value={(draft.tags || []).filter((tag) => tag !== 'free-write').join(', ')} onChange={(event) => setField('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="memory, school, idea" />
-            </label>
-            <label>Optional next step
-              <input value={draft.copingStep || ''} onChange={(event) => setField('copingStep', event.target.value)} placeholder="Something to return to later" />
-            </label>
-          </div>
-          <span className="notebook-page-corner" aria-hidden="true" />
-        </div>
+        <JournalNotebook draft={draft} mood={mood} onFieldChange={setField} required />
         <div className="actions freewrite-actions">
           <button className="primary" type="submit"><Save aria-hidden="true" size={17} />Save page</button>
           <button onClick={onCancel} type="button"><X aria-hidden="true" size={17} />Cancel</button>
@@ -181,11 +150,7 @@ function EditEntry({ entry, onSave, onCancel }) {
   });
   return (
     <section className="screen app-screen freewrite-screen edit-entry-screen">
-      <header className="freewrite-heading">
-        <span>{checkIn ? 'Editing check-in' : 'Editing journal page'}</span>
-        <h1>Edit Entry</h1>
-        <p>{entryDate}</p>
-      </header>
+      <PageHeader eyebrow={checkIn ? 'Editing check-in' : 'Editing journal page'} title="Edit Entry" subtitle={entryDate} />
       <form className="freewrite-form" onSubmit={(event) => {
         event.preventDefault();
         const tags = checkIn
@@ -193,51 +158,59 @@ function EditEntry({ entry, onSave, onCancel }) {
           : Array.from(new Set([...(draft.tags || []), 'free-write']));
         onSave({ ...draft, tags });
       }}>
-        <div className="freewrite-notebook journal-editor-notebook edit-entry-notebook" style={mood ? { '--entry-accent': mood.color } : undefined}>
-          <div className="freewrite-page-heading">
-            {!checkIn ? (
-              <label className="freewrite-title-field">Title
-                <input maxLength={100} required value={draft.specificFeeling || ''} onChange={(event) => setField('specificFeeling', event.target.value)} placeholder="Give this page a title" />
-              </label>
-            ) : (
-              <div className="edit-entry-label">
-                <span>Check-in</span>
-                <strong>{draft.specificFeeling || draft.mood || 'Journal entry'}</strong>
-              </div>
-            )}
-            <label>Mood
-              <select value={draft.mood} onChange={(event) => setField('mood', event.target.value)}>
-                {moods.map((moodOption) => <option key={moodOption.key}>{moodOption.key}</option>)}
-              </select>
-            </label>
-          </div>
-          <label className="freewrite-writing-field">
-            <span className="visually-hidden">Journal entry</span>
-            <textarea value={draft.note} onChange={(event) => setField('note', event.target.value)} placeholder="Write what you want to remember..." />
-          </label>
-          <div className="freewrite-page-footer">
-            {!checkIn && (
-              <label>Tags
-                <input value={(draft.tags || []).filter((tag) => tag !== 'free-write').join(', ')} onChange={(event) => setField('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="memory, school, idea" />
-              </label>
-            )}
-            <label>Optional next step
-              <input value={draft.copingStep || ''} onChange={(event) => setField('copingStep', event.target.value)} placeholder="Something to return to later" />
-            </label>
-            {checkIn && (
-              <label className="inline-check edit-primary-check">
-                <input checked={Boolean(draft.primary)} onChange={(event) => setField('primary', event.target.checked)} type="checkbox" />
-                Make this the main entry for this day
-              </label>
-            )}
-          </div>
-          <span className="notebook-page-corner" aria-hidden="true" />
-        </div>
+        <JournalNotebook checkIn={checkIn} draft={draft} mood={mood} onFieldChange={setField} />
         <div className="actions freewrite-actions edit-entry-actions">
           <button className="primary" type="submit"><Save aria-hidden="true" size={17} />Save changes</button>
           <button onClick={onCancel} type="button"><X aria-hidden="true" size={17} />Cancel</button>
         </div>
       </form>
     </section>
+  );
+}
+
+function JournalNotebook({ draft, mood, onFieldChange, checkIn = false, required = false }) {
+  const visibleTags = (draft.tags || []).filter((tag) => tag !== 'free-write');
+  return (
+    <div className={`freewrite-notebook journal-editor-notebook${checkIn ? ' edit-entry-notebook' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
+      <div className="freewrite-page-heading">
+        {!checkIn ? (
+          <label className="freewrite-title-field">Title
+            <input maxLength={100} required value={draft.specificFeeling || ''} onChange={(event) => onFieldChange('specificFeeling', event.target.value)} placeholder="Give this page a title" />
+          </label>
+        ) : (
+          <div className="edit-entry-label">
+            <span>Check-in</span>
+            <strong>{draft.specificFeeling || draft.mood || 'Journal entry'}</strong>
+          </div>
+        )}
+        <label className="journal-mood-field">Mood
+          <select value={draft.mood} onChange={(event) => onFieldChange('mood', event.target.value)}>
+            {moods.map((moodOption) => <option key={moodOption.key}>{moodOption.key}</option>)}
+          </select>
+        </label>
+      </div>
+      <label className="freewrite-writing-field">
+        <span className="visually-hidden">Journal entry</span>
+        <textarea required={required} value={draft.note} onChange={(event) => onFieldChange('note', event.target.value)} placeholder={checkIn ? 'Write what you want to remember...' : 'Start writing here...'} />
+      </label>
+      <div className="freewrite-page-footer">
+        {!checkIn && (
+          <label>Tags
+            <input value={visibleTags.join(', ')} onChange={(event) => onFieldChange('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="memory, school, idea" />
+            {visibleTags.length > 0 && <span className="journal-tag-preview">{visibleTags.map((tag) => <small key={tag}>#{tag}</small>)}</span>}
+          </label>
+        )}
+        <label>Optional next step
+          <input value={draft.copingStep || ''} onChange={(event) => onFieldChange('copingStep', event.target.value)} placeholder="Something to return to later" />
+        </label>
+        {checkIn && (
+          <label className="inline-check edit-primary-check">
+            <input checked={Boolean(draft.primary)} onChange={(event) => onFieldChange('primary', event.target.checked)} type="checkbox" />
+            Make this the main entry for this day
+          </label>
+        )}
+      </div>
+      <span className="notebook-page-corner" aria-hidden="true" />
+    </div>
   );
 }

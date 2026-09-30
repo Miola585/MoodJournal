@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
 import {
   buildConnections,
   constellationStars,
@@ -59,7 +60,7 @@ export function ConstellationGallery({ entries, moods }) {
   );
 }
 
-export function ConstellationGame({ mood }) {
+export function ConstellationGame({ mood, privateStorage }) {
   const starfieldRef = useRef(null);
   const [selectedStars, setSelectedStars] = useState([]);
   const [connections, setConnections] = useState([]);
@@ -70,6 +71,12 @@ export function ConstellationGame({ mood }) {
   const [pulsingStars, setPulsingStars] = useState([]);
   const [name, setName] = useState('');
   const [savedConstellation, setSavedConstellation] = useState(null);
+  const [, setStoredConstellations, storageError] = usePrivateStorageState(
+    privateStorage,
+    constellationStorageKey,
+    [],
+    (value) => Array.isArray(value) ? value.slice(0, 12) : []
+  );
   const selectedStarData = constellationStars.filter((star) => selectedStars.includes(star.id));
   const archetype = detectConstellationArchetype(selectedStarData, connections);
   const lineColor = getMoodColor([mood], mood.key);
@@ -139,8 +146,7 @@ export function ConstellationGame({ mood }) {
       stars: selectedStars,
       connections
     };
-    const saved = readStoredList(constellationStorageKey);
-    localStorage.setItem(constellationStorageKey, JSON.stringify([constellation, ...saved].slice(0, 12)));
+    setStoredConstellations((current) => [constellation, ...current].slice(0, 12));
     setSavedConstellation(constellation);
   };
 
@@ -254,6 +260,7 @@ export function ConstellationGame({ mood }) {
           <ConstellationPreview stars={savedPreview.stars} connections={savedPreview.connections} mood={savedPreview.mood} moods={[mood]} />
         </article>
       )}
+      {storageError && <p className="form-error" role="alert">{storageError}</p>}
     </div>
   );
 }
@@ -287,13 +294,4 @@ function ConstellationPreview({ stars, connections, mood, moods }) {
       ))}
     </div>
   );
-}
-
-function readStoredList(key) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key));
-    return Array.isArray(value) ? value : [];
-  } catch {
-    return [];
-  }
 }

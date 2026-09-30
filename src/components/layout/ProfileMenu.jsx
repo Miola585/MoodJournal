@@ -11,7 +11,7 @@ export function ProfileMenu({ user, profile, openApp }) {
   };
   const signOut = async () => {
     setOpen(false);
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
   };
   return (
     <section className="profile-menu">

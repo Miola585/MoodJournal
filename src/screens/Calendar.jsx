@@ -3,6 +3,7 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { moods } from '../data/journalData';
 import { buildCalendarDays, formatDateKey, getPrimaryEntry, groupEntriesByDate, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
+import { PageHeader } from '../components/layout/PageHeader';
 
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -47,12 +48,7 @@ export function Calendar({ nav, entries, onPrimary }) {
 
   return (
     <section className="screen app-screen calendar-screen">
-      <div className="calendar-heading">
-        <div>
-          <h1>Calendar</h1>
-          <p>Review your mood history by day.</p>
-        </div>
-      </div>
+      <PageHeader title="Calendar" subtitle="Review your mood history by day." />
       {nav}
       <div className="calendar-board">
         <div className="calendar-toolbar">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createEntry, factors, guidedPrompts, moods } from '../data/journalData';
+import { PageHeader } from '../components/layout/PageHeader';
 
 const stepLabels = ['Mood', 'Details', 'Journal', 'Context'];
 const primaryMoodKeys = ['Happy', 'Calm', 'Content', 'Sad', 'Overwhelmed'];
@@ -86,11 +87,8 @@ export function CheckIn({ nav, onSave }) {
 
   return (
     <section className="screen app-screen checkin-screen">
-      <div className="tool-heading">
-        <h1>Daily Mood Check-In</h1>
-        {nav}
-        <p>Name what you feel, notice what shaped it, and choose one small next step.</p>
-      </div>
+      <PageHeader align="center" eyebrow="A quiet minute" title="Daily Mood Check-In" subtitle="Name what you feel, notice what shaped it, and choose one small next step." />
+      {nav}
       <form className="flow checkin-flow" onSubmit={submit}>
         <div className="checkin-progress" aria-label="Check-in progress">
           {stepLabels.map((label, index) => (
@@ -117,7 +115,7 @@ export function CheckIn({ nav, onSave }) {
               </div>
               <div className="mood-grid checkin-mood-grid">
                 {visibleMoods.map((item) => (
-                  <button className={entry.mood === item.key ? 'mood selected' : 'mood'} key={item.key} onClick={() => selectMood(item.key)} style={{ '--mood': item.color }} type="button">
+                  <button aria-pressed={entry.mood === item.key} className={entry.mood === item.key ? 'mood selected' : 'mood'} key={item.key} onClick={() => selectMood(item.key)} style={{ '--mood': item.color }} type="button">
                     <span>{item.emoji}</span>
                     {item.key}
                   </button>
@@ -130,19 +128,19 @@ export function CheckIn({ nav, onSave }) {
           )}
 
           {step === 1 && (
-            <div className="checkin-step-content">
+            <div className="checkin-step-content details-step-content">
               <div className="step-copy">
                 <span>Details</span>
                 <h2>{entry.mood ? `What kind of ${entry.mood.toLowerCase()} is it?` : 'Add a little more detail'}</h2>
                 <p>Optional. These details can help you notice patterns later.</p>
               </div>
               <div className="panel quiet-panel detail-choice-panel">
-                <ChoiceChips label="Specific feeling" values={mood?.feelings || []} selected={entry.specificFeeling} onSelect={(value) => setField('specificFeeling', value)} />
-                <div className="choice-section">
-                  <p className="field-label">How strong does this feeling feel?</p>
+                <ChoiceChips hint="Choose the word that feels closest." label="Specific feeling" stepNumber="1" values={mood?.feelings || []} selected={entry.specificFeeling} onSelect={(value) => setField('specificFeeling', value)} />
+                <div className="choice-section intensity-choice-section">
+                  <DetailSectionHeading hint="A quick estimate is enough." label="How strong does this feeling feel?" number="2" />
                   <div className="choice-grid intensity-grid" role="group" aria-label="Intensity">
-                    {intensityLevels.map((level) => (
-                      <button className={entry.intensity === level.value ? 'choice-button intensity-choice selected' : 'choice-button intensity-choice'} key={level.label} onClick={() => setField('intensity', level.value)} type="button">
+                    {intensityLevels.map((level, index) => (
+                      <button aria-pressed={entry.intensity === level.value} className={entry.intensity === level.value ? 'choice-button intensity-choice selected' : 'choice-button intensity-choice'} key={level.label} onClick={() => setField('intensity', level.value)} style={{ '--intensity-level': `${(index + 1) * 20}%` }} type="button">
                         <span>{level.label}</span>
                         <small>{level.value}/10</small>
                       </button>
@@ -150,20 +148,21 @@ export function CheckIn({ nav, onSave }) {
                   </div>
                 </div>
               </div>
-              <ChipGroup label="What might be affecting your mood?" values={factors} selected={entry.factors} onToggle={(value) => toggleList('factors', value)} />
+              <ChipGroup hint="Choose as many as fit, or leave this blank." label="What might be affecting your mood?" stepNumber="3" values={factors} selected={entry.factors} onToggle={(value) => toggleList('factors', value)} />
             </div>
           )}
 
           {step === 2 && (
-            <div className="checkin-step-content">
+            <div className="checkin-step-content journal-checkin-content">
               <div className="step-copy">
                 <span>Journal</span>
                 <h2>Write one honest note.</h2>
                 <p>No perfect wording needed. A few real words are enough.</p>
               </div>
-              <div className="panel journal-step-panel">
-                <ChoiceChips label="Guided journaling mode" values={promptModes} selected={promptType} onSelect={setPromptType} variant="prompt" />
-                <label>Journal prompt
+              <div className="journal-step-panel">
+                <ChoiceChips hint="Choose a gentle direction for your note." label="Guided journaling mode" stepNumber="1" values={promptModes} selected={promptType} onSelect={setPromptType} variant="prompt" />
+                <label className="journal-writing-field">
+                  <DetailSectionHeading hint="Start wherever your mind goes. You can keep it short." label="Your note" number="2" />
                   <textarea value={entry.note} onChange={(event) => setField('note', event.target.value)} placeholder={guidedPrompts[promptType][entry.intensity % guidedPrompts[promptType].length]} />
                 </label>
               </div>
@@ -171,13 +170,13 @@ export function CheckIn({ nav, onSave }) {
           )}
 
           {step === 3 && (
-            <div className="checkin-step-content">
+            <div className="checkin-step-content context-step-content">
               <div className="step-copy">
                 <span>Optional context</span>
                 <h2>Add anything that might help later.</h2>
                 <p>Skip what does not matter today.</p>
               </div>
-              <Disclosure title="Body check" open={showBodyDetails} onToggle={() => setShowBodyDetails((current) => !current)}>
+              <Disclosure hint="Meals, water, and rest can add useful context." number="1" title="Body check" open={showBodyDetails} onToggle={() => setShowBodyDetails((current) => !current)}>
                 <div className="body-check-grid">
                   {bodyCheckGroups.map((group) => (
                     <TapCardGroup
@@ -190,7 +189,7 @@ export function CheckIn({ nav, onSave }) {
                   ))}
                 </div>
               </Disclosure>
-              <Disclosure title="Tiny extras" open={showExtraContext} onToggle={() => setShowExtraContext((current) => !current)}>
+              <Disclosure hint="Add searchable words or one kind next step." number="2" title="Tiny extras" open={showExtraContext} onToggle={() => setShowExtraContext((current) => !current)}>
                 <div className="two-col">
                   <label>Tags
                     <input value={entry.tags.join(', ')} onChange={(event) => setField('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="school, family, tired, nervous" />
@@ -219,14 +218,26 @@ export function CheckIn({ nav, onSave }) {
   );
 }
 
-function ChoiceChips({ label, values, selected, onSelect, variant = 'feeling' }) {
+function DetailSectionHeading({ number, label, hint }) {
+  return (
+    <div className="detail-section-heading">
+      {number && <span className="detail-section-number" aria-hidden="true">{number}</span>}
+      <div>
+        <p className="field-label">{label}</p>
+        {hint && <span className="detail-section-hint">{hint}</span>}
+      </div>
+    </div>
+  );
+}
+
+function ChoiceChips({ label, values, selected, onSelect, variant = 'feeling', stepNumber, hint }) {
   return (
     <div className="choice-section">
-      <p className="field-label">{label}</p>
+      <DetailSectionHeading hint={hint} label={label} number={stepNumber} />
       {values.length > 0 ? (
         <div className={`choice-grid ${variant}-chip-grid`} role="group" aria-label={label}>
           {values.map((value) => (
-            <button className={selected === value ? 'choice-button selected' : 'choice-button'} key={value} onClick={() => onSelect(value)} type="button">
+            <button aria-pressed={selected === value} className={selected === value ? 'choice-button selected' : 'choice-button'} key={value} onClick={() => onSelect(value)} type="button">
               {value}
             </button>
           ))}
@@ -244,7 +255,7 @@ function TapCardGroup({ label, value, options, onSelect }) {
       <p className="field-label">{label}</p>
       <div className="body-card-options" role="group" aria-label={label}>
         {options.map((option) => (
-          <button className={value === option.value ? 'body-card selected' : 'body-card'} key={option.value} onClick={() => onSelect(option.value)} type="button">
+          <button aria-pressed={value === option.value} className={value === option.value ? 'body-card selected' : 'body-card'} key={option.value} onClick={() => onSelect(option.value)} type="button">
             {option.label}
           </button>
         ))}
@@ -253,25 +264,31 @@ function TapCardGroup({ label, value, options, onSelect }) {
   );
 }
 
-function Disclosure({ title, open, onToggle, children }) {
+function Disclosure({ title, hint, number, open, onToggle, children }) {
   return (
-    <div className="panel disclosure-panel">
+    <div className={open ? 'panel disclosure-panel open' : 'panel disclosure-panel'}>
       <button className="disclosure-trigger" onClick={onToggle} type="button" aria-expanded={open}>
-        <span>{title}</span>
-        <span>{open ? '-' : '+'}</span>
+        <span className="disclosure-heading">
+          <span className="detail-section-number" aria-hidden="true">{number}</span>
+          <span>
+            <strong>{title}</strong>
+            <small>{hint}</small>
+          </span>
+        </span>
+        <span className="disclosure-symbol" aria-hidden="true">{open ? '-' : '+'}</span>
       </button>
       {open && <div className="disclosure-content">{children}</div>}
     </div>
   );
 }
 
-function ChipGroup({ label, values, selected, onToggle }) {
+function ChipGroup({ label, values, selected, onToggle, stepNumber, hint }) {
   return (
-    <div className="panel quiet-panel">
-      <p className="field-label">{label}</p>
-      <div className="chips">
+    <div className="panel quiet-panel factor-choice-panel">
+      <DetailSectionHeading hint={hint} label={label} number={stepNumber} />
+      <div className="chips" role="group" aria-label={label}>
         {values.map((value) => (
-          <button className={selected.includes(value) ? 'chip selected' : 'chip'} key={value} onClick={() => onToggle(value)} type="button">{value}</button>
+          <button aria-pressed={selected.includes(value)} className={selected.includes(value) ? 'chip selected' : 'chip'} key={value} onClick={() => onToggle(value)} type="button">{value}</button>
         ))}
       </div>
     </div>

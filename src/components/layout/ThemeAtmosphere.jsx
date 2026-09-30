@@ -1,8 +1,5 @@
 const cafeArtUrl = new URL('../../../img/Theme Img/coffecup.png', import.meta.url).href;
-const cafeNotesUrl = new URL('../../../img/Theme Img/notes.png', import.meta.url).href;
-const cafeCatUrl = new URL('../../../img/Theme Img/cat_silhouette.png', import.meta.url).href;
-const cafePumpkinUrl = new URL('../../../img/Theme Img/cafe-pumpkin-accent.png', import.meta.url).href;
-const cafeLeafUrl = new URL('../../../img/Theme Img/cafe-fall-leaf-accent.png', import.meta.url).href;
+const cafePumpkinUrl = new URL('../../../img/Sticker_book/Cozy_complete/pumpkin_512.png', import.meta.url).href;
 const seafoamWaveUrl = new URL('../../../img/Theme Img/waves2.png', import.meta.url).href;
 const seafoamShellUrl = new URL('../../../img/Theme Img/shell.png', import.meta.url).href;
 const seafoamMarineShellUrl = new URL('../../../img/Theme Img/marine_shell.png', import.meta.url).href;
@@ -23,7 +20,6 @@ const gardenDaisyUrl = new URL('../../../img/Theme Img/garden-daisy-accent.png',
 const sunriseSunUrl = new URL('../../../img/Theme Img/sunrise-sun-accent.png', import.meta.url).href;
 const sunriseRedSunUrl = new URL('../../../img/Theme Img/sunrise-red-sun-accent.png', import.meta.url).href;
 const sunriseCloudUrl = new URL('../../../img/Theme Img/sunset_cloud.png', import.meta.url).href;
-const sunriseTwinkleUrl = new URL('../../../img/Theme Img/yellow_twinkle.png', import.meta.url).href;
 const sunriseWaveUrl = new URL('../../../img/Theme Img/sunrise-wave-accent.png', import.meta.url).href;
 const sunriseGradientUrl = new URL('../../../img/Theme Img/sunrise-gradient-accent.png', import.meta.url).href;
 
@@ -35,10 +31,7 @@ export function ThemeAtmosphere() {
       <span className="atmosphere-layer layer-three" />
       <span className="atmosphere-particles" />
       <img className="theme-art-image theme-art-cafe-image" src={cafeArtUrl} alt="" />
-      <img className="theme-art-image theme-art-cafe-notes" src={cafeNotesUrl} alt="" />
-      <img className="theme-art-image theme-art-cafe-cat" src={cafeCatUrl} alt="" />
       <img className="theme-art-image theme-art-cafe-pumpkin" src={cafePumpkinUrl} alt="" />
-      <img className="theme-art-image theme-art-cafe-leaf" src={cafeLeafUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-wave" src={seafoamWaveUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-shell" src={seafoamShellUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-marine-shell" src={seafoamMarineShellUrl} alt="" />
@@ -60,7 +53,6 @@ export function ThemeAtmosphere() {
       <img className="theme-art-image theme-art-sunrise-sun" src={sunriseSunUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-red-sun" src={sunriseRedSunUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-cloud" src={sunriseCloudUrl} alt="" />
-      <img className="theme-art-image theme-art-sunrise-twinkle" src={sunriseTwinkleUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-wave" src={sunriseWaveUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-gradient" src={sunriseGradientUrl} alt="" />
       <svg className="theme-art theme-art-garden" viewBox="0 0 1200 720" preserveAspectRatio="none">

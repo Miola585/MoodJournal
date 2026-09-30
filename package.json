@@ -11,7 +11,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "npm run build",
-    "test": "npm run build"
+    "test": "node --test && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

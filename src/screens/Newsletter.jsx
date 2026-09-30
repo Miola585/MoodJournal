@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { sunshineUrl } from '../data/journalData';
+import { PageHeader } from '../components/layout/PageHeader';
 
 export function Newsletter({ nav }) {
   const [people, setPeople] = useState([
@@ -24,7 +25,7 @@ export function Newsletter({ nav }) {
 
   return (
     <section className="newsletter-section app-screen" id="rsvp">
-      <h1>Stay Connected</h1>
+      <PageHeader title="Stay Connected" subtitle="Occasional journaling prompts, wellness activities, and supportive resources." />
       {nav}
       <div className="newsletter-grid">
         <p>Stay connected with upcoming wellness activities, journaling prompts, and mindfulness tips. Join our community to receive gentle reminders and supportive resources.</p>

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getOrbitBalanceLabel, getOrbitPrompt, getOrbitStability, orbitRingLabels, orbitRings, planetSeeds } from './gameUtils';
 
 const ringRatios = {
@@ -15,19 +15,35 @@ const ringCssDistances = {
   far: 'clamp(136px, 33vmin, 270px)'
 };
 
-export function OrbitGame() {
+export function OrbitGame({ privateStorage }) {
   const today = new Date().toISOString().slice(0, 10);
   const storageKey = `moodOrbit:${today}`;
   const stageRef = useRef(null);
-  const [planets, setPlanets] = useState(() => readStoredOrbit(storageKey) || planetSeeds);
+  const [planets, setPlanets] = useState(planetSeeds);
   const [selectedPlanet, setSelectedPlanet] = useState(planets[0]?.name || '');
   const [draggingPlanet, setDraggingPlanet] = useState('');
   const [activeRing, setActiveRing] = useState('');
   const [message, setMessage] = useState('');
+  const [storageError, setStorageError] = useState('');
   const balanceScore = getOrbitStability(planets);
   const balanceLabel = getOrbitBalanceLabel(balanceScore);
   const closest = [...planets].sort((a, b) => orbitRings.indexOf(a.orbit) - orbitRings.indexOf(b.orbit))[0];
   const selected = planets.find((planet) => planet.name === selectedPlanet) || closest;
+
+  useEffect(() => {
+    let active = true;
+    privateStorage.read(storageKey, null)
+      .then((saved) => {
+        if (!active || !Array.isArray(saved)) return;
+        setPlanets(normalizeStoredOrbit(saved));
+      })
+      .catch((error) => {
+        if (active) setStorageError(error.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, [privateStorage, storageKey]);
 
   const movePlanet = (planetName, orbit, angle = null) => {
     setPlanets((current) => current.map((planet) => (
@@ -62,9 +78,14 @@ export function OrbitGame() {
     setActiveRing('');
   };
 
-  const finishOrbit = () => {
-    localStorage.setItem(storageKey, JSON.stringify(planets));
-    setMessage('Saved. You can come back later and see what moved.');
+  const finishOrbit = async () => {
+    setStorageError('');
+    try {
+      await privateStorage.write(storageKey, planets);
+      setMessage('Saved. You can come back later and see what moved.');
+    } catch (error) {
+      setStorageError(error.message);
+    }
   };
 
   return (
@@ -143,6 +164,7 @@ export function OrbitGame() {
         <button className="primary finish-orbit" onClick={finishOrbit} type="button">Finish orbit</button>
       </div>
       {message && <p className="success-message">{message}</p>}
+      {storageError && <p className="form-error" role="alert">{storageError}</p>}
     </div>
   );
 }
@@ -153,12 +175,6 @@ function getNearestRing(value) {
   ), 'close');
 }
 
-function readStoredOrbit(key) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(key));
-    if (!Array.isArray(saved)) return null;
-    return planetSeeds.map((seed) => ({ ...seed, ...(saved.find((planet) => planet.name === seed.name) || {}) }));
-  } catch {
-    return null;
-  }
+function normalizeStoredOrbit(saved) {
+  return planetSeeds.map((seed) => ({ ...seed, ...(saved.find((planet) => planet.name === seed.name) || {}) }));
 }

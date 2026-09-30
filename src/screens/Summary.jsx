@@ -15,6 +15,7 @@ import {
   YAxis
 } from 'recharts';
 import { countBy, countMany, formatDateKey, getPatternNotes, isCheckIn, topLabel } from '../utils/journalUtils';
+import { PageHeader } from '../components/layout/PageHeader';
 
 const moodPalette = ['#c9825a', '#d9a441', '#8fae73', '#7eaeb4', '#9c8bc2', '#d88b9b', '#b98b66', '#7f9f83'];
 const factorPalette = '#b87955';
@@ -49,10 +50,7 @@ export function Summary({ nav, entries }) {
 
   return (
     <section className="screen app-screen summary-screen">
-      <header className="summary-heading">
-        <span>{weekLabel}</span>
-        <h1>Weekly Summary</h1>
-        <p>{weekRange} - A softer look at check-ins, mood patterns, and common factors.</p>
+      <PageHeader eyebrow={weekLabel} title="Weekly Summary" subtitle={`${weekRange} - A softer look at check-ins, mood patterns, and common factors.`} actions={(
         <div className="summary-week-nav" aria-label="Choose summary week">
           <button className="secondary" type="button" onClick={() => setWeekOffset((offset) => offset - 1)}>
             <ChevronLeft aria-hidden="true" size={17} />
@@ -66,7 +64,7 @@ export function Summary({ nav, entries }) {
             <ChevronRight aria-hidden="true" size={17} />
           </button>
         </div>
-      </header>
+      )} />
       {nav}
 
       <div className="summary-stat-grid">

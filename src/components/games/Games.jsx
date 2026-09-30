@@ -6,6 +6,8 @@ import { MemoryJarGame } from './MemoryJarGame';
 import { MoodGardenGame } from './MoodGardenGame';
 import { NightSkyGalaxy } from './NightSkyGame';
 import { OrbitGame } from './OrbitGame';
+import { PageHeader } from '../layout/PageHeader';
+import { GamePageShell } from './GamePageShell';
 import {
   gameLabels,
   rotatingGames
@@ -47,7 +49,7 @@ const gameLibraryDetails = {
   }
 };
 
-export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEntriesByDate }) {
+export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEntriesByDate, privateStorage }) {
   const navigate = useNavigate();
   const { gameId } = useParams();
   const dayNumber = Math.floor(new Date(todayKey()).getTime() / 86400000);
@@ -58,22 +60,20 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
     return (
       <section className={`screen app-screen games-screen standalone-game-screen standalone-game-screen-${selectedGame}`}>
         {nav}
-        <header className="game-route-header">
+        <div className="game-route-header">
           <button className="secondary back-to-games" onClick={() => navigate('/games')} type="button">
             <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.4} />
             <span>Back to games</span>
           </button>
-          <div>
-            <h1>{gameLabels[selectedGame]}</h1>
-            <p>{gameRouteCopy[selectedGame]}</p>
-          </div>
-        </header>
+          <PageHeader align="center" title={gameLabels[selectedGame]} subtitle={gameRouteCopy[selectedGame]} />
+        </div>
         <GameStage
           game={selectedGame}
           entries={entries}
           moods={moods}
           todayKey={todayKey}
           getPrimaryEntry={getPrimaryEntry}
+          privateStorage={privateStorage}
         />
       </section>
     );
@@ -81,10 +81,7 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
 
   return (
     <section className="screen app-screen games-screen games-hub-screen">
-      <header className="games-hub-header">
-        <h1>Games</h1>
-        <p>Small reflection spaces for when you want to reset, notice, or make something gentle.</p>
-      </header>
+      <PageHeader align="center" eyebrow="Play and reflect" title="Games" subtitle="Small reflection spaces for when you want to reset, notice, or make something gentle." />
       {nav}
       <GameLauncher openGame={(game) => navigate(`/games/${game}`)} featuredGame={featuredGame} />
       <NightSkyGalaxy entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} />
@@ -123,25 +120,25 @@ function GameLauncher({ openGame, featuredGame }) {
   );
 }
 
-function GameStage({ game, entries, moods, todayKey, getPrimaryEntry }) {
+function GameStage({ game, entries, moods, todayKey, getPrimaryEntry, privateStorage }) {
   const todayEntries = entries.filter((entry) => entry.dateKey === todayKey());
   const mainToday = getPrimaryEntry(todayEntries);
   const mood = moods.find((item) => item.key === mainToday?.mood) || moods[0];
 
   return (
-    <section className={`game-route-shell game-page game-page-${game}`} aria-label={`${gameLabels[game]} game`}>
-      <FeaturedGame game={game} mood={mood} mainToday={mainToday} todayEntries={todayEntries} />
-    </section>
+    <GamePageShell game={game} label={gameLabels[game]}>
+      <FeaturedGame game={game} mood={mood} mainToday={mainToday} todayEntries={todayEntries} privateStorage={privateStorage} />
+    </GamePageShell>
   );
 }
 
-function FeaturedGame({ game, mood, mainToday, todayEntries }) {
+function FeaturedGame({ game, mood, mainToday, todayEntries, privateStorage }) {
   const games = {
     match: <EmotionalMatchGame />,
-    constellation: <ConstellationGame mood={mood} />,
+    constellation: <ConstellationGame mood={mood} privateStorage={privateStorage} />,
     garden: <MoodGardenGame mood={mood} mainToday={mainToday} todayEntries={todayEntries} />,
-    memory: <MemoryJarGame mood={mood} mainToday={mainToday} />,
-    orbit: <OrbitGame />
+    memory: <MemoryJarGame mood={mood} mainToday={mainToday} privateStorage={privateStorage} />,
+    orbit: <OrbitGame privateStorage={privateStorage} />
   };
   return games[game] || games.match;
 }
