@@ -125,7 +125,8 @@ export const createEntry = () => ({
   meals: '',
   water: '',
   sleep: '',
-  primary: false
+  primary: false,
+  bookmarked: false
 });
 
 export const createFreeWriteEntry = () => ({

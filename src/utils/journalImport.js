@@ -1,3 +1,5 @@
+import { dateKeyFromTimestamp, isJournalDateAllowed } from './journalUtils.js';
+
 const MAX_IMPORT_ENTRIES = 5000;
 export const MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024;
 
@@ -30,7 +32,7 @@ const readStringList = (entry, field) => {
   return value;
 };
 
-const normalizeEntry = (entry) => {
+export const normalizeImportedEntry = (entry) => {
   if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
     throw new Error('The backup contains an invalid journal entry.');
   }
@@ -38,8 +40,8 @@ const normalizeEntry = (entry) => {
 
   const created = readString(entry, 'created', 64);
   if (!created || Number.isNaN(Date.parse(created))) throw new Error('An imported entry has an invalid creation date.');
-  const dateKey = readString(entry, 'dateKey', 10, created.slice(0, 10));
-  if (!/^\d{4}-\d{2}-\d{2}$/u.test(dateKey)) throw new Error('An imported entry has an invalid journal date.');
+  const dateKey = readString(entry, 'dateKey', 10, dateKeyFromTimestamp(created));
+  if (!isJournalDateAllowed(dateKey)) throw new Error('An imported entry has an invalid journal date or a future date.');
   const type = readString(entry, 'type', 20, 'checkin');
   if (!['checkin', 'journal', 'game'].includes(type)) throw new Error('An imported entry has an unsupported entry type.');
 
@@ -56,7 +58,8 @@ const normalizeEntry = (entry) => {
     intensity,
     factors: readStringList(entry, 'factors'),
     tags: readStringList(entry, 'tags'),
-    primary: Boolean(entry.primary)
+    primary: Boolean(entry.primary),
+    bookmarked: Boolean(entry.bookmarked)
   };
   Object.entries(stringFields).forEach(([field, maxLength]) => {
     normalized[field] = readString(entry, field, maxLength);
@@ -92,9 +95,53 @@ export function parseJournalBackup(text) {
   if (data.journalEntriesV2.length > MAX_IMPORT_ENTRIES) {
     throw new Error(`A backup can contain at most ${MAX_IMPORT_ENTRIES} entries.`);
   }
-  const entries = data.journalEntriesV2.map(normalizeEntry);
+  const entries = data.journalEntriesV2.map(normalizeImportedEntry);
   if (new Set(entries.map((entry) => entry.id)).size !== entries.length) {
     throw new Error('The backup contains duplicate entry IDs.');
   }
   return entries;
+}
+
+const comparableEntry = (entry) => JSON.stringify(normalizeImportedEntry(entry));
+
+export function compareJournalImports(currentEntries, importedEntries) {
+  const currentById = new Map(currentEntries.map((entry) => [String(entry.id), entry]));
+  const importedById = new Map(importedEntries.map((entry) => [String(entry.id), entry]));
+  const newEntries = [];
+  const exactDuplicates = [];
+  const conflicts = [];
+
+  importedEntries.forEach((entry) => {
+    const current = currentById.get(String(entry.id));
+    if (!current) newEntries.push(entry);
+    else if (comparableEntry(current) === comparableEntry(entry)) exactDuplicates.push(entry);
+    else conflicts.push({ current, imported: entry });
+  });
+
+  const currentOnly = currentEntries.filter((entry) => !importedById.has(String(entry.id)));
+  return {
+    newEntries,
+    exactDuplicates,
+    conflicts,
+    currentOnly,
+    counts: {
+      new: newEntries.length,
+      duplicates: exactDuplicates.length,
+      conflicts: conflicts.length,
+      currentOnly: currentOnly.length
+    }
+  };
+}
+
+export function buildImportedJournal(currentEntries, importedEntries, mode) {
+  const comparison = compareJournalImports(currentEntries, importedEntries);
+  if (mode === 'replace') return importedEntries;
+  if (mode === 'backup') {
+    const importedById = new Map(importedEntries.map((entry) => [String(entry.id), entry]));
+    return [
+      ...currentEntries.map((entry) => importedById.get(String(entry.id)) || entry),
+      ...comparison.newEntries
+    ];
+  }
+  return [...currentEntries, ...comparison.newEntries];
 }

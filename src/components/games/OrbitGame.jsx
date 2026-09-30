@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getOrbitBalanceLabel, getOrbitPrompt, getOrbitStability, orbitRingLabels, orbitRings, planetSeeds } from './gameUtils';
+import { todayKey } from '../../utils/journalUtils';
 
 const ringRatios = {
   close: 0.18,
@@ -16,7 +17,7 @@ const ringCssDistances = {
 };
 
 export function OrbitGame({ privateStorage }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
   const storageKey = `moodOrbit:${today}`;
   const stageRef = useRef(null);
   const [planets, setPlanets] = useState(planetSeeds);

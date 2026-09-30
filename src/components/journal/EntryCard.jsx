@@ -1,10 +1,10 @@
 import { useId, useState } from 'react';
-import { ArrowRight, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowRight, Bookmark, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { moods } from '../../data/journalData';
 import { isCheckIn } from '../../utils/journalUtils';
 import { stripGameData } from '../games/gameUtils';
 
-export function EntryCard({ entry, onEdit, onDelete, onPrimary, compact = false }) {
+export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, compact = false }) {
   const [expanded, setExpanded] = useState(false);
   const pageId = useId();
   const mood = moods.find((item) => item.key === entry.mood);
@@ -13,6 +13,7 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, compact = false 
   const canToggle = compact || Boolean(onEdit || onDelete);
   const showFullEntry = expanded || !canToggle;
   const createdAt = new Date(entry.created);
+  const journalDate = entry.dateKey ? new Date(`${entry.dateKey}T12:00:00`) : createdAt;
   const showPrimaryAction = Boolean(onPrimary && isCheckIn(entry) && !entry.primary);
   return (
     <article className={`${isCheckIn(entry) ? 'entry-card entry-card-checkin' : 'entry-card entry-card-freewrite'}${compact ? ' entry-card-compact' : ''}${showFullEntry ? ' entry-card-open' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
@@ -21,10 +22,13 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, compact = false 
           <span className="entry-type-badge">{entryLabel}</span>
           {entry.primary ? <span className="primary-marker">Main</span> : null}
         </div>
-        <time dateTime={entry.created}>
-          <span>{createdAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+        <div className="entry-card-date-actions">
+        {onBookmark && <button aria-label={entry.bookmarked ? 'Remove bookmark' : 'Bookmark this page'} aria-pressed={Boolean(entry.bookmarked)} className={entry.bookmarked ? 'entry-bookmark active' : 'entry-bookmark'} onClick={() => onBookmark(!entry.bookmarked)} title={entry.bookmarked ? 'Remove bookmark' : 'Bookmark page'} type="button"><Bookmark aria-hidden="true" fill={entry.bookmarked ? 'currentColor' : 'none'} size={19} /></button>}
+        <time dateTime={entry.dateKey || entry.created}>
+          <span>{journalDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           <span>{createdAt.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</span>
         </time>
+        </div>
       </div>
       <h2>{isCheckIn(entry) ? `${mood?.emoji || ''} ${entry.mood || 'Check-In'}` : entry.specificFeeling || 'Untitled page'}</h2>
       {!showFullEntry && (

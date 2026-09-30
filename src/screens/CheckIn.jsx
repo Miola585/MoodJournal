@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { CalendarDays, ChevronDown, Sparkles } from 'lucide-react';
 import { createEntry, factors, guidedPrompts, moods } from '../data/journalData';
 import { PageHeader } from '../components/layout/PageHeader';
+import { todayKey } from '../utils/journalUtils';
+import { useJournalDraft } from '../hooks/useJournalDraft';
+import { DraftRecoveryNotice, SaveState } from '../components/journal/DraftRecoveryNotice';
 
 const stepLabels = ['Mood', 'Details', 'Journal', 'Context'];
 const primaryMoodKeys = ['Happy', 'Calm', 'Content', 'Sad', 'Overwhelmed'];
@@ -44,18 +48,27 @@ const bodyCheckGroups = [
   }
 ];
 
-export function CheckIn({ nav, onSave }) {
+export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
   const [entry, setEntry] = useState(createEntry);
   const [promptType, setPromptType] = useState('Reflect');
   const [step, setStep] = useState(0);
   const [showMoreMoods, setShowMoreMoods] = useState(false);
   const [showBodyDetails, setShowBodyDetails] = useState(false);
   const [showExtraContext, setShowExtraContext] = useState(false);
+  const [showFullCheckIn, setShowFullCheckIn] = useState(false);
+  const [saveState, setSaveState] = useState('');
+  const draftState = useJournalDraft({ privateStorage, formId: 'checkin:new', draft: entry, setDraft: setEntry });
   const mood = moods.find((item) => item.key === entry.mood);
   const visibleMoods = showMoreMoods ? moods : moods.filter((item) => primaryMoodKeys.includes(item.key));
-  const canSave = Boolean(entry.mood && entry.note.trim());
-  const setField = (field, value) => setEntry((current) => ({ ...current, [field]: value }));
+  const sameDayCheckIns = entries.filter((item) => (item.type || 'checkin') === 'checkin' && item.dateKey === entry.dateKey);
+  const isAdditionalCheckIn = sameDayCheckIns.length > 0 && !showFullCheckIn;
+  const canSave = Boolean(entry.mood && (sameDayCheckIns.length > 0 || entry.note.trim()));
+  const setField = (field, value) => {
+    setSaveState('');
+    setEntry((current) => ({ ...current, [field]: value }));
+  };
   const selectMood = (value) => {
+    setSaveState('');
     setEntry((current) => ({
       ...current,
       mood: value,
@@ -63,6 +76,7 @@ export function CheckIn({ nav, onSave }) {
     }));
   };
   const toggleList = (field, value) => {
+    setSaveState('');
     setEntry((current) => ({
       ...current,
       [field]: current[field].includes(value) ? current[field].filter((item) => item !== value) : [...current[field], value]
@@ -73,23 +87,67 @@ export function CheckIn({ nav, onSave }) {
     setStep((current) => Math.min(current + 1, stepLabels.length - 1));
   };
   const goBack = () => setStep((current) => Math.max(current - 1, 0));
-  const submit = (event) => {
-    event.preventDefault();
+  const submit = async (event) => {
+    event?.preventDefault();
     if (!canSave) return;
-    onSave(entry);
+    setSaveState('saving');
+    const saved = await onSave(entry);
+    if (!saved) {
+      setSaveState('error');
+      return;
+    }
+    setSaveState('saved');
+    await draftState.clearDraft(entry);
     setEntry(createEntry());
     setPromptType('Reflect');
     setStep(0);
     setShowMoreMoods(false);
     setShowBodyDetails(false);
     setShowExtraContext(false);
+    setShowFullCheckIn(false);
+    onDone?.();
   };
 
   return (
     <section className="screen app-screen checkin-screen">
       <PageHeader align="center" eyebrow="A quiet minute" title="Daily Mood Check-In" subtitle="Name what you feel, notice what shaped it, and choose one small next step." />
       {nav}
+      <DraftRecoveryNotice record={draftState.storedDraft} onRestore={draftState.restoreDraft} onDiscard={draftState.discardDraft} />
       <form className="flow checkin-flow" onSubmit={submit}>
+        <div className="journal-date-row">
+          <label>
+            <CalendarDays aria-hidden="true" size={17} />
+            Journal date
+            <input max={todayKey()} onChange={(event) => setField('dateKey', event.target.value)} type="date" value={entry.dateKey} />
+          </label>
+          {sameDayCheckIns.length > 0 ? <span>{sameDayCheckIns.length} check-in{sameDayCheckIns.length === 1 ? '' : 's'} already saved for this day</span> : <span>This will be the main check-in for this day</span>}
+        </div>
+
+        {isAdditionalCheckIn ? (
+          <div className="checkin-step-panel compact-checkin-panel">
+            <div className="checkin-step-content">
+              <div className="step-copy">
+                <span>Another moment</span>
+                <h2>How are you feeling now?</h2>
+                <p>Add a quick mood moment without replacing the main reflection for this day.</p>
+              </div>
+              <div className="mood-grid checkin-mood-grid">
+                {visibleMoods.map((item) => (
+                  <button aria-pressed={entry.mood === item.key} className={entry.mood === item.key ? 'mood selected' : 'mood'} key={item.key} onClick={() => selectMood(item.key)} style={{ '--mood': item.color }} type="button">
+                    <span>{item.emoji}</span>{item.key}
+                  </button>
+                ))}
+              </div>
+              <button className="secondary subtle-action" onClick={() => setShowMoreMoods((current) => !current)} type="button">{showMoreMoods ? 'Show fewer moods' : 'More feelings'}</button>
+              <label className="compact-checkin-note">Optional note
+                <textarea value={entry.note} onChange={(event) => setField('note', event.target.value)} placeholder="What changed, or what do you want to remember?" />
+              </label>
+              <button className="ghost-button compact-details-toggle" onClick={() => setShowFullCheckIn(true)} type="button">
+                <ChevronDown aria-hidden="true" size={17} />Add more detail
+              </button>
+            </div>
+          </div>
+        ) : <>
         <div className="checkin-progress" aria-label="Check-in progress">
           {stepLabels.map((label, index) => (
             <button
@@ -203,15 +261,21 @@ export function CheckIn({ nav, onSave }) {
             </div>
           )}
         </div>
+        </>}
 
-        <div className={step === 2 && canSave ? 'checkin-action-bar has-save' : 'checkin-action-bar'}>
+        <div className={`${step === 2 && canSave ? 'checkin-action-bar has-save' : 'checkin-action-bar'}${isAdditionalCheckIn ? ' compact-checkin-actions' : ''}`}>
+          {isAdditionalCheckIn ? <span className="compact-checkin-primary-note"><Sparkles aria-hidden="true" size={16} />Your earlier check-in stays the main one.</span> : null}
+          {!isAdditionalCheckIn && <>
           <button className="secondary" disabled={step === 0} onClick={goBack} type="button">Back</button>
           {step < stepLabels.length - 1 && (
             <button className="primary" disabled={step === 0 && !entry.mood} onClick={goNext} type="button">{step === 2 ? 'Continue to context' : 'Next'}</button>
           )}
           {(step === stepLabels.length - 1 || (step === 2 && canSave)) && (
-            <button className="primary" disabled={!canSave} type="submit">Save Check-In</button>
+            <button className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Save Check-In</button>
           )}
+          </>}
+          {isAdditionalCheckIn && <button className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Save mood moment</button>}
+          <SaveState state={saveState} onRetry={submit} draftStatus={draftState.dirty ? draftState.draftStatus : ''} />
         </div>
       </form>
     </section>

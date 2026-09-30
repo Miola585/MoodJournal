@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Accessibility, Bell, BookOpen, Check, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, ShieldCheck, Sun, Sunset, Type, UserRound } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { todayKey } from '../utils/journalUtils';
-import { MAX_IMPORT_FILE_BYTES, parseJournalBackup } from '../utils/journalImport';
+import { buildImportedJournal, compareJournalImports, MAX_IMPORT_FILE_BYTES, parseJournalBackup } from '../utils/journalImport';
 import { themeChoices } from '../data/themeChoices';
 
 export function Settings({
-  nav, user, profile, entries, saveEntries, fontScale, setFontScale, fontStyle, setFontStyle,
+  nav, user, profile, entries, saveEntries, replaceJournalEntries, checkJournalReplaceAvailable, fontScale, setFontScale, fontStyle, setFontStyle,
   siteTheme, setSiteTheme, theme, setTheme, reduceMotion, setReduceMotion, pin, setPin, onOpen,
   recoverPin, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder,
   journalEncryption
@@ -25,6 +25,9 @@ export function Settings({
   const [recoveryKey, setRecoveryKey] = useState('');
   const [encryptionMessage, setEncryptionMessage] = useState('');
   const [dataMessage, setDataMessage] = useState('');
+  const [importPreview, setImportPreview] = useState(null);
+  const [importBusy, setImportBusy] = useState(false);
+  const [replaceAvailable, setReplaceAvailable] = useState(false);
   const reminderTimes = reminder.times?.length ? reminder.times : [reminder.time || '19:00'];
   const updateReminderTime = (index, value) => {
     const nextTimes = reminderTimes.map((time, timeIndex) => timeIndex === index ? value : time);
@@ -39,12 +42,12 @@ export function Settings({
     const safeTimes = nextTimes.length ? nextTimes : ['19:00'];
     setReminder({ ...reminder, time: safeTimes[0], times: safeTimes });
   };
-  const exportData = () => {
+  const exportData = (suffix = '') => {
     const blob = new Blob([JSON.stringify({ journalEntriesV2: entries }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `mood-journal-${todayKey()}.json`;
+    link.download = `mood-journal-${todayKey()}${suffix ? `-${suffix}` : ''}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -61,8 +64,10 @@ export function Settings({
     reader.onload = async () => {
       try {
         const importedEntries = parseJournalBackup(reader.result);
-        const saved = await saveEntries(importedEntries);
-        setDataMessage(saved ? `${importedEntries.length} journal entr${importedEntries.length === 1 ? 'y' : 'ies'} imported.` : 'The backup could not be saved.');
+        const comparison = compareJournalImports(entries, importedEntries);
+        setImportPreview({ entries: importedEntries, comparison, fileName: file.name });
+        setReplaceAvailable(await checkJournalReplaceAvailable());
+        setDataMessage('Backup checked. Review the comparison before choosing how to import it.');
       } catch (error) {
         setDataMessage(error.message || 'Could not import that file.');
       }
@@ -73,6 +78,42 @@ export function Settings({
       event.target.value = '';
     };
     reader.readAsText(file);
+  };
+  const applyImport = async (mode) => {
+    if (!importPreview || importBusy) return;
+    setImportBusy(true);
+    setDataMessage(mode === 'replace' ? 'Preparing a safety copy...' : 'Saving imported entries...');
+    try {
+      if (mode === 'replace') {
+        if (!replaceAvailable) {
+          setDataMessage('Full replacement is disabled until the atomic replacement function is installed in Supabase.');
+          return;
+        }
+        const confirmation = window.prompt('Type REPLACE JOURNAL to replace every current entry with this backup. A safety export will download first.');
+        if (confirmation !== 'REPLACE JOURNAL') {
+          setDataMessage('Journal replacement was cancelled. The preview is still available.');
+          return;
+        }
+        exportData('before-import');
+        const result = await replaceJournalEntries(buildImportedJournal(entries, importPreview.entries, 'replace'));
+        if (!result?.ok) {
+          setReplaceAvailable(!result?.unavailable);
+          setDataMessage(result?.error || 'The journal could not be replaced. Nothing was partially deleted.');
+          return;
+        }
+      } else {
+        const nextEntries = buildImportedJournal(entries, importPreview.entries, mode);
+        const saved = await saveEntries(nextEntries);
+        if (!saved) {
+          setDataMessage('The backup could not be saved. The preview is still available so you can retry.');
+          return;
+        }
+      }
+      setDataMessage(`${importPreview.entries.length} backup entr${importPreview.entries.length === 1 ? 'y was' : 'ies were'} processed safely.`);
+      setImportPreview(null);
+    } finally {
+      setImportBusy(false);
+    }
   };
   const enableEncryption = async () => {
     setEncryptionMessage('');
@@ -254,8 +295,25 @@ export function Settings({
       </SettingsSection>
 
       <SettingsSection icon={Database} title="Privacy & Data" description="Keep a copy of your journal or restore one you exported earlier.">
-        <div className="settings-actions"><button className="secondary-button" onClick={exportData} type="button">Export data</button><label className="file-button secondary-button">Import data<input accept="application/json" onChange={importData} type="file" /></label></div>
+        <div className="settings-actions"><button className="secondary-button" onClick={() => exportData()} type="button">Export data</button><label className="file-button secondary-button">Preview a backup<input accept="application/json" onChange={importData} type="file" /></label></div>
         {dataMessage && <p className="settings-message" role="status">{dataMessage}</p>}
+        {importPreview && <section className="import-preview" aria-labelledby="import-preview-title">
+          <div className="import-preview-heading">
+            <div><span>Checked backup</span><h3 id="import-preview-title">{importPreview.fileName}</h3></div>
+            <button className="ghost-button" onClick={() => { setImportPreview(null); setDataMessage(''); }} type="button">Close preview</button>
+          </div>
+          <div className="import-count-grid">
+            <div><strong>{importPreview.comparison.counts.new}</strong><span>New entries</span></div>
+            <div><strong>{importPreview.comparison.counts.duplicates}</strong><span>Exact duplicates</span></div>
+            <div><strong>{importPreview.comparison.counts.conflicts}</strong><span>Conflicting IDs</span></div>
+            <div><strong>{importPreview.comparison.counts.currentOnly}</strong><span>Current-only entries</span></div>
+          </div>
+          <div className="import-choice-list">
+            <button className="secondary-button" disabled={importBusy} onClick={() => applyImport('safe')} type="button"><span><strong>Merge safely</strong><small>Add new entries and keep current versions of conflicts.</small></span></button>
+            <button className="secondary-button" disabled={importBusy} onClick={() => applyImport('backup')} type="button"><span><strong>Use backup versions</strong><small>Add new entries, replace conflicts, and keep current-only entries.</small></span></button>
+            <button className="danger-button" disabled={importBusy || !replaceAvailable} onClick={() => applyImport('replace')} title={replaceAvailable ? '' : 'Install replace_journal_entries from docs/supabase-schema.sql first'} type="button"><span><strong>Replace journal</strong><small>{replaceAvailable ? 'Download a safety copy, then replace the complete journal.' : 'Unavailable until atomic replacement is installed.'}</small></span></button>
+          </div>
+        </section>}
         {journalEncryption.enabled && <p className="privacy-note"><Download aria-hidden="true" size={16} />Exports are readable JSON created on this device after unlocking. Store exported files as carefully as the journal itself.</p>}
       </SettingsSection>
 

@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, ExternalLink, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
-import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isMissingEntryTypeError, normalizeReminder, normalizeUsername, readStorage, rowToEntry, todayKey, viewFromPath } from './utils/journalUtils';
+import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, isMissingEntryTypeError, normalizeDailyPrimaries, normalizeReminder, normalizeUsername, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
 import {
   changeJournalPassphrase,
   createEncryptionConfigRow,
@@ -40,6 +40,7 @@ import { Summary } from './screens/Summary';
 import { Activities } from './screens/Activities';
 import { Settings } from './screens/Settings';
 import { createPrivateStorage } from './utils/privateStorage';
+import { confirmJournalNavigation } from './hooks/useJournalDraft';
 
 const Games = lazy(() => import('./components/games/Games').then((module) => ({ default: module.Games })));
 const encryptionRevisionKey = 'journalEncryptionRevision';
@@ -63,7 +64,7 @@ function App() {
   const location = useLocation();
   const view = viewFromPath(location.pathname, viewPaths);
   const [authMode, setAuthMode] = useState('signin');
-  const [entries, setEntries] = useState(() => isSupabaseConfigured || storedEncryptionConfig() ? [] : readStorage(localEntriesKey, []));
+  const [entries, setEntries] = useState(() => isSupabaseConfigured || storedEncryptionConfig() ? [] : normalizeDailyPrimaries(readStorage(localEntriesKey, [])));
   const [localEntries, setLocalEntries] = useState(() => readStorage(localEntriesKey, []));
   const [encryptionConfig, setEncryptionConfig] = useState(() => isSupabaseConfigured ? null : storedEncryptionConfig());
   const [encryptionKey, setEncryptionKey] = useState(null);
@@ -137,27 +138,40 @@ function App() {
   };
 
   const saveEntries = async (nextEntries) => {
+    const normalizedEntries = normalizeDailyPrimaries(nextEntries);
     if (isSupabaseConfigured && user && (!encryptionConfig || !encryptionKey)) {
       setDataError('Your encrypted journal must be unlocked before anything can be saved.');
       return false;
     }
     if (encryptionConfig) {
       try {
-        await persistEncryptedJournal(nextEntries);
+        await persistEncryptedJournal(normalizedEntries);
         return true;
       } catch (error) {
         setDataError(error.message);
         return false;
       }
     }
-    setEntries(nextEntries);
     if (!isSupabaseConfigured || !user) {
-      localStorage.setItem(localEntriesKey, JSON.stringify(nextEntries));
+      try {
+        localStorage.setItem(localEntriesKey, JSON.stringify(normalizedEntries));
+        setEntries(normalizedEntries);
+        setDataError('');
+        return true;
+      } catch (error) {
+        setDataError(error.message || 'This browser could not save the journal.');
+        return false;
+      }
+    }
+    const rows = normalizedEntries.map((entry) => entryToRow(entry, user.id));
+    if (rows.length === 0) {
+      setEntries([]);
+      setDataError('');
       return true;
     }
-    const rows = nextEntries.map((entry) => entryToRow(entry, user.id));
     const { error } = await supabase.from('journal_entries').upsert(rows);
     if (!error) {
+      setEntries(normalizedEntries);
       setDataError('');
       return true;
     }
@@ -168,11 +182,51 @@ function App() {
         setDataError(fallbackError.message);
         return false;
       }
+      setEntries(normalizedEntries);
       setDataError('Saved without entry type because Supabase is missing the entry_type column. Run docs/supabase-schema.sql in Supabase SQL Editor to fully enable Check-In, Free Write, and Game entry separation.');
       return true;
     }
     setDataError(error.message);
     return false;
+  };
+
+  const replaceJournalEntries = async (nextEntries) => {
+    const normalizedEntries = normalizeDailyPrimaries(nextEntries);
+    if (!isSupabaseConfigured || !user) {
+      const saved = await saveEntries(normalizedEntries);
+      return { ok: saved, unavailable: false };
+    }
+    if (!encryptionConfig || !encryptionKey) {
+      return { ok: false, unavailable: false, error: 'Unlock your encrypted journal before replacing it.' };
+    }
+    try {
+      const encrypted = await encryptEntriesToRows(normalizedEntries, user.id, encryptionKey);
+      const replacementRows = [createEncryptionConfigRow(encryptionConfig, user.id), ...encrypted];
+      const { error } = await supabase.rpc('replace_journal_entries', { replacement_rows: replacementRows, dry_run: false });
+      if (error) {
+        const unavailable = /replace_journal_entries|schema cache|function/i.test(error.message || '');
+        return {
+          ok: false,
+          unavailable,
+          error: unavailable
+            ? 'Full replacement is unavailable until replace_journal_entries is installed from docs/supabase-schema.sql.'
+            : error.message
+        };
+      }
+      setEncryptedRows(encrypted);
+      setEntries(normalizedEntries);
+      setDataError('');
+      return { ok: true, unavailable: false };
+    } catch (error) {
+      setDataError(error.message);
+      return { ok: false, unavailable: false, error: error.message };
+    }
+  };
+
+  const checkJournalReplaceAvailable = async () => {
+    if (!isSupabaseConfigured || !user) return true;
+    const { error } = await supabase.rpc('replace_journal_entries', { replacement_rows: [], dry_run: true });
+    return !error;
   };
 
   const enableJournalEncryption = async (passphrase) => {
@@ -252,7 +306,7 @@ function App() {
       const dataKey = useRecoveryKey
         ? await unlockJournalWithRecoveryKey(encryptionConfig, credential)
         : await unlockJournalWithPassphrase(encryptionConfig, credential);
-      const decryptedEntries = await decryptEntryRows(encryptedRows, dataKey);
+      const decryptedEntries = normalizeDailyPrimaries(await decryptEntryRows(encryptedRows, dataKey));
       setEncryptionKey(dataKey);
       setEntries(decryptedEntries);
       return true;
@@ -329,76 +383,70 @@ function App() {
       setEncryptionBusy(false);
     }
   };
-  const saveEntry = async (entry, nextView = 'activities') => {
+  const saveEntry = async (entry) => {
+    if (!isJournalDateAllowed(entry.dateKey)) {
+      setDataError('Choose today or an earlier journal date.');
+      return false;
+    }
     const mood = moods.find((item) => item.key === entry.mood);
     const entryType = entry.type || 'checkin';
-    const existingSameDayCheckIn = entryType === 'checkin' ? entries.find((item) => isCheckIn(item) && item.dateKey === entry.dateKey) : null;
-    const effectiveEntry = existingSameDayCheckIn ? {
-      ...entry,
-      id: existingSameDayCheckIn.id,
-      created: existingSameDayCheckIn.created,
-      primary: true
-    } : entry;
-    const sameDayCheckIns = entries.filter((item) => isCheckIn(item) && item.dateKey === effectiveEntry.dateKey && item.id !== effectiveEntry.id);
+    const existing = entries.find((item) => item.id === entry.id);
     const normalized = {
-      ...effectiveEntry,
+      ...entry,
       type: entryType,
-      primary: entryType === 'checkin' && (entry.primary || sameDayCheckIns.length === 0),
+      created: existing?.created || entry.created || new Date().toISOString(),
+      bookmarked: Boolean(entry.bookmarked),
       moodScore: mood?.score || null,
       updated: new Date().toISOString()
     };
-    const exists = entries.some((item) => item.id === normalized.id);
-    const nextEntries = exists
-      ? entries.map((item) => item.id === normalized.id ? normalized : item).filter((item) => !(isCheckIn(item) && item.dateKey === normalized.dateKey && item.id !== normalized.id))
-      : [normalized, ...entries];
-    await saveEntries(normalized.primary ? nextEntries.map((item) => isCheckIn(item) && item.dateKey === normalized.dateKey ? { ...item, primary: item.id === normalized.id } : item) : nextEntries);
-    navigate(viewPaths[nextView] || viewPaths.activities);
+    return saveEntries(upsertJournalEntry(entries, normalized));
   };
   const deleteEntry = async (id) => {
-    const nextEntries = entries.filter((entry) => entry.id !== id);
-    if (encryptionConfig) {
-      if (!isSupabaseConfigured || !user) {
-        await saveEntries(nextEntries);
-        return;
-      }
-      setEntries(nextEntries);
-      setEncryptedRows((rows) => rows.filter((row) => row.id !== String(id)));
-      const { error } = await supabase.from('journal_entries').delete().eq('id', id);
-      if (error) setDataError(error.message);
-      return;
-    }
-    setEntries(nextEntries);
+    const previousEntries = entries;
+    const nextEntries = removeJournalEntry(entries, id);
     if (!isSupabaseConfigured || !user) {
-      localStorage.setItem(localEntriesKey, JSON.stringify(nextEntries));
-      return;
+      return saveEntries(nextEntries);
     }
+    const prepared = await saveEntries(nextEntries);
+    if (!prepared) return false;
     const { error } = await supabase.from('journal_entries').delete().eq('id', id);
-    if (error) setDataError(error.message);
+    if (!error) {
+      setEncryptedRows((rows) => rows.filter((row) => row.id !== String(id)));
+      setDataError('');
+      return true;
+    }
+    await saveEntries(previousEntries);
+    setDataError(error.message);
+    return false;
   };
   const setPrimaryEntry = async (id) => {
     const target = entries.find((entry) => entry.id === id);
-    if (!target || !isCheckIn(target)) return;
-    await saveEntries(entries.map((entry) => isCheckIn(entry) && entry.dateKey === target.dateKey ? { ...entry, primary: entry.id === id } : entry));
+    if (!target || !isCheckIn(target)) return false;
+    return saveEntries(entries.map((entry) => isCheckIn(entry) && entry.dateKey === target.dateKey ? { ...entry, primary: entry.id === id } : entry));
   };
+  const setBookmarkedEntry = async (id, bookmarked) => saveEntries(entries.map((entry) => entry.id === id ? { ...entry, bookmarked } : entry));
   const importLocalEntries = async () => {
-    if (!user || localEntries.length === 0) return;
+    if (!user || localEntries.length === 0) return false;
     const existingIds = new Set(entries.map((entry) => entry.id));
     const entriesToImport = localEntries.filter((entry) => !existingIds.has(entry.id));
     if (entriesToImport.length === 0) {
       localStorage.removeItem(localEntriesKey);
       setLocalEntries([]);
       setImportMessage('Those local entries are already in this account.');
-      return;
+      return true;
     }
     const imported = await saveEntries([...entriesToImport, ...entries]);
-    if (!imported) return;
+    if (!imported) return false;
     localStorage.removeItem(localEntriesKey);
     setLocalEntries([]);
     setImportMessage(`${entriesToImport.length} local entr${entriesToImport.length === 1 ? 'y' : 'ies'} imported.`);
+    return true;
   };
   const openApp = (nextView = 'checkin') => {
+    if (!confirmJournalNavigation()) return false;
     navigate(viewPaths[nextView] || viewPaths.checkin);
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    return true;
   };
   const updateTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -533,7 +581,7 @@ function App() {
             setEncryptionConfig(null);
             setEncryptionKey(null);
             setEncryptedRows([]);
-            setEntries(rows.filter((row) => !isEncryptionConfigRow(row)).map(rowToEntry));
+            setEntries(normalizeDailyPrimaries(rows.filter((row) => !isEncryptionConfigRow(row)).map(rowToEntry)));
           }
           setAccountDataLoadedFor(user.id);
         }
@@ -677,17 +725,17 @@ function App() {
         <Suspense fallback={<section className="screen app-screen"><div className="panel auth-panel"><p>Loading page...</p></div></section>}>
         <Routes>
           <Route path="/" element={<Home entries={entries} onOpen={openApp} onOpenGame={(game) => navigate(`/games/${game}`)} profile={profile} />} />
-          <Route path="/checkin" element={<CheckIn nav={null} onSave={saveEntry} />} />
+          <Route path="/checkin" element={<CheckIn nav={null} entries={entries} onSave={saveEntry} onDone={() => openApp('activities')} privateStorage={privateStorage} />} />
           <Route path="/activities" element={<Activities nav={null} entries={entries} privateStorage={privateStorage} />} />
-          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
-          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={entries} onSave={(entry) => saveEntry(entry, 'games')} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
-          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Entries nav={null} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
-          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Calendar nav={null} entries={entries} onPrimary={setPrimaryEntry} /></JournalPrivacyGate>} />
+          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={entries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={entries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Entries nav={null} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Calendar nav={null} entries={entries} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} /></JournalPrivacyGate>} />
           <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Summary nav={null} entries={entries} /></JournalPrivacyGate>} />
           <Route path="/about" element={<About nav={null} />} />
           <Route path="/newsletter" element={<Newsletter nav={null} />} />
           <Route path="/admin" element={profile?.role === 'admin' ? <AdminPanel nav={null} /> : <Navigate to="/" replace />} />
-          <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
+          <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} replaceJournalEntries={replaceJournalEntries} checkJournalReplaceAvailable={checkJournalReplaceAvailable} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>

@@ -60,6 +60,74 @@ using (auth.uid() = user_id);
 create index if not exists journal_entries_user_date_idx
 on public.journal_entries (user_id, date_key desc);
 
+-- Atomically replaces only the signed-in user's journal. The browser sends
+-- already-encrypted rows, so this function never needs entry plaintext.
+create or replace function public.replace_journal_entries(replacement_rows jsonb, dry_run boolean default false)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $$
+declare
+  current_user_id uuid := auth.uid();
+begin
+  if current_user_id is null then
+    raise exception 'Authentication is required.';
+  end if;
+  if jsonb_typeof(replacement_rows) <> 'array' then
+    raise exception 'Replacement rows must be a JSON array.';
+  end if;
+  if exists (
+    select 1
+    from jsonb_array_elements(replacement_rows) as item
+    where item->>'user_id' is null or (item->>'user_id')::uuid <> current_user_id
+  ) then
+    raise exception 'Every replacement row must belong to the signed-in user.';
+  end if;
+  if exists (
+    select item->>'id'
+    from jsonb_array_elements(replacement_rows) as item
+    group by item->>'id'
+    having item->>'id' is null or count(*) > 1
+  ) then
+    raise exception 'Replacement rows contain missing or duplicate IDs.';
+  end if;
+  if dry_run then
+    return;
+  end if;
+
+  delete from public.journal_entries where user_id = current_user_id;
+  insert into public.journal_entries (
+    id, user_id, entry_type, created, date_key, mood, specific_feeling,
+    intensity, factors, tags, note, coping_step, meals, water, sleep,
+    "primary", mood_score, updated_at
+  )
+  select
+    row_data.id,
+    row_data.user_id,
+    coalesce(row_data.entry_type, 'checkin'),
+    row_data.created,
+    row_data.date_key,
+    coalesce(row_data.mood, ''),
+    coalesce(row_data.specific_feeling, ''),
+    coalesce(row_data.intensity, 5),
+    coalesce(row_data.factors, '{}'),
+    coalesce(row_data.tags, '{}'),
+    coalesce(row_data.note, ''),
+    coalesce(row_data.coping_step, ''),
+    coalesce(row_data.meals, ''),
+    coalesce(row_data.water, ''),
+    coalesce(row_data.sleep, ''),
+    coalesce(row_data."primary", false),
+    row_data.mood_score,
+    coalesce(row_data.updated_at, now())
+  from jsonb_populate_recordset(null::public.journal_entries, replacement_rows) as row_data;
+end;
+$$;
+
+revoke all on function public.replace_journal_entries(jsonb, boolean) from public;
+grant execute on function public.replace_journal_entries(jsonb, boolean) to authenticated;
+
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
   username text unique not null,

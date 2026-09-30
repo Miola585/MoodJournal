@@ -51,7 +51,7 @@ export function Home({ entries, onOpen, onOpenGame, profile }) {
           <p>{mainToday?.note?.trim() || (mainToday ? 'Your check-in is saved. You can add another thought whenever you need to.' : 'One honest note is enough to begin.')}</p>
         </div>
         <button className="primary-button" onClick={() => onOpen('checkin')} type="button">
-          {mainToday ? 'Return to check-in' : 'Start today\'s check-in'}
+          {mainToday ? 'Add another mood moment' : 'Start today\'s check-in'}
           <ArrowRight aria-hidden="true" size={18} />
         </button>
       </section>

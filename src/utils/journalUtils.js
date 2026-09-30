@@ -2,7 +2,14 @@ export const viewFromPath = (pathname, viewPaths) => {
   const match = Object.entries(viewPaths).find(([, path]) => path !== '/' && pathname.startsWith(path));
   return match?.[0] || 'home';
 };
-export const todayKey = () => new Date().toISOString().slice(0, 10);
+export const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+export const todayKey = () => formatDateKey(new Date());
+export const dateKeyFromTimestamp = (value) => formatDateKey(new Date(value));
+export const isJournalDateAllowed = (value, maximum = todayKey()) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(value) || value > maximum) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  return formatDateKey(new Date(year, month - 1, day)) === value;
+};
 export const normalizeUsername = (value) => value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 export const readStorage = (key, fallback) => {
   try {
@@ -20,7 +27,6 @@ export const countMany = (items, key) => items.reduce((acc, item) => {
   return acc;
 }, {});
 export const topLabel = (counts) => Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
-export const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 export const isCheckIn = (entry) => (entry.type || 'checkin') === 'checkin';
 export const isVisibleJournalEntry = (entry) => isCheckIn(entry) || entry.type === 'journal' || (entry.tags || []).includes('free-write');
 export const isMissingEntryTypeError = (error) => /entry[_-]?type|schema cache/i.test(error?.message || '');
@@ -30,6 +36,42 @@ export const groupEntriesByDate = (entries) => entries.reduce((acc, entry) => {
   return acc;
 }, {});
 export const getPrimaryEntry = (entries) => entries.find((entry) => isCheckIn(entry) && entry.primary) || entries.find(isCheckIn) || entries[0] || null;
+export const normalizeDailyPrimaries = (entries) => {
+  const checkInsByDate = new Map();
+  entries.forEach((entry) => {
+    if (!isCheckIn(entry)) return;
+    const dateKey = entry.dateKey || dateKeyFromTimestamp(entry.created);
+    const sameDay = checkInsByDate.get(dateKey) || [];
+    sameDay.push(entry);
+    checkInsByDate.set(dateKey, sameDay);
+  });
+
+  const primaryIds = new Set();
+  checkInsByDate.forEach((sameDay) => {
+    const ordered = [...sameDay].sort((left, right) => new Date(left.created) - new Date(right.created));
+    const selected = ordered.find((entry) => entry.primary) || ordered[0];
+    if (selected) primaryIds.add(selected.id);
+  });
+
+  return entries.map((entry) => isCheckIn(entry)
+    ? { ...entry, dateKey: entry.dateKey || dateKeyFromTimestamp(entry.created), primary: primaryIds.has(entry.id) }
+    : { ...entry, dateKey: entry.dateKey || dateKeyFromTimestamp(entry.created) });
+};
+export const selectDailyPrimaryCheckIns = (entries) => normalizeDailyPrimaries(entries)
+  .filter((entry) => isCheckIn(entry) && entry.primary);
+export const upsertJournalEntry = (entries, nextEntry) => {
+  const exists = entries.some((entry) => entry.id === nextEntry.id);
+  let nextEntries = exists
+    ? entries.map((entry) => entry.id === nextEntry.id ? nextEntry : entry)
+    : [nextEntry, ...entries];
+  if (isCheckIn(nextEntry) && nextEntry.primary) {
+    nextEntries = nextEntries.map((entry) => isCheckIn(entry) && entry.dateKey === nextEntry.dateKey
+      ? { ...entry, primary: entry.id === nextEntry.id }
+      : entry);
+  }
+  return normalizeDailyPrimaries(nextEntries);
+};
+export const removeJournalEntry = (entries, id) => normalizeDailyPrimaries(entries.filter((entry) => entry.id !== id));
 export const calculateStreak = (entries) => {
   const dates = new Set(entries.map((entry) => entry.dateKey));
   let streak = 0;
@@ -80,6 +122,7 @@ export const rowToEntry = (row) => ({
   water: row.water || '',
   sleep: row.sleep || '',
   primary: Boolean(row.primary),
+  bookmarked: false,
   moodScore: row.mood_score || null,
   updated: row.updated_at
 });

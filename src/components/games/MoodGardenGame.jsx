@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { todayKey } from '../../utils/journalUtils';
 
 const gardenSprites = [
   new URL('../../../img/1111x_PixelPlants/pixelplants_sunflowers/Growing Sunflowers/PP_SF1-1.png', import.meta.url).href,
@@ -25,7 +26,7 @@ const weatherByMood = {
 };
 
 export function MoodGardenGame({ mood, mainToday, todayEntries = [] }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayKey();
   const storageKey = `gardenTendedToday:${today}`;
   const hasCheckIn = Boolean(mainToday?.mood);
   const intensity = Number(mainToday?.intensity || mood.score || 5);

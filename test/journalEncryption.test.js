@@ -20,6 +20,7 @@ const entry = {
   title: 'Private title',
   note: 'This is the private journal writing.',
   tags: ['private-tag'],
+  bookmarked: true,
   factors: ['School'],
   copingStep: 'Take a walk'
 };
@@ -36,6 +37,7 @@ test('encrypted journal rows round-trip without exposing sensitive fields', asyn
   assert.equal(serialized.includes(entry.dateKey), false);
   assert.equal(serialized.includes(entry.created), false);
   assert.equal(serialized.includes(entry.type), false);
+  assert.equal(serialized.includes('bookmarked'), false);
   assert.equal(rows[0].date_key, '1970-01-01');
   assert.equal(rows[0].created, '1970-01-01T00:00:00.000Z');
 

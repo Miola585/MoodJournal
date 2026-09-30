@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { countBy, countMany, formatDateKey, getPatternNotes, isCheckIn, topLabel } from '../utils/journalUtils';
+import { countBy, countMany, formatDateKey, getPatternNotes, selectDailyPrimaryCheckIns, topLabel } from '../utils/journalUtils';
 import { PageHeader } from '../components/layout/PageHeader';
 
 const moodPalette = ['#c9825a', '#d9a441', '#8fae73', '#7eaeb4', '#9c8bc2', '#d88b9b', '#b98b66', '#7f9f83'];
@@ -22,7 +22,7 @@ const factorPalette = '#b87955';
 
 export function Summary({ nav, entries }) {
   const [weekOffset, setWeekOffset] = useState(0);
-  const checkInEntries = entries.filter(isCheckIn);
+  const checkInEntries = selectDailyPrimaryCheckIns(entries);
   const weekDays = buildWeekDays(weekOffset);
   const weekKeys = new Set(weekDays.map((day) => day.dateKey));
   const weeklyEntries = checkInEntries.filter((entry) => weekKeys.has(entry.dateKey || formatDateKey(new Date(entry.created))));

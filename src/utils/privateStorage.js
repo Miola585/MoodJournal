@@ -54,6 +54,12 @@ export function createPrivateStorage({ ownerId, encryptionEnabled, dataKey, stor
     return value;
   };
 
+  const remove = async (key) => {
+    storage.removeItem(encryptedKeyFor(key));
+    storage.removeItem(plainKeyFor(key));
+    storage.removeItem(key);
+  };
+
   const migrateKnown = async () => {
     if (!encryptionEnabled || !dataKey || typeof storage.key !== 'function') return;
     const privateNames = new Set(['gameMemoryJar', 'gameConstellations']);
@@ -71,5 +77,5 @@ export function createPrivateStorage({ ownerId, encryptionEnabled, dataKey, stor
     }));
   };
 
-  return { read, write, migrateKnown, encrypted: Boolean(encryptionEnabled) };
+  return { read, write, remove, migrateKnown, encrypted: Boolean(encryptionEnabled) };
 }

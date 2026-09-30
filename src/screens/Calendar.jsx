@@ -16,7 +16,7 @@ const formatFriendlyDate = (dateKey) => {
   });
 };
 
-export function Calendar({ nav, entries, onPrimary }) {
+export function Calendar({ nav, entries, onPrimary, onBookmark }) {
   const [monthDate, setMonthDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const year = monthDate.getFullYear();
@@ -128,7 +128,7 @@ export function Calendar({ nav, entries, onPrimary }) {
               <span>Check-ins and free writes will appear here when saved.</span>
             </div>
           </div>
-        ) : selectedEntries.map((entry) => <EntryCard compact entry={entry} key={entry.id} onPrimary={() => onPrimary(entry.id)} />)}
+        ) : selectedEntries.map((entry) => <EntryCard compact entry={entry} key={entry.id} onPrimary={() => onPrimary(entry.id)} onBookmark={(bookmarked) => onBookmark(entry.id, bookmarked)} />)}
       </div>
     </section>
   );

@@ -35,3 +35,15 @@ test('private storage migrates a legacy plaintext value when encryption is on', 
   assert.equal(storage.getItem('activityNotes:2026-09-30'), null);
   assert.equal([...storage.values.values()].some((value) => value.includes('A private note')), false);
 });
+
+test('encrypted device drafts can be removed without leaving plaintext copies', async () => {
+  const storage = new MemoryStorage();
+  const { dataKey } = await createJournalEncryption('private storage passphrase', { iterations: 100000 });
+  const privateStorage = createPrivateStorage({ ownerId: 'user-1', encryptionEnabled: true, dataKey, storage });
+  const record = { version: 1, formId: 'entry:1', savedAt: new Date().toISOString(), draft: { note: 'Private unfinished writing' } };
+  await privateStorage.write('journalDraft:entry:1', record);
+  assert.equal([...storage.values.values()].some((value) => value.includes(record.draft.note)), false);
+  assert.deepEqual(await privateStorage.read('journalDraft:entry:1', null), record);
+  await privateStorage.remove('journalDraft:entry:1');
+  assert.equal(await privateStorage.read('journalDraft:entry:1', null), null);
+});

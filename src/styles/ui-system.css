@@ -2,6 +2,372 @@
   --app-max-width: 1240px;
 }
 
+/* Journal safety and expression */
+.journal-date-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: 12px 16px;
+  border-left: 4px solid var(--interactive-accent);
+  background: color-mix(in srgb, var(--surface-major) 90%, transparent);
+  color: var(--text-secondary);
+  box-shadow: var(--surface-shadow);
+}
+
+.journal-date-row label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 3px 8px;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.journal-date-row input {
+  grid-column: 1 / -1;
+  width: auto;
+  min-height: 38px;
+  background: var(--field-surface);
+  color: var(--text-primary);
+}
+
+.journal-date-row > span {
+  max-width: 360px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.compact-checkin-panel {
+  width: min(900px, 100%);
+  margin-inline: auto;
+}
+
+.compact-checkin-panel .checkin-step-content {
+  gap: 18px;
+}
+
+.compact-checkin-note {
+  display: grid;
+  gap: 8px;
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.compact-checkin-note textarea {
+  min-height: 150px;
+  padding: 14px 16px;
+  border-color: var(--border-subtle);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--interactive-accent) 20%, transparent) 31px 32px),
+    var(--field-surface);
+  color: var(--text-primary);
+  line-height: 32px;
+}
+
+.compact-details-toggle,
+.compact-checkin-primary-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.compact-details-toggle {
+  width: fit-content;
+}
+
+.compact-checkin-primary-note {
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.checkin-action-bar.compact-checkin-actions {
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.45fr);
+}
+
+.draft-recovery-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(980px, 100%);
+  margin-inline: auto;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--interactive-accent);
+  border-radius: 6px;
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.draft-recovery-notice > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.draft-recovery-notice span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.draft-recovery-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.journal-save-state {
+  display: inline-flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-self: end;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.journal-save-state.saved::before {
+  content: "\2726";
+  color: var(--interactive-accent);
+}
+
+.journal-save-state.error {
+  color: var(--danger-text, #a53e45);
+}
+
+.journal-save-state button {
+  min-height: 28px;
+  padding: 3px 8px;
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
+}
+
+.archive-toolbar {
+  grid-template-columns: minmax(230px, 1.4fr) repeat(3, minmax(145px, 0.75fr)) auto;
+}
+
+.bookmark-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 8px 12px;
+  border-color: var(--border-subtle);
+  background: var(--surface-interactive);
+  color: var(--text-primary);
+}
+
+.bookmark-filter.active {
+  border-color: var(--interactive-accent);
+  background: var(--interactive-strong);
+  color: var(--btn-text);
+}
+
+.entry-card-date-actions {
+  align-items: flex-start;
+}
+
+.entry-bookmark {
+  position: absolute;
+  top: 6px;
+  right: 54px;
+  z-index: 3;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0;
+  place-items: center;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.entry-bookmark:hover,
+.entry-bookmark.active {
+  border-color: color-mix(in srgb, var(--entry-accent, var(--interactive-accent)) 58%, var(--border-subtle));
+  background: color-mix(in srgb, var(--entry-accent, var(--interactive-accent)) 18%, var(--surface-major));
+  color: color-mix(in srgb, var(--entry-accent, var(--interactive-accent)) 76%, var(--text-primary));
+}
+
+.delete-undo-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  max-width: min(460px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--interactive-accent);
+  border-radius: 6px;
+  background: var(--surface-major);
+  color: var(--text-primary);
+  box-shadow: 0 16px 40px color-mix(in srgb, #000 24%, transparent);
+}
+
+.delete-undo-toast.error {
+  border-left-color: var(--danger-text, #a53e45);
+}
+
+.delete-undo-toast button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  background: var(--surface-interactive);
+  color: var(--text-primary);
+}
+
+.freewrite-page-heading {
+  grid-template-columns: minmax(0, 1fr) minmax(145px, 180px) minmax(145px, 180px);
+}
+
+.journal-date-field input {
+  min-height: 48px;
+}
+
+.import-preview {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--border-subtle);
+  border-left: 4px solid var(--interactive-accent);
+  border-radius: 6px;
+  background: var(--surface-secondary);
+}
+
+.import-preview-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.import-preview-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.import-preview-heading span,
+.import-choice-list small {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.import-preview-heading h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.import-count-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.import-count-grid > div {
+  display: grid;
+  gap: 2px;
+  padding: 12px;
+  border-bottom: 3px solid color-mix(in srgb, var(--interactive-accent) 42%, var(--border-subtle));
+  background: var(--surface-major);
+}
+
+.import-count-grid strong {
+  font-size: 1.35rem;
+}
+
+.import-count-grid span {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.import-choice-list {
+  display: grid;
+  gap: 8px;
+}
+
+.import-choice-list button {
+  min-height: 58px;
+  justify-content: flex-start;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.import-choice-list button > span {
+  display: grid;
+  gap: 2px;
+}
+
+.danger-button {
+  border: 1px solid color-mix(in srgb, var(--danger-text, #a53e45) 50%, var(--border-subtle));
+  background: transparent;
+  color: var(--danger-text, #a53e45);
+}
+
+.danger-button:not(:disabled):hover {
+  background: color-mix(in srgb, var(--danger-text, #a53e45) 12%, var(--surface-major));
+}
+
+@media (max-width: 840px) {
+  .archive-toolbar,
+  .import-count-grid,
+  .freewrite-page-heading {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .archive-keyword-field,
+  .freewrite-title-field,
+  .edit-entry-label {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .journal-date-row,
+  .draft-recovery-notice,
+  .import-preview-heading,
+  .delete-undo-toast {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .journal-date-row > span {
+    text-align: left;
+  }
+
+  .draft-recovery-actions,
+  .draft-recovery-actions button {
+    width: 100%;
+  }
+
+  .archive-toolbar,
+  .import-count-grid,
+  .freewrite-page-heading,
+  .checkin-action-bar.compact-checkin-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .delete-undo-toast {
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .entry-bookmark {
+    top: 8px;
+    right: 46px;
+  }
+}
+
 .app {
   --page-background: var(--bg);
   --surface-major: var(--hero-surface);
@@ -2478,5 +2844,35 @@ button.topnav-menu-button {
   .back-to-games {
     grid-row: 2;
     justify-self: center;
+  }
+}
+
+/* Keep milestone layout overrides after the legacy responsive layer. */
+.archive-toolbar {
+  grid-template-columns: minmax(230px, 1.4fr) repeat(3, minmax(145px, 0.75fr)) auto;
+}
+
+.freewrite-page-heading {
+  grid-template-columns: minmax(0, 1fr) minmax(145px, 180px) minmax(145px, 180px);
+}
+
+@media (max-width: 840px) {
+  .archive-toolbar,
+  .freewrite-page-heading {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .archive-keyword-field,
+  .freewrite-title-field,
+  .edit-entry-label {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .archive-toolbar,
+  .freewrite-page-heading,
+  .checkin-action-bar.compact-checkin-actions {
+    grid-template-columns: 1fr;
   }
 }
