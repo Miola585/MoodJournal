@@ -1,4 +1,4 @@
-import { todayKey } from '../utils/journalUtils';
+import { todayKey } from '../utils/journalUtils.js';
 
 export const logoUrl = new URL('../../img/JJ.png', import.meta.url).href;
 export const emotionWheelUrl = new URL('../../img/Emotion-Wheel.png', import.meta.url).href;
@@ -35,6 +35,136 @@ export const guidedPrompts = {
   Growth: ['What did this mood teach you?', 'What would you try differently next time?', 'What is one small win from today?'],
   Support: ['Who could you talk to if this feeling gets heavier?', 'What would you say to a friend feeling this way?', 'What support do you need right now?']
 };
+
+export const quickActivityGroups = [
+  [
+    {
+      kind: 'body',
+      title: 'Let your shoulders go',
+      minutes: 2,
+      detail: 'Your shoulders may be doing more work than they need to. Let them come down for a moment.',
+      steps: ['Bring your shoulders up toward your ears', 'Breathe out and let them fall', 'Do that twice more, then loosen your jaw'],
+      notePrompt: 'Did anywhere in your body soften?'
+    },
+    {
+      kind: 'body',
+      title: 'Give your hands a break',
+      minutes: 2,
+      detail: 'Hands hold tension too, especially after typing, scrolling, or gripping things all day.',
+      steps: ['Curl your hands into loose fists', 'Open them wide and stretch your fingers', 'Slowly roll each wrist a few times'],
+      notePrompt: 'How do your hands feel now?'
+    },
+    {
+      kind: 'body',
+      title: 'Look across the room',
+      minutes: 3,
+      detail: 'Give your eyes a break from whatever has been close in front of you.',
+      steps: ['Find the farthest thing you can see', 'Stay with its shape and color for a few breaths', 'Let your eyes wander around the rest of the room'],
+      notePrompt: 'What caught your eye?'
+    },
+    {
+      kind: 'body',
+      title: 'Feel the floor',
+      minutes: 3,
+      detail: 'When everything feels a little floaty or tense, let the floor remind you where you are.',
+      steps: ['Put both feet flat on the floor', 'Let the chair or wall take some of your weight', 'Press your feet down as you take three slow breaths'],
+      notePrompt: 'Do you feel any steadier?'
+    }
+  ],
+  [
+    {
+      kind: 'reflection',
+      title: 'Keep one good moment',
+      minutes: 3,
+      detail: 'Even on a rough day, there may be one small moment worth keeping.',
+      steps: ['Think of something that felt okay, kind, or comforting', 'Write down what happened', 'Add the detail you do not want to forget'],
+      notePrompt: 'The moment I want to keep is...'
+    },
+    {
+      kind: 'reflection',
+      title: "What's here right now?",
+      minutes: 4,
+      detail: 'You do not have to explain everything. Just put a few honest words around this moment.',
+      steps: ['Start with: Right now, I feel...', 'Add what may have brought this on', 'Name what would help for the next ten minutes'],
+      notePrompt: 'Right now...'
+    },
+    {
+      kind: 'reflection',
+      title: 'Notice the room',
+      minutes: 3,
+      detail: 'Come back to the space around you by noticing three ordinary things.',
+      steps: ['Find a color you like or keep noticing', 'Listen for the clearest sound nearby', 'Touch something and notice its texture'],
+      notePrompt: 'The detail I noticed most was...'
+    },
+    {
+      kind: 'reflection',
+      title: 'What helped before?',
+      minutes: 4,
+      detail: 'You have made it through other hard or tired moments. See if one old support still fits.',
+      steps: ['Think of another time you felt something like this', 'Remember one thing that made it a little easier', 'Decide whether you want to try it today'],
+      notePrompt: 'Something I could try again is...'
+    },
+    {
+      kind: 'reflection',
+      title: 'Set one worry down',
+      minutes: 4,
+      detail: 'You do not have to solve the whole worry now. Give it somewhere else to sit for a while.',
+      steps: ['Write the worry in one plain sentence', 'Circle any piece you can respond to today', 'Give the rest a time to revisit, or mark it not for today'],
+      notePrompt: 'The part I can handle today is...'
+    }
+  ],
+  [
+    {
+      kind: 'action',
+      title: 'Just the first step',
+      minutes: 4,
+      detail: 'Pick one thing you have been avoiding and make the beginning small enough to do now.',
+      steps: ['Name the task', 'Choose its first visible action, like opening the file or moving one item', 'Do only that much before deciding whether to continue'],
+      notePrompt: 'The first step is...'
+    },
+    {
+      kind: 'action',
+      title: 'Clear one little spot',
+      minutes: 5,
+      detail: 'You do not need to clean the whole room. Make one small patch of it easier to be in.',
+      steps: ['Choose one corner, chair, or part of your desk', 'Clear away any rubbish', 'Put three things back where they belong'],
+      notePrompt: 'The spot I made calmer was...'
+    },
+    {
+      kind: 'action',
+      title: 'Say what you need',
+      minutes: 4,
+      detail: 'One clear sentence can be easier than carrying a request around in your head.',
+      steps: ['Choose who needs to hear from you', 'Write the request or update in one sentence', 'Send it, or save it until you feel ready'],
+      notePrompt: 'What I need to say is...'
+    },
+    {
+      kind: 'action',
+      title: 'What can wait?',
+      minutes: 4,
+      detail: 'Not everything asking for your attention has to be handled today.',
+      steps: ['Write down the three loudest demands', 'Choose the one that truly needs today', 'Move the others to another day, or ask someone for help'],
+      notePrompt: 'I am letting this wait...'
+    },
+    {
+      kind: 'action',
+      title: 'Make later easier',
+      minutes: 5,
+      detail: 'Do one small favor for the version of you who will be here later.',
+      steps: ['Think of something you will need to do', 'Put the first thing you will need where you can see it', 'Leave yourself a simple note about when to begin'],
+      notePrompt: 'Later will be easier because...'
+    },
+    {
+      kind: 'action',
+      title: 'Give it two minutes',
+      minutes: 2,
+      detail: 'You are only agreeing to begin, not to finish the whole thing.',
+      steps: ['Choose one task', 'Start the first physical part of it', 'Stop when the timer ends, or keep going only if it feels okay'],
+      notePrompt: 'I gave two minutes to...'
+    }
+  ]
+];
+
 export const activities = {
   Anxious: [
     { title: 'Box breathing', minutes: 2, detail: 'Breathe in 4, hold 4, out 4, hold 4. Repeat slowly.', steps: ['Sit somewhere steady', 'Relax your shoulders', 'Complete 4 rounds'] },
@@ -66,11 +196,7 @@ export const activities = {
     { title: 'Gentle stretch', minutes: 6, detail: 'Stretch neck, shoulders, wrists, and back.', steps: ['Roll shoulders', 'Stretch wrists', 'Breathe out slowly'] },
     { title: 'Energy check', minutes: 4, detail: 'Choose what can wait until later.', steps: ['List one must-do', 'List one can-wait', 'Lower one expectation'] }
   ],
-  default: [
-    { title: 'Shoulder drop', minutes: 2, detail: 'Relax your jaw, lower your shoulders, and take a few slow breaths.', steps: ['Unclench your jaw', 'Drop your shoulders', 'Take three slow breaths'] },
-    { title: 'One good thing', minutes: 3, detail: 'Write one small thing that helped, even if the day was messy.', steps: ['Name one good thing', 'Add one detail', 'Let it be enough'] },
-    { title: 'Tiny next step', minutes: 4, detail: 'Pick one small action that would make the next few minutes easier.', steps: ['Name what feels heavy', 'Choose one small step', 'Start gently'] }
-  ]
+  default: quickActivityGroups.flat()
 };
 export const featureCards = [
   { image: emotionWheelUrl, title: 'Emotion Exploration', text: 'Use a wider feeling vocabulary to identify what is happening.' },

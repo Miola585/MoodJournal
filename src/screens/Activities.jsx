@@ -1,19 +1,26 @@
-import { CheckCircle2, Footprints, Heart, Pause, Play, RotateCcw, Sparkles, Wind } from 'lucide-react';
+import { CheckCircle2, Heart, Pause, Play, RotateCcw, Sparkles, Wind } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { DailyGroundingTools } from '../components/games/DailyGroundingTools';
-import { activities } from '../data/journalData';
+import { quickActivityGroups } from '../data/journalData';
 import { todayKey } from '../utils/journalUtils';
 import { PageHeader } from '../components/layout/PageHeader';
 import { usePrivateStorageState } from '../hooks/usePrivateStorageState';
+import { selectDailyActivities } from '../utils/activityUtils';
 
 export function Activities({ nav, privateStorage }) {
-  const list = activities.default;
   const today = todayKey();
+  const list = useMemo(() => selectDailyActivities(quickActivityGroups, today), [today]);
   const storageKey = `activityCompletions:${today}`;
   const notesStorageKey = `activityNotes:${today}`;
   const [completed, setCompleted] = useState(() => readStoredObject(storageKey));
   const [notes, setNotes, notesStorageError] = usePrivateStorageState(privateStorage, notesStorageKey, {});
   const [selectedTitle, setSelectedTitle] = useState(list[0]?.title || '');
+
+  useEffect(() => {
+    if (!list.some((activity) => activity.title === selectedTitle)) {
+      setSelectedTitle(list[0]?.title || '');
+    }
+  }, [list, selectedTitle]);
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(completed));
@@ -42,7 +49,7 @@ export function Activities({ nav, privateStorage }) {
         <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
         <div className="activity-selector" role="tablist" aria-label="Quick activities">
           {list.map((activity) => {
-            const Icon = activityIcons[activity.title] || Heart;
+            const Icon = activityIcons[activity.kind] || Heart;
             const selected = activity.title === selectedTitle;
             return (
               <button
@@ -105,18 +112,9 @@ export function Activities({ nav, privateStorage }) {
 }
 
 const activityIcons = {
-  '10-minute walk': Footprints,
-  'Gratitude snapshot': Heart,
-  'Warm drink pause': Sparkles,
-  'Shoulder drop': Wind,
-  'One good thing': Heart,
-  'Tiny next step': Sparkles
-};
-
-const activityNotePrompts = {
-  'Shoulder drop': 'What feels a little softer now?',
-  'One good thing': 'One small thing I want to remember...',
-  'Tiny next step': 'The next small thing I can do is...'
+  body: Wind,
+  reflection: Heart,
+  action: Sparkles
 };
 
 function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, onNoteChange }) {
@@ -143,7 +141,7 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
 
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
   const seconds = String(secondsLeft % 60).padStart(2, '0');
-  const Icon = activityIcons[activity.title] || Heart;
+  const Icon = activityIcons[activity.kind] || Heart;
   const panelId = `activity-panel-${toId(activity.title)}`;
   const tabId = `activity-tab-${toId(activity.title)}`;
 
@@ -193,7 +191,7 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
           <textarea
             maxLength={240}
             onChange={(event) => onNoteChange(event.target.value)}
-            placeholder={activityNotePrompts[activity.title] || 'Notice anything you want to remember?'}
+            placeholder={activity.notePrompt || 'Notice anything you want to remember?'}
             rows={3}
             value={note}
           />

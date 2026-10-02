@@ -3,7 +3,7 @@ export const themeChoices = [
     key: 'warm',
     label: 'Cozy Cafe',
     shortLabel: 'Cafe',
-    description: 'Warm cocoa, parchment, and a quiet corner.',
+    description: 'Espresso, parchment, caramel, and a quiet autumn corner.',
     colors: ['#4c3127', '#f7ead7', '#c9895d']
   },
   {
@@ -17,8 +17,8 @@ export const themeChoices = [
     key: 'sunrise',
     label: 'Sunrise / Sunset',
     shortLabel: 'Sunrise',
-    description: 'Peach mornings and dusky rose evenings.',
-    colors: ['#894f59', '#fff0dd', '#efa06e']
+    description: 'Blue-sky mornings and ember-plum evenings.',
+    colors: ['#4a2b4d', '#eef6ff', '#f58b78']
   },
   {
     key: 'ocean',

@@ -18,9 +18,7 @@ const gardenFlowersUrl = new URL('../../../img/Theme Img/garden-flowers-accent.p
 const gardenLeavesUrl = new URL('../../../img/Theme Img/garden-leaves-accent.png', import.meta.url).href;
 const gardenDaisyUrl = new URL('../../../img/Theme Img/garden-daisy-accent.png', import.meta.url).href;
 const sunriseSunUrl = new URL('../../../img/Theme Img/sunrise-sun-accent.png', import.meta.url).href;
-const sunriseRedSunUrl = new URL('../../../img/Theme Img/sunrise-red-sun-accent.png', import.meta.url).href;
 const sunriseCloudUrl = new URL('../../../img/Theme Img/sunset_cloud.png', import.meta.url).href;
-const sunriseWaveUrl = new URL('../../../img/Theme Img/sunrise-wave-accent.png', import.meta.url).href;
 const sunriseGradientUrl = new URL('../../../img/Theme Img/sunrise-gradient-accent.png', import.meta.url).href;
 
 export function ThemeAtmosphere() {
@@ -51,9 +49,7 @@ export function ThemeAtmosphere() {
       <img className="theme-art-image theme-art-garden-daisy" src={gardenDaisyUrl} alt="" />
       <img className="theme-art-image theme-art-garden-daisy-alt" src={gardenDaisyUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-sun" src={sunriseSunUrl} alt="" />
-      <img className="theme-art-image theme-art-sunrise-red-sun" src={sunriseRedSunUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-cloud" src={sunriseCloudUrl} alt="" />
-      <img className="theme-art-image theme-art-sunrise-wave" src={sunriseWaveUrl} alt="" />
       <img className="theme-art-image theme-art-sunrise-gradient" src={sunriseGradientUrl} alt="" />
       <svg className="theme-art theme-art-garden" viewBox="0 0 1200 720" preserveAspectRatio="none">
         <g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
