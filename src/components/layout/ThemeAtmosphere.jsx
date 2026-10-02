@@ -11,9 +11,7 @@ const seafoamCoralUrl = new URL('../../../img/Theme Img/coral.png', import.meta.
 const nightCelestialUrl = new URL('../../../img/Theme Img/night-celestial-accent.png', import.meta.url).href;
 const nightLightMoonUrl = new URL('../../../img/Theme Img/night-moon2-light-accent.png', import.meta.url).href;
 const nightStarFlareUrl = new URL('../../../img/Theme Img/star_flare.png', import.meta.url).href;
-const nightWhiteTwinkleUrl = new URL('../../../img/Theme Img/white_twinkle.png', import.meta.url).href;
 const nightBannerUrl = new URL('../../../img/Theme Img/night-banner-accent.png', import.meta.url).href;
-const nightSkyAccentUrl = new URL('../../../img/Theme Img/night-sky-accent-small.png', import.meta.url).href;
 const gardenFlowersUrl = new URL('../../../img/Theme Img/garden-flowers-accent.png', import.meta.url).href;
 const gardenLeavesUrl = new URL('../../../img/Theme Img/garden-leaves-accent.png', import.meta.url).href;
 const gardenDaisyUrl = new URL('../../../img/Theme Img/garden-daisy-accent.png', import.meta.url).href;
@@ -21,7 +19,7 @@ const sunriseSunUrl = new URL('../../../img/Theme Img/sunrise-sun-accent.png', i
 const sunriseCloudUrl = new URL('../../../img/Theme Img/sunset_cloud.png', import.meta.url).href;
 const sunriseGradientUrl = new URL('../../../img/Theme Img/sunrise-gradient-accent.png', import.meta.url).href;
 
-export function ThemeAtmosphere() {
+export function ThemeAtmosphere({ siteTheme, dark }) {
   return (
     <div className="theme-atmosphere" aria-hidden="true">
       <span className="atmosphere-layer layer-one" />
@@ -38,12 +36,13 @@ export function ThemeAtmosphere() {
       <img className="theme-art-image theme-art-ocean-fish" src={seafoamFishUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-starfish" src={seafoamStarfishUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-coral" src={seafoamCoralUrl} alt="" />
-      <img className="theme-art-image theme-art-night-celestial" src={nightCelestialUrl} alt="" />
-      <img className="theme-art-image theme-art-night-moon-light" src={nightLightMoonUrl} alt="" />
-      <img className="theme-art-image theme-art-night-star-flare" src={nightStarFlareUrl} alt="" />
-      <img className="theme-art-image theme-art-night-twinkle-dark" src={nightWhiteTwinkleUrl} alt="" />
-      <img className="theme-art-image theme-art-night-banner-light" src={nightBannerUrl} alt="" />
-      <img className="theme-art-image theme-art-night-accent-dark" src={nightSkyAccentUrl} alt="" />
+      {siteTheme === 'night' && (dark
+        ? <img className="theme-art-image theme-art-night-celestial" src={nightCelestialUrl} alt="" />
+        : <>
+            <img className="theme-art-image theme-art-night-moon-light" src={nightLightMoonUrl} alt="" />
+            <img className="theme-art-image theme-art-night-star-flare" src={nightStarFlareUrl} alt="" />
+            <img className="theme-art-image theme-art-night-banner-light" src={nightBannerUrl} alt="" />
+          </>)}
       <img className="theme-art-image theme-art-garden-flowers" src={gardenFlowersUrl} alt="" />
       <img className="theme-art-image theme-art-garden-leaves" src={gardenLeavesUrl} alt="" />
       <img className="theme-art-image theme-art-garden-daisy" src={gardenDaisyUrl} alt="" />

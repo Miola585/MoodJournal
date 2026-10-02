@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createFreeWriteEntry } from '../src/data/journalData.js';
 import {
   dateKeyFromTimestamp,
   formatDateKey,
@@ -17,6 +18,13 @@ const checkIn = (id, dateKey, created, primary = false) => ({
   created,
   mood: 'Calm',
   primary
+});
+
+test('a new free write does not assign an emotion', () => {
+  const entry = createFreeWriteEntry();
+  assert.equal(entry.type, 'journal');
+  assert.equal(entry.mood, '');
+  assert.equal(entry.primary, false);
 });
 
 test('journal dates reject future and impossible calendar dates', () => {

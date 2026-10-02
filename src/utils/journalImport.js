@@ -1,4 +1,7 @@
 import { dateKeyFromTimestamp, isJournalDateAllowed } from './journalUtils.js';
+import { normalizeStickerPlacements } from './stickerUtils.js';
+import { normalizeNoteDoc } from './journalRichText.js';
+import { normalizeJournalNotes } from './journalNotes.js';
 
 const MAX_IMPORT_ENTRIES = 5000;
 export const MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024;
@@ -8,6 +11,7 @@ const stringFields = {
   mood: 80,
   specificFeeling: 120,
   note: 1000000,
+  pageNote: 600,
   copingStep: 1000,
   meals: 120,
   water: 120,
@@ -59,8 +63,15 @@ export const normalizeImportedEntry = (entry) => {
     factors: readStringList(entry, 'factors'),
     tags: readStringList(entry, 'tags'),
     primary: Boolean(entry.primary),
-    bookmarked: Boolean(entry.bookmarked)
+    bookmarked: Boolean(entry.bookmarked),
+    stickers: normalizeStickerPlacements(entry.stickers),
+    stickyNotes: normalizeJournalNotes(entry.stickyNotes),
+    noteDoc: normalizeNoteDoc(entry.noteDoc),
+    paperStyle: entry.paperStyle === undefined ? 'lined' : entry.paperStyle
   };
+  if (!['lined', 'plain'].includes(normalized.paperStyle)) {
+    throw new Error('An imported entry has an invalid paper style.');
+  }
   Object.entries(stringFields).forEach(([field, maxLength]) => {
     normalized[field] = readString(entry, field, maxLength);
   });

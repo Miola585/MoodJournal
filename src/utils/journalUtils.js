@@ -5,6 +5,10 @@ export const viewFromPath = (pathname, viewPaths) => {
 export const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 export const todayKey = () => formatDateKey(new Date());
 export const dateKeyFromTimestamp = (value) => formatDateKey(new Date(value));
+export const journalDayNumber = (dateKey) => {
+  const [year, month, day] = String(dateKey).split('-').map(Number);
+  return Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / 86400000) + 1;
+};
 export const isJournalDateAllowed = (value, maximum = todayKey()) => {
   if (!/^\d{4}-\d{2}-\d{2}$/u.test(value) || value > maximum) return false;
   const [year, month, day] = value.split('-').map(Number);

@@ -1,26 +1,36 @@
-import { CheckCircle2, Heart, Pause, Play, RotateCcw, Sparkles, Wind } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Heart, Pause, Play, RotateCcw, Sparkles, Wind } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { DailyGroundingTools } from '../components/games/DailyGroundingTools';
 import { quickActivityGroups } from '../data/journalData';
 import { todayKey } from '../utils/journalUtils';
 import { PageHeader } from '../components/layout/PageHeader';
 import { usePrivateStorageState } from '../hooks/usePrivateStorageState';
-import { selectDailyActivities } from '../utils/activityUtils';
+import { selectDailyActivities, selectFeaturedDailyActivity } from '../utils/activityUtils';
 
 export function Activities({ nav, privateStorage }) {
   const today = todayKey();
   const list = useMemo(() => selectDailyActivities(quickActivityGroups, today), [today]);
+  const featured = useMemo(() => selectFeaturedDailyActivity(list, today), [list, today]);
   const storageKey = `activityCompletions:${today}`;
   const notesStorageKey = `activityNotes:${today}`;
   const [completed, setCompleted] = useState(() => readStoredObject(storageKey));
   const [notes, setNotes, notesStorageError] = usePrivateStorageState(privateStorage, notesStorageKey, {});
   const [selectedTitle, setSelectedTitle] = useState(list[0]?.title || '');
+  const [focusTitle, setFocusTitle] = useState('');
 
   useEffect(() => {
     if (!list.some((activity) => activity.title === selectedTitle)) {
       setSelectedTitle(list[0]?.title || '');
     }
   }, [list, selectedTitle]);
+
+  useEffect(() => {
+    if (!focusTitle || selectedTitle !== focusTitle) return;
+    const panel = document.getElementById(`activity-panel-${toId(focusTitle)}`);
+    panel?.focus({ preventScroll: true });
+    panel?.scrollIntoView({ block: 'start' });
+    setFocusTitle('');
+  }, [focusTitle, selectedTitle]);
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(completed));
@@ -46,6 +56,20 @@ export function Activities({ nav, privateStorage }) {
 
       <section className="activities-focus" aria-labelledby="activity-picker-title">
         {notesStorageError && <p className="form-error" role="alert">{notesStorageError}</p>}
+        {featured && (
+          <div className="activity-feature" aria-labelledby="activity-feature-title">
+            <div className="activity-feature-copy">
+              <span className="activities-eyebrow">Suggested for today &middot; {featured.minutes} min</span>
+              <h2 id="activity-feature-title">{featured.title}</h2>
+              <p>{featured.detail}</p>
+              <button className="primary activity-feature-button" onClick={() => { setSelectedTitle(featured.title); setFocusTitle(featured.title); }} type="button">
+                {completed[featured.title] ? 'Open activity' : 'Begin activity'}
+                <ArrowRight aria-hidden="true" size={18} />
+              </button>
+            </div>
+            <span className="activity-feature-art" aria-hidden="true" />
+          </div>
+        )}
         <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
         <div className="activity-selector" role="tablist" aria-label="Quick activities">
           {list.map((activity) => {
@@ -163,6 +187,7 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
       hidden={!active}
       id={panelId}
       role="tabpanel"
+      tabIndex={-1}
     >
       <div className="activity-sheet-date">{dateLabel}</div>
       <header className="activity-sheet-heading">

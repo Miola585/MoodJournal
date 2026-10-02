@@ -19,6 +19,7 @@ const entry = {
   mood: 'Anxious',
   title: 'Private title',
   note: 'This is the private journal writing.',
+  stickyNotes: [{ uid: 1, text: 'A private little thought', x: 0.8, y: 0.7 }],
   tags: ['private-tag'],
   bookmarked: true,
   factors: ['School'],
@@ -31,6 +32,7 @@ test('encrypted journal rows round-trip without exposing sensitive fields', asyn
   const serialized = JSON.stringify(rows);
 
   assert.equal(serialized.includes(entry.note), false);
+  assert.equal(serialized.includes(entry.stickyNotes[0].text), false);
   assert.equal(serialized.includes(entry.title), false);
   assert.equal(serialized.includes(entry.mood), false);
   assert.equal(serialized.includes(entry.tags[0]), false);

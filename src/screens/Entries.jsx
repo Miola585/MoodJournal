@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bookmark, BookOpen, PenLine, RotateCcw, Save, Search, Undo2, X } from 'lucide-react';
-import { createFreeWriteEntry, moods } from '../data/journalData';
-import { isCheckIn, isVisibleJournalEntry, todayKey } from '../utils/journalUtils';
+import { Bookmark, BookOpen, FileText, List, PenLine, RotateCcw, Save, Search, Trash2, Undo2, X } from 'lucide-react';
+import { checkInTitleAfterMoodChange, createFreeWriteEntry, moods } from '../data/journalData';
+import { isCheckIn, isJournalDateAllowed, isVisibleJournalEntry, journalDayNumber, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
 import { PageHeader } from '../components/layout/PageHeader';
 import { useJournalDraft } from '../hooks/useJournalDraft';
 import { DraftRecoveryNotice, SaveState } from '../components/journal/DraftRecoveryNotice';
+import { StickerBook } from '../components/journal/StickerBook';
+import { StickerLayer } from '../components/journal/StickerLayer';
+import { RichNoteEditor } from '../components/journal/RichNoteEditor';
+import { StickyNote } from '../components/journal/StickyNote';
+import { clampStickerPosition, createStickerPlacement } from '../utils/stickerUtils';
+import { createJournalNote, getJournalNotes, MAX_JOURNAL_NOTES } from '../utils/journalNotes';
 
 export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark, privateStorage }) {
   const [query, setQuery] = useState('');
@@ -26,7 +32,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
   const filtered = journalEntries.filter((entry) => {
     const text = `${entry.note} ${entry.mood} ${entry.specificFeeling} ${(entry.tags || []).join(' ')} ${(entry.factors || []).join(' ')}`.toLowerCase();
     const matchesKeyword = text.includes(query.toLowerCase());
-    const matchesMood = !moodFilter || entry.mood === moodFilter;
+    const matchesMood = !moodFilter || (isCheckIn(entry) && entry.mood === moodFilter);
     const matchesTag = !tagFilter || (entry.tags || []).some((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase()));
     const matchesDate = !dateFilter || entry.dateKey === dateFilter;
     const matchesBookmark = !bookmarkFilter || entry.bookmarked;
@@ -163,16 +169,14 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
 function FreeWriteEntry({ nav, onSave, onCancel, privateStorage }) {
   const [draft, setDraft] = useState(createFreeWriteEntry());
   const [saveState, setSaveState] = useState('');
+  const [bookOpen, setBookOpen] = useState(false);
   const draftState = useJournalDraft({ privateStorage, formId: 'freewrite:new', draft, setDraft });
   const setField = (field, value) => { setSaveState(''); setDraft((current) => ({ ...current, [field]: value })); };
-  const mood = moods.find((item) => item.key === draft.mood);
-  const entryDate = dateKeyToDate(draft.dateKey).toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  const setWriting = (note, noteDoc) => { setSaveState(''); setDraft((current) => ({ ...current, note, noteDoc })); };
+  const setNotes = (update) => { setSaveState(''); setDraft((current) => ({ ...current, stickyNotes: update(getJournalNotes(current)), pageNote: '' })); };
   const saveDraft = async () => {
+    if (!isJournalDateAllowed(draft.dateKey)) { setSaveState('invalid-date'); return; }
+    if (!draft.note.trim()) { setSaveState('empty'); return; }
     setSaveState('saving');
     const entry = { ...draft, tags: Array.from(new Set([...(draft.tags || []), 'free-write'])) };
     const saved = await onSave(entry);
@@ -183,18 +187,21 @@ function FreeWriteEntry({ nav, onSave, onCancel, privateStorage }) {
   };
   return (
     <section className="screen app-screen freewrite-screen">
-      <PageHeader eyebrow="New journal page" title="Free Write" subtitle={entryDate} />
+      <h1 className="visually-hidden">New journal page</h1>
       {nav}
       <DraftRecoveryNotice record={draftState.storedDraft} onRestore={draftState.restoreDraft} onDiscard={draftState.discardDraft} />
       <form className="freewrite-form" onSubmit={async (event) => {
         event.preventDefault();
         await saveDraft();
       }}>
-        <JournalNotebook draft={draft} mood={mood} onFieldChange={setField} required />
-        <div className="actions freewrite-actions">
-          <button className="primary" disabled={saveState === 'saving'} type="submit"><Save aria-hidden="true" size={17} />Save page</button>
+        <JournalNotebook actionButtons={<>
+          <button aria-label="Save page" className="primary" disabled={saveState === 'saving'} title="Save page" type="submit"><Save aria-hidden="true" size={17} />Save</button>
           <button onClick={() => draftState.confirmDiscard() && onCancel()} type="button"><X aria-hidden="true" size={17} />Cancel</button>
+        </>} bookOpen={bookOpen} onBookClose={() => setBookOpen(false)} onBookToggle={() => setBookOpen((open) => !open)} draft={draft} onFieldChange={setField} onNotesChange={setNotes} onWritingChange={setWriting} privateStorage={privateStorage} required />
+        <div className="journal-writing-feedback">
           <SaveState state={saveState} onRetry={saveDraft} draftStatus={draftState.dirty ? draftState.draftStatus : ''} />
+          {saveState === 'empty' && <span className="journal-save-state error" role="alert">Write something on the page before saving.</span>}
+          {saveState === 'invalid-date' && <span className="journal-save-state error" role="alert">Choose today or an earlier journal date.</span>}
         </div>
       </form>
     </section>
@@ -204,17 +211,20 @@ function FreeWriteEntry({ nav, onSave, onCancel, privateStorage }) {
 function EditEntry({ entry, onSave, onCancel, privateStorage }) {
   const [draft, setDraft] = useState(entry);
   const [saveState, setSaveState] = useState('');
+  const [bookOpen, setBookOpen] = useState(false);
   const draftState = useJournalDraft({ privateStorage, formId: `entry:${entry.id}`, draft, setDraft });
-  const setField = (field, value) => { setSaveState(''); setDraft((current) => ({ ...current, [field]: value })); };
+  const setField = (field, value) => {
+    setSaveState('');
+    setDraft((current) => field === 'mood' && isCheckIn(current)
+      ? { ...current, mood: value, specificFeeling: checkInTitleAfterMoodChange(current.specificFeeling, current.mood, value) }
+      : { ...current, [field]: value });
+  };
+  const setWriting = (note, noteDoc) => { setSaveState(''); setDraft((current) => ({ ...current, note, noteDoc })); };
+  const setNotes = (update) => { setSaveState(''); setDraft((current) => ({ ...current, stickyNotes: update(getJournalNotes(current)), pageNote: '' })); };
   const checkIn = isCheckIn(draft);
-  const mood = moods.find((item) => item.key === draft.mood);
-  const entryDate = dateKeyToDate(draft.dateKey).toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  const mood = checkIn ? moods.find((item) => item.key === draft.mood) : null;
   const saveDraft = async () => {
+    if (!isJournalDateAllowed(draft.dateKey)) { setSaveState('invalid-date'); return; }
     const tags = checkIn
       ? draft.tags
       : Array.from(new Set([...(draft.tags || []), 'free-write']));
@@ -228,70 +238,191 @@ function EditEntry({ entry, onSave, onCancel, privateStorage }) {
   };
   return (
     <section className="screen app-screen freewrite-screen edit-entry-screen">
-      <PageHeader eyebrow={checkIn ? 'Editing check-in' : 'Editing journal page'} title="Edit Entry" subtitle={entryDate} />
+      <h1 className="visually-hidden">{checkIn ? 'Edit check-in' : 'Edit journal page'}</h1>
       <DraftRecoveryNotice record={draftState.storedDraft} onRestore={draftState.restoreDraft} onDiscard={draftState.discardDraft} />
       <form className="freewrite-form" onSubmit={async (event) => {
         event.preventDefault();
         await saveDraft();
       }}>
-        <JournalNotebook checkIn={checkIn} draft={draft} mood={mood} onFieldChange={setField} />
-        <div className="actions freewrite-actions edit-entry-actions">
-          <button className="primary" disabled={saveState === 'saving'} type="submit"><Save aria-hidden="true" size={17} />Save changes</button>
+        <JournalNotebook actionButtons={<>
+          <button aria-label="Save changes" className="primary" disabled={saveState === 'saving'} title="Save changes" type="submit"><Save aria-hidden="true" size={17} />Save</button>
           <button onClick={() => draftState.confirmDiscard() && onCancel()} type="button"><X aria-hidden="true" size={17} />Cancel</button>
+        </>} bookOpen={bookOpen} onBookClose={() => setBookOpen(false)} onBookToggle={() => setBookOpen((open) => !open)} checkIn={checkIn} draft={draft} mood={mood} onFieldChange={setField} onNotesChange={setNotes} onWritingChange={setWriting} privateStorage={privateStorage} />
+        <div className="journal-writing-feedback">
           <SaveState state={saveState} onRetry={saveDraft} draftStatus={draftState.dirty ? draftState.draftStatus : ''} />
+          {saveState === 'invalid-date' && <span className="journal-save-state error" role="alert">Choose today or an earlier journal date.</span>}
         </div>
       </form>
     </section>
   );
 }
 
-function JournalNotebook({ draft, mood, onFieldChange, checkIn = false, required = false }) {
+function StickerBookTrigger({ open, onToggle }) {
+  return <button aria-controls="sticker-book-panel" aria-expanded={open} className="secondary-button sticker-book-trigger" onClick={onToggle} type="button"><BookOpen aria-hidden="true" size={17} />Sticker Book</button>;
+}
+
+function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onNotesChange, onWritingChange, privateStorage, bookOpen, onBookClose, onBookToggle, checkIn = false, required = false }) {
+  const [bookPage, setBookPage] = useState(0);
+  const [selectedStickerId, setSelectedStickerId] = useState(null);
+  const [placementRegion, setPlacementRegion] = useState('writing');
+  const [nextStepOpen, setNextStepOpen] = useState(false);
+  const [nextStepPosition, setNextStepPosition] = useState({ x: 0.95, y: 0.05 });
+  const [focusNoteId, setFocusNoteId] = useState(null);
+  const [toolbarTarget, setToolbarTarget] = useState(null);
+  const [discoveries, setDiscoveries] = useState({});
+  const introRef = useRef(null);
+  const writingSurfaceRef = useRef(null);
+  const addNoteButtonRef = useRef(null);
+  const nextStepButtonRef = useRef(null);
+  const toggleNextStep = () => setNextStepOpen((open) => !open);
+  useEffect(() => {
+    if (!selectedStickerId) return;
+    const clearSelection = (event) => {
+      if (!event.target.closest('.journal-placed-sticker, .journal-sticker-edit')) setSelectedStickerId(null);
+    };
+    const clearOnEscape = (event) => {
+      if (event.key === 'Escape') setSelectedStickerId(null);
+    };
+    document.addEventListener('pointerdown', clearSelection);
+    document.addEventListener('keydown', clearOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', clearSelection);
+      document.removeEventListener('keydown', clearOnEscape);
+    };
+  }, [selectedStickerId]);
+  useEffect(() => {
+    if (bookOpen && window.matchMedia('(max-width: 1100px)').matches) {
+      writingSurfaceRef.current?.scrollIntoView({ block: 'start' });
+    }
+  }, [bookOpen]);
+  useEffect(() => {
+    let active = true;
+    privateStorage?.read('gameConstellations', []).then((saved) => {
+      if (active) setDiscoveries({ constellation: Array.isArray(saved) && saved.length > 0 });
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [privateStorage]);
+  const placements = Array.isArray(draft.stickers) ? draft.stickers : [];
+  const updatePlacement = (id, change) => onFieldChange('stickers', placements.map((placement) => placement.id === id ? { ...placement, ...change } : placement));
+  const removePlacement = (id) => {
+    onFieldChange('stickers', placements.filter((placement) => placement.id !== id));
+    setSelectedStickerId(null);
+  };
+  const chooseSticker = (stickerId, position, region = placementRegion) => {
+    if (placements.length >= 40) return;
+    const placement = {
+      ...createStickerPlacement(stickerId, placements, region),
+      ...(region === 'details' ? { x: 78, y: 66, size: 24 } : {}),
+      ...position
+    };
+    onFieldChange('stickers', [...placements, placement]);
+    setSelectedStickerId(placement.id);
+    if (window.matchMedia('(max-width: 1100px)').matches) {
+      onBookClose();
+      if (region === 'details') introRef.current?.scrollIntoView({ block: 'center' });
+    }
+  };
+  const dropSticker = (stickerId, clientX, clientY) => {
+    for (const [region, ref] of [['details', introRef], ['writing', writingSurfaceRef]]) {
+      const bounds = ref.current?.querySelector('.journal-sticker-layer')?.getBoundingClientRect();
+      if (!bounds || clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) continue;
+      chooseSticker(stickerId, {
+        x: clampStickerPosition((clientX - bounds.left) / bounds.width * 100),
+        y: clampStickerPosition((clientY - bounds.top) / bounds.height * 100)
+      }, region);
+      return;
+    }
+  };
   const visibleTags = (draft.tags || []).filter((tag) => tag !== 'free-write');
+  const journalNotes = getJournalNotes(draft);
+  const addNote = () => {
+    if (journalNotes.length >= MAX_JOURNAL_NOTES) return;
+    const added = createJournalNote(journalNotes);
+    onNotesChange((notes) => [...notes, added]);
+    setFocusNoteId(added.uid);
+  };
+  const changeNote = (changed) => onNotesChange((notes) => notes.map((note) => note.uid === changed.uid ? changed : note));
+  const removeNote = (uid) => {
+    onNotesChange((notes) => notes.filter((note) => note.uid !== uid));
+    window.requestAnimationFrame(() => addNoteButtonRef.current?.focus());
+  };
   return (
-    <div className={`freewrite-notebook journal-editor-notebook${checkIn ? ' edit-entry-notebook' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
-      <div className="freewrite-page-heading">
-        {!checkIn ? (
-          <label className="freewrite-title-field">Title
-            <input maxLength={100} required value={draft.specificFeeling || ''} onChange={(event) => onFieldChange('specificFeeling', event.target.value)} placeholder="Give this page a title" />
-          </label>
-        ) : (
-          <div className="edit-entry-label">
-            <span>Check-in</span>
-            <strong>{draft.specificFeeling || draft.mood || 'Journal entry'}</strong>
-          </div>
-        )}
-        <label className="journal-mood-field">Mood
-          <select value={draft.mood} onChange={(event) => onFieldChange('mood', event.target.value)}>
-            {moods.map((moodOption) => <option key={moodOption.key}>{moodOption.key}</option>)}
-          </select>
-        </label>
-        <label className="journal-date-field">Journal date
-          <input max={todayKey()} onChange={(event) => onFieldChange('dateKey', event.target.value)} required type="date" value={draft.dateKey} />
-        </label>
+    <>
+    <div className="journal-paper-controls">
+      <div className="journal-paper-controls-actions">
+        <div aria-label="Paper style" className="journal-paper-switch" role="group">
+          <button aria-pressed={draft.paperStyle === 'plain'} onClick={() => onFieldChange('paperStyle', 'plain')} type="button"><FileText aria-hidden="true" size={16} />Plain</button>
+          <button aria-pressed={draft.paperStyle !== 'plain'} onClick={() => onFieldChange('paperStyle', 'lined')} type="button"><List aria-hidden="true" size={16} />Lined</button>
+        </div>
+        <StickerBookTrigger open={bookOpen} onToggle={onBookToggle} />
       </div>
-      <label className="freewrite-writing-field">
-        <span className="visually-hidden">Journal entry</span>
-        <textarea required={required} value={draft.note} onChange={(event) => onFieldChange('note', event.target.value)} placeholder={checkIn ? 'Write what you want to remember...' : 'Start writing here...'} />
-      </label>
-      <div className="freewrite-page-footer">
-        {!checkIn && (
+    </div>
+    <div className={`freewrite-notebook journal-editor-notebook${checkIn ? ' edit-entry-notebook' : ''}${draft.paperStyle === 'plain' ? ' journal-paper-plain' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
+      <div className="journal-paper-intro" ref={introRef}>
+        <div className="freewrite-page-heading">
+          <div className="journal-title-row">
+            {!checkIn ? (
+              <label className="freewrite-title-field"><span className="visually-hidden">Title</span>
+                <input maxLength={100} required value={draft.specificFeeling || ''} onChange={(event) => onFieldChange('specificFeeling', event.target.value)} placeholder="Give this page a title" />
+              </label>
+            ) : (
+              <label className="freewrite-title-field"><span className="visually-hidden">Check-in title</span>
+                <input aria-label="Check-in title" list="checkin-title-options" maxLength={120} onChange={(event) => onFieldChange('specificFeeling', event.target.value)} placeholder={draft.mood || 'Title your check-in'} value={draft.specificFeeling || ''} />
+                <datalist id="checkin-title-options">{mood?.feelings.map((feeling) => <option key={feeling} value={feeling} />)}</datalist>
+              </label>
+            )}
+            {checkIn && <div className="journal-title-actions">
+              <label aria-label="Main entry for this day" className="inline-check edit-primary-check" title="Main entry for this day">
+                <input checked={Boolean(draft.primary)} onChange={(event) => onFieldChange('primary', event.target.checked)} type="checkbox" />
+                <span className="primary-entry-label">Main entry for this day</span>
+              </label>
+            </div>}
+          </div>
+          <div className="journal-paper-datestamp">
+            <span>{checkIn ? 'Check-In' : 'Free Write'}</span>
+            <span>Day {journalDayNumber(draft.dateKey)}</span>
+            <time dateTime={draft.created}>{new Date(draft.created).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}</time>
+          </div>
+          <div className="journal-paper-entry-meta">
+            <details className="journal-paper-date-picker"><summary title="Change journal date">{isJournalDateAllowed(draft.dateKey) ? dateKeyToDate(draft.dateKey).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }) : 'Choose a journal date'}</summary><label><span className="visually-hidden">Journal date</span><input aria-label="Journal date" max={todayKey()} onChange={(event) => onFieldChange('dateKey', event.target.value)} required type="date" value={draft.dateKey} /></label></details>
+            {!isJournalDateAllowed(draft.dateKey) && <span className="journal-date-warning" role="alert">Today or earlier only</span>}
+            {checkIn && <label className="journal-mood-field">Feeling
+              <select value={draft.mood} onChange={(event) => onFieldChange('mood', event.target.value)}>
+                {moods.map((moodOption) => <option key={moodOption.key}>{moodOption.key}</option>)}
+              </select>
+            </label>}
+            {checkIn && <button aria-expanded={nextStepOpen} className="journal-next-step-trigger" onClick={toggleNextStep} ref={nextStepButtonRef} title="Open your next step" type="button">Next step</button>}
+          </div>
+        </div>
+        <StickerLayer onMove={updatePlacement} onRemove={removePlacement} onSelect={setSelectedStickerId} placements={placements.filter((placement) => placement.region === 'details')} selectedId={selectedStickerId} />
+      </div>
+      <div className="freewrite-writing-surface" ref={writingSurfaceRef}>
+        <div className="freewrite-writing-field">
+          <RichNoteEditor addNoteButtonRef={addNoteButtonRef} canAddNote={journalNotes.length < MAX_JOURNAL_NOTES} note={draft.note || ''} noteDoc={draft.noteDoc} onAddNote={addNote} onChange={onWritingChange} required={required} toolbarTarget={toolbarTarget} />
+        </div>
+        <StickerLayer onMove={updatePlacement} onRemove={removePlacement} onSelect={setSelectedStickerId} placements={placements.filter((placement) => placement.region !== 'details')} selectedId={selectedStickerId} />
+        <div className="journal-sticky-layer">
+          {journalNotes.map((note) => <StickyNote focusOnMount={focusNoteId === note.uid} key={note.uid} note={note} onChange={changeNote} onRemove={removeNote} paperStyle={draft.paperStyle} />)}
+          {nextStepOpen && <StickyNote focusOnMount maxLength={1000} note={{ uid: -1, text: draft.copingStep || '', ...nextStepPosition }} onChange={(changed) => {
+            if (changed.text !== (draft.copingStep || '')) onFieldChange('copingStep', changed.text);
+            if (changed.x !== nextStepPosition.x || changed.y !== nextStepPosition.y) setNextStepPosition({ x: changed.x, y: changed.y });
+          }} onRemove={() => { setNextStepOpen(false); window.requestAnimationFrame(() => nextStepButtonRef.current?.focus()); }} paperStyle={draft.paperStyle} placeholder="One thing I can do next..." removeLabel="Close Next step" title="Next step" />}
+        </div>
+        {bookOpen && <StickerBook discoveries={discoveries} onChoose={chooseSticker} onClose={onBookClose} onDropSticker={dropSticker} onPageChange={setBookPage} onPlacementRegionChange={setPlacementRegion} pageIndex={bookPage} placementRegion={placementRegion} />}
+      </div>
+      {!checkIn && <div className="freewrite-page-footer">
           <label>Tags
             <input value={visibleTags.join(', ')} onChange={(event) => onFieldChange('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="memory, school, idea" />
             {visibleTags.length > 0 && <span className="journal-tag-preview">{visibleTags.map((tag) => <small key={tag}>#{tag}</small>)}</span>}
           </label>
-        )}
-        <label>Optional next step
-          <input value={draft.copingStep || ''} onChange={(event) => onFieldChange('copingStep', event.target.value)} placeholder="Something to return to later" />
-        </label>
-        {checkIn && (
-          <label className="inline-check edit-primary-check">
-            <input checked={Boolean(draft.primary)} onChange={(event) => onFieldChange('primary', event.target.checked)} type="checkbox" />
-            Make this the main entry for this day
-          </label>
-        )}
-      </div>
+      </div>}
       <span className="notebook-page-corner" aria-hidden="true" />
     </div>
+    <div className="journal-writing-bar">
+      <div className="journal-writing-tools-slot" ref={setToolbarTarget} />
+      <div className="journal-writing-actions">{actionButtons}</div>
+    </div>
+    </>
   );
 }
 

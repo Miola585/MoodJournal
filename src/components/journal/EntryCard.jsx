@@ -1,8 +1,12 @@
 import { useId, useState } from 'react';
 import { ArrowRight, Bookmark, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { moods } from '../../data/journalData';
-import { isCheckIn } from '../../utils/journalUtils';
+import { isCheckIn, journalDayNumber } from '../../utils/journalUtils';
 import { stripGameData } from '../games/gameUtils';
+import { StickerLayer } from './StickerLayer';
+import { RichNoteContent } from './RichNoteContent';
+import { StickyNote } from './StickyNote';
+import { getJournalNotes } from '../../utils/journalNotes';
 
 export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, compact = false }) {
   const [expanded, setExpanded] = useState(false);
@@ -15,12 +19,17 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
   const createdAt = new Date(entry.created);
   const journalDate = entry.dateKey ? new Date(`${entry.dateKey}T12:00:00`) : createdAt;
   const showPrimaryAction = Boolean(onPrimary && isCheckIn(entry) && !entry.primary);
+  const stickers = Array.isArray(entry.stickers) ? entry.stickers : [];
+  const detailsStickers = stickers.filter((placement) => placement.region === 'details');
+  const writingStickers = stickers.filter((placement) => placement.region !== 'details');
+  const stickyNotes = getJournalNotes(entry);
   return (
-    <article className={`${isCheckIn(entry) ? 'entry-card entry-card-checkin' : 'entry-card entry-card-freewrite'}${compact ? ' entry-card-compact' : ''}${showFullEntry ? ' entry-card-open' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
+    <article className={`${isCheckIn(entry) ? 'entry-card entry-card-checkin' : 'entry-card entry-card-freewrite'}${compact ? ' entry-card-compact' : ''}${showFullEntry ? ' entry-card-open' : ''}`} style={isCheckIn(entry) && mood ? { '--entry-accent': mood.color } : undefined}>
       <div className="entry-card-topline">
         <div>
           <span className="entry-type-badge">{entryLabel}</span>
           {entry.primary ? <span className="primary-marker">Main</span> : null}
+          {showFullEntry && <span className="entry-day-number">Day {journalDayNumber(entry.dateKey || createdAt.toISOString().slice(0, 10))}</span>}
         </div>
         <div className="entry-card-date-actions">
         {onBookmark && <button aria-label={entry.bookmarked ? 'Remove bookmark' : 'Bookmark this page'} aria-pressed={Boolean(entry.bookmarked)} className={entry.bookmarked ? 'entry-bookmark active' : 'entry-bookmark'} onClick={() => onBookmark(!entry.bookmarked)} title={entry.bookmarked ? 'Remove bookmark' : 'Bookmark page'} type="button"><Bookmark aria-hidden="true" fill={entry.bookmarked ? 'currentColor' : 'none'} size={19} /></button>}
@@ -31,6 +40,7 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
         </div>
       </div>
       <h2>{isCheckIn(entry) ? `${mood?.emoji || ''} ${entry.mood || 'Check-In'}` : entry.specificFeeling || 'Untitled page'}</h2>
+      {showFullEntry && detailsStickers.length > 0 && <div className="entry-details-sticker-layer"><StickerLayer placements={detailsStickers} /></div>}
       {!showFullEntry && (
         <p className={compact ? 'entry-closed-note entry-compact-preview' : 'entry-closed-note'}>
           <BookOpen aria-hidden="true" size={16} />
@@ -39,8 +49,10 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
       )}
       {showFullEntry && (
         <>
-          <div className="entry-page" id={pageId}>
-            <p className="entry-preview">{notePreview || 'No writing on this page.'}</p>
+          <div className={writingStickers.length || stickyNotes.length ? 'entry-page entry-page-decorated' : 'entry-page'} id={pageId}>
+            <RichNoteContent doc={entry.noteDoc} fallback={notePreview} />
+            <StickerLayer placements={writingStickers} />
+            <div className="journal-sticky-layer">{stickyNotes.map((note) => <StickyNote key={note.uid} note={note} paperStyle={entry.paperStyle} readOnly />)}</div>
           </div>
           {entry.copingStep && (
             <aside className="entry-next-step">

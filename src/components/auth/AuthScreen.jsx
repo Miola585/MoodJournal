@@ -167,7 +167,7 @@ export function AuthScreen({ mode, setMode, siteTheme, setSiteTheme, theme, setT
         </div>
 
         <div className="auth-paper-preview" aria-hidden="true">
-          <span>Today&apos;s page</span>
+          <span>Today&apos;s page &middot; {selectedTheme.label}</span>
           <strong>A small moment belongs here.</strong>
           <i /><i /><i />
         </div>

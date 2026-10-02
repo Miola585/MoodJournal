@@ -193,7 +193,7 @@ a:hover {
   position: relative;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
   background: var(--bg);
   font-size: calc(1rem * var(--font-scale, 1));

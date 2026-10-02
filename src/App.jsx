@@ -34,7 +34,6 @@ import { Home } from './screens/Home';
 import { About } from './screens/About';
 import { Newsletter } from './screens/Newsletter';
 import { CheckIn } from './screens/CheckIn';
-import { Entries } from './screens/Entries';
 import { Calendar } from './screens/Calendar';
 import { Summary } from './screens/Summary';
 import { Activities } from './screens/Activities';
@@ -43,6 +42,7 @@ import { createPrivateStorage } from './utils/privateStorage';
 import { confirmJournalNavigation } from './hooks/useJournalDraft';
 
 const Games = lazy(() => import('./components/games/Games').then((module) => ({ default: module.Games })));
+const Entries = lazy(() => import('./screens/Entries').then((module) => ({ default: module.Entries })));
 const encryptionRevisionKey = 'journalEncryptionRevision';
 const invalidEncryptionConfig = { version: 0, invalid: true };
 
@@ -679,7 +679,7 @@ function App() {
 
   return (
     <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} ${showingAuth ? 'auth-active' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
-      <ThemeAtmosphere />
+      <ThemeAtmosphere siteTheme={siteTheme} dark={theme === 'dark'} />
       <header className="topbar">
         <div className="topbar-inner app-container">
           <button className="brand" onClick={() => openApp('home')} type="button">

@@ -7,6 +7,11 @@ export function selectDailyActivities(groups, dateKey) {
   });
 }
 
+export function selectFeaturedDailyActivity(activities, dateKey) {
+  if (!Array.isArray(activities) || activities.length === 0) return null;
+  return activities[positiveModulo(dateKeyToDayNumber(dateKey), activities.length)];
+}
+
 function dateKeyToDayNumber(dateKey) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateKey);
   if (!match) throw new TypeError('Expected a local date key in YYYY-MM-DD format.');

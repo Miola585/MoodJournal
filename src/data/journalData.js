@@ -165,6 +165,12 @@ export const quickActivityGroups = [
   ]
 ];
 
+export const checkInTitleAfterMoodChange = (title, previousMood, nextMood) => {
+  if (previousMood === nextMood) return title;
+  const previousFeeling = moods.find((mood) => mood.key === previousMood)?.feelings.includes(title);
+  return previousFeeling ? '' : title;
+};
+
 export const activities = {
   Anxious: [
     { title: 'Box breathing', minutes: 2, detail: 'Breathe in 4, hold 4, out 4, hold 4. Repeat slowly.', steps: ['Sit somewhere steady', 'Relax your shoulders', 'Complete 4 rounds'] },
@@ -247,18 +253,22 @@ export const createEntry = () => ({
   factors: [],
   tags: [],
   note: '',
+  noteDoc: null,
+  pageNote: '',
+  stickyNotes: [],
+  paperStyle: 'lined',
   copingStep: '',
   meals: '',
   water: '',
   sleep: '',
   primary: false,
-  bookmarked: false
+  bookmarked: false,
+  stickers: []
 });
 
 export const createFreeWriteEntry = () => ({
   ...createEntry(),
   type: 'journal',
-  mood: 'Content',
   specificFeeling: '',
   intensity: 5,
   tags: ['free-write']

@@ -18,7 +18,7 @@ export const themeChoices = [
     label: 'Sunrise / Sunset',
     shortLabel: 'Sunrise',
     description: 'Blue-sky mornings and ember-plum evenings.',
-    colors: ['#4a2b4d', '#eef6ff', '#f58b78']
+    colors: ['#241724', '#eef6ff', '#f07868']
   },
   {
     key: 'ocean',
@@ -32,6 +32,6 @@ export const themeChoices = [
     label: 'Night Sky',
     shortLabel: 'Night',
     description: 'Moonlight, lavender, and a quieter sky.',
-    colors: ['#292850', '#f0effd', '#9389df']
+    colors: ['#17182f', '#eef0fb', '#a7a1ef']
   }
 ];

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CalendarDays, ChevronDown, Sparkles } from 'lucide-react';
 import { createEntry, factors, guidedPrompts, moods } from '../data/journalData';
 import { PageHeader } from '../components/layout/PageHeader';
-import { todayKey } from '../utils/journalUtils';
+import { isJournalDateAllowed, todayKey } from '../utils/journalUtils';
 import { useJournalDraft } from '../hooks/useJournalDraft';
 import { DraftRecoveryNotice, SaveState } from '../components/journal/DraftRecoveryNotice';
 
@@ -62,7 +62,8 @@ export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
   const visibleMoods = showMoreMoods ? moods : moods.filter((item) => primaryMoodKeys.includes(item.key));
   const sameDayCheckIns = entries.filter((item) => (item.type || 'checkin') === 'checkin' && item.dateKey === entry.dateKey);
   const isAdditionalCheckIn = sameDayCheckIns.length > 0 && !showFullCheckIn;
-  const canSave = Boolean(entry.mood && (sameDayCheckIns.length > 0 || entry.note.trim()));
+  const dateAllowed = isJournalDateAllowed(entry.dateKey);
+  const canSave = Boolean(dateAllowed && entry.mood && (sameDayCheckIns.length > 0 || entry.note.trim()));
   const setField = (field, value) => {
     setSaveState('');
     setEntry((current) => ({ ...current, [field]: value }));
@@ -118,9 +119,9 @@ export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
           <label>
             <CalendarDays aria-hidden="true" size={17} />
             Journal date
-            <input max={todayKey()} onChange={(event) => setField('dateKey', event.target.value)} type="date" value={entry.dateKey} />
+            <input aria-describedby={!dateAllowed ? 'checkin-date-warning' : undefined} max={todayKey()} onChange={(event) => setField('dateKey', event.target.value)} required type="date" value={entry.dateKey} />
           </label>
-          {sameDayCheckIns.length > 0 ? <span>{sameDayCheckIns.length} check-in{sameDayCheckIns.length === 1 ? '' : 's'} already saved for this day</span> : <span>This will be the main check-in for this day</span>}
+          {!dateAllowed ? <span id="checkin-date-warning" role="alert">Choose today or an earlier date.</span> : sameDayCheckIns.length > 0 ? <span>{sameDayCheckIns.length} check-in{sameDayCheckIns.length === 1 ? '' : 's'} already saved for this day</span> : <span>This will be the main check-in for this day</span>}
         </div>
 
         {isAdditionalCheckIn ? (

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { moods } from '../data/journalData';
-import { buildCalendarDays, formatDateKey, getPrimaryEntry, groupEntriesByDate, todayKey } from '../utils/journalUtils';
+import { buildCalendarDays, formatDateKey, getPrimaryEntry, groupEntriesByDate, isCheckIn, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
 import { PageHeader } from '../components/layout/PageHeader';
 
@@ -75,7 +75,7 @@ export function Calendar({ nav, entries, onPrimary, onBookmark }) {
             const key = day ? formatDateKey(new Date(year, month, day)) : '';
             const dayEntries = key ? grouped[key] || [] : [];
             const mainEntry = getPrimaryEntry(dayEntries);
-            const firstMood = mainEntry ? moods.find((mood) => mood.key === mainEntry.mood) : null;
+            const firstMood = mainEntry && isCheckIn(mainEntry) ? moods.find((mood) => mood.key === mainEntry.mood) : null;
             const isSelected = key === selectedDate;
             const isToday = key === currentTodayKey;
             const hasEntries = dayEntries.length > 0;

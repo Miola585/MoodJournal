@@ -1,4 +1,5 @@
 .app.theme-warm {
+  --world-motif-image: url('../../img/Theme Img/coffecup.png');
   --page-background: #f3e8df;
   --surface-major: #fff7ed;
   --surface-secondary: #f3dcc9;
@@ -19,6 +20,7 @@
 }
 
 .app.theme-night {
+  --world-motif-image: url('../../img/Theme Img/night-moon2-light-accent.png');
   --bg: #eef0fb;
   --text: #25243d;
   --card-bg: #d8ddf4;
@@ -36,7 +38,7 @@
   --accent-color-dark: #4f4a96;
   --accent-color-darkest: #25243d;
   --accent-color-green: #c5d8ba;
-  --selected-bg: #7772c8;
+  --selected-bg: #6f6bb7;
   --selected-text: #ffffff;
   --muted-text: #5d5a86;
   --hero-surface: #f6f2ff;
@@ -61,6 +63,7 @@
 }
 
 .app.theme-sunrise {
+  --world-motif-image: url('../../img/Theme Img/sunrise-sun-accent.png');
   --bg: #eef6ff;
   --text: #3e2b46;
   --card-bg: #f8dce5;
@@ -71,7 +74,7 @@
   --btn-hover: #ffffff;
   --link-text: #87405e;
   --border-hover: #713148;
-  --schedule-color: #ffd39e;
+  --schedule-color: #f7e5ec;
   --navi-bar-color: #4a2b4d;
   --navi-bar-text: #fff9f3;
   --accent-color-light: #fde6ee;
@@ -92,7 +95,7 @@
   --calm-break-bg: #f5e4ee;
   --input-bg: #fffdf8;
   --toggle-bg: #76576e;
-  --theme-art-color: rgba(164, 63, 92, 0.22);
+  --theme-art-color: rgba(164, 63, 92, 0.14);
   --soft-border: #cfaabd;
   --glass-bg: color-mix(in srgb, #f8dce5 86%, transparent);
   --glass-strong: color-mix(in srgb, #fff0b8 88%, transparent);
@@ -119,16 +122,16 @@
   --journal-rule: rgba(164, 63, 92, 0.18);
   --journal-margin: rgba(164, 63, 92, 0.46);
   --atmo-base:
-    linear-gradient(145deg, rgba(204, 228, 255, 0.74), transparent 44%),
-    linear-gradient(30deg, rgba(255, 209, 102, 0.22), transparent 48%),
-    linear-gradient(300deg, rgba(245, 139, 120, 0.18), transparent 46%);
+    linear-gradient(145deg, rgba(204, 228, 255, 0.6), transparent 44%),
+    linear-gradient(30deg, rgba(255, 209, 102, 0.14), transparent 48%),
+    linear-gradient(300deg, rgba(245, 139, 120, 0.1), transparent 46%);
   --atmo-detail:
-    repeating-linear-gradient(180deg, rgba(164, 63, 92, 0.035) 0 1px, transparent 1px 34px);
-  --atmo-particles:
-    radial-gradient(circle, rgba(255, 209, 102, 0.42) 0 1px, transparent 1.8px);
+    radial-gradient(circle, rgba(255, 209, 102, 0.22) 0 1px, transparent 1.8px);
+  --atmo-particles: none;
 }
 
 .app.theme-garden {
+  --world-motif-image: url('../../img/Theme Img/garden-daisy-accent.png');
   --bg: #edf4e8;
   --text: #263726;
   --card-bg: #d8e7cd;
@@ -171,6 +174,7 @@
 }
 
 .app.theme-ocean {
+  --world-motif-image: url('../../img/Theme Img/shell.png');
   --bg: #e8f4f3;
   --text: #23393d;
   --card-bg: #cde6e4;
@@ -324,73 +328,74 @@
 }
 
 .app.theme-sunrise.dark {
-  --bg: #1d1428;
+  --world-motif-image: url('../../img/Theme Img/sunset_cloud.png');
+  --bg: #241724;
   --text: #fff4f0;
   --link-text: #ffb4a6;
-  --card-bg: #382039;
-  --header-card: #5a2c46;
+  --card-bg: #3c2638;
+  --header-card: #60364b;
   --button-bg: #f07868;
   --button-bg-hover: #ff967a;
   --btn-text: #291421;
   --btn-hover: #291421;
   --border-hover: #ffc0b2;
-  --schedule-color: #2a1830;
-  --navi-bar-color: #32182c;
+  --schedule-color: #30202e;
+  --navi-bar-color: #2c1b2a;
   --navi-bar-text: #fff5f1;
-  --accent-color-light: #4a263d;
-  --accent-color-medium: #ef6a66;
-  --accent-color-dark: #ff9a7d;
+  --accent-color-light: #533044;
+  --accent-color-medium: #ef8b85;
+  --accent-color-dark: #ffb49a;
   --accent-color-darkest: #120a18;
-  --accent-color-green: #f0a66d;
+  --accent-color-green: #ffb49a;
   --selected-bg: #f07868;
   --selected-text: #291421;
   --tab-text: #fff4f0;
   --muted-text: #e3bac4;
-  --hero-surface: #29172f;
-  --hero-surface-strong: #47233c;
+  --hero-surface: #30202e;
+  --hero-surface-strong: #60364b;
   --hero-accent: #ff967a;
-  --hero-accent-soft: #5f2e48;
-  --secondary-nav-hover: rgba(255, 150, 122, 0.2);
-  --mood-chip-bg: #24152c;
-  --calm-break-bg: #35203a;
-  --input-bg: #24152c;
+  --hero-accent-soft: #533044;
+  --secondary-nav-hover: rgba(255, 150, 122, 0.14);
+  --mood-chip-bg: #2c1b2a;
+  --calm-break-bg: #493344;
+  --input-bg: #2c1b2a;
   --toggle-bg: #76475d;
-  --theme-art-color: rgba(240, 120, 104, 0.25);
-  --soft-border: #a9586c;
+  --theme-art-color: rgba(240, 120, 104, 0.18);
+  --soft-border: #a26379;
   --shadow: 0 16px 36px rgba(10, 4, 15, 0.5);
   --surface-shadow: 0 22px 50px rgba(10, 4, 15, 0.54);
   --hover-shadow: 0 28px 58px rgba(10, 4, 15, 0.6);
-  --glass-bg: color-mix(in srgb, #382039 80%, transparent);
-  --glass-strong: color-mix(in srgb, #5a2c46 78%, transparent);
-  --glass-border: color-mix(in srgb, #a9586c 68%, #ffb4a6);
+  --glass-bg: color-mix(in srgb, #3c2638 86%, transparent);
+  --glass-strong: color-mix(in srgb, #60364b 86%, transparent);
+  --glass-border: color-mix(in srgb, #a26379 68%, #ffb49a);
   --inner-highlight: inset 0 1px 0 rgba(255, 212, 201, 0.15);
-  --page-background: #1d1428;
-  --surface-major: #29172f;
-  --surface-secondary: #47233c;
-  --surface-interactive: #35203a;
-  --surface-interactive-hover: #5a2d48;
-  --field-surface: #24152c;
+  --page-background: #241724;
+  --surface-major: #30202e;
+  --surface-secondary: #3c2638;
+  --surface-interactive: #493344;
+  --surface-interactive-hover: #533044;
+  --field-surface: #2c1b2a;
   --text-primary: #fff4f0;
   --text-secondary: #e3bac4;
   --interactive-accent: #ff967a;
   --interactive-strong: #f07868;
   --text-on-accent: #291421;
   --focus-ring: #ffd0c3;
-  --border-subtle: #8e4d63;
+  --border-subtle: #a26379;
   --shadow-soft: 0 16px 38px rgba(10, 4, 15, 0.36);
-  --journal-paper: #38263a;
+  --journal-paper: #493344;
   --journal-rule: rgba(255, 150, 122, 0.25);
   --journal-margin: rgba(240, 120, 104, 0.62);
   --atmo-base:
-    linear-gradient(180deg, rgba(76, 35, 68, 0.42), transparent 48%),
-    linear-gradient(0deg, rgba(150, 47, 57, 0.23), transparent 40%),
-    linear-gradient(125deg, rgba(240, 120, 104, 0.1), transparent 44%);
-  --atmo-detail:
-    repeating-linear-gradient(0deg, rgba(255, 150, 122, 0.04) 0 1px, transparent 1px 30px);
+    linear-gradient(180deg, rgba(76, 35, 68, 0.24), transparent 48%),
+    linear-gradient(0deg, rgba(150, 47, 57, 0.12), transparent 40%),
+    linear-gradient(125deg, rgba(240, 120, 104, 0.04), transparent 44%);
+  --atmo-detail: none;
   --atmo-particles: none;
 }
 
 .app.theme-night.dark {
+  --world-motif-image: url('../../img/Theme Img/night-celestial-accent.png');
   --bg: #121327;
   --text: #f5f1ff;
   --link-text: #d8d1ff;
@@ -400,8 +405,8 @@
   --button-bg-hover: #827adb;
   --btn-text: #15142c;
   --schedule-color: #191a33;
-  --navi-bar-color: #f5f1ff;
-  --navi-bar-text: #15142c;
+  --navi-bar-color: #17182f;
+  --navi-bar-text: #f5f1ff;
   --accent-color-light: #36335f;
   --accent-color-medium: #b7b0ff;
   --accent-color-dark: #d8d1ff;
@@ -422,6 +427,12 @@
   --glass-bg: color-mix(in srgb, #1f203d 76%, transparent);
   --glass-strong: color-mix(in srgb, #34305c 78%, transparent);
   --glass-border: color-mix(in srgb, #756fd1 72%, #ffffff);
+  --surface-major: #1f203d;
+  --surface-secondary: #2b2952;
+  --surface-interactive: #34305c;
+  --surface-interactive-hover: #36335f;
+  --field-surface: #1b1d36;
+  --journal-paper: #1f203d;
   --atmo-base:
     linear-gradient(140deg, rgba(183, 176, 255, 0.14), transparent 38%),
     linear-gradient(330deg, rgba(54, 51, 95, 0.24), transparent 48%);
@@ -471,6 +482,7 @@
 }
 
 .app.theme-ocean.dark {
+  --world-motif-image: url('../../img/Theme Img/marine_shell.png');
   --bg: #102326;
   --text: #effffe;
   --link-text: #cef7f8;

@@ -10,6 +10,7 @@ Use this private local file to capture future ideas before deciding what should 
 - Mobile visual check: verify that theme artwork, sticky action bars, and card layouts do not overlap or crowd small screens.
 - Shared button polish: improve primary, secondary, icon, pill, toolbar, card action, and navigation buttons so they feel consistent across all themes, with clear hover, focus, disabled, and mobile states.
 - Weekly Summary history: keep previous-week navigation clear, and later consider month/season summary views once there is enough data.
+- Journal tagging: explore turning a trailing `#tag` in an entry into a searchable tag, without making users fill out a separate Tags field. Decide later whether the marker stays in the writing and how multiword tags should work.
 - Monthly Journal History: show previous months as individual solid-color journal covers labeled with the month and year. Opening a cover should reveal that month's saved entries.
 - Monthly Journal covers can display stickers collected or placed during that month. Keep cover color and sticker placement decorative and user-controlled rather than tied to emotional performance.
 - Inside a monthly journal, tint each dated page using that day's primary saved mood color. Keep text contrast accessible, and use a calm neutral page when a day has no mood or contains only a free write without a selected mood.

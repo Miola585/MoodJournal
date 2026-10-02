@@ -43,14 +43,35 @@
   backdrop-filter: blur(8px);
 }
 
+.auth-welcome::before {
+  content: "";
+  position: absolute;
+  right: -3%;
+  bottom: 8%;
+  width: min(300px, 44%);
+  aspect-ratio: 1;
+  background: var(--world-motif-image) center / contain no-repeat;
+  opacity: 0.82;
+  pointer-events: none;
+}
+
+.auth-welcome > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app.theme-night.dark .auth-welcome::before,
+.app.theme-ocean.dark .auth-welcome::before {
+  filter: brightness(1.22) saturate(1.12);
+}
+
 .auth-welcome::after {
   content: "";
   position: absolute;
   inset: auto 0 0;
   z-index: -1;
   height: 31%;
-  border-top: 1px solid color-mix(in srgb, var(--interactive-accent) 20%, transparent);
-  background: color-mix(in srgb, var(--journal-paper) 44%, transparent);
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--journal-paper) 44%, transparent));
   opacity: 0.74;
 }
 
@@ -230,16 +251,30 @@
   align-self: end;
   display: grid;
   gap: 10px;
-  width: min(470px, 94%);
+  width: min(420px, 84%);
   margin-top: 8px;
-  padding: 22px 26px 26px;
+  padding: 22px 26px 26px 44px;
   border: 1px solid color-mix(in srgb, var(--journal-margin) 54%, var(--border-subtle));
   border-radius: 6px;
   background:
+    linear-gradient(90deg, transparent 0 27px, var(--journal-margin) 27px 29px, transparent 29px),
     repeating-linear-gradient(180deg, transparent 0 30px, var(--journal-rule) 30px 31px),
     var(--journal-paper);
   box-shadow: 0 12px 28px color-mix(in srgb, var(--accent-color-darkest) 10%, transparent);
   transform: rotate(-1deg);
+}
+
+.auth-paper-preview::before {
+  content: "";
+  position: absolute;
+  top: 23px;
+  left: 9px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--journal-margin);
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  box-shadow: 0 51px 0 -1px var(--surface-secondary), 0 51px 0 var(--journal-margin), 0 102px 0 -1px var(--surface-secondary), 0 102px 0 var(--journal-margin);
 }
 
 .auth-paper-preview span {
@@ -722,6 +757,18 @@
     overflow: visible;
   }
 
+  .auth-welcome::after {
+    display: none;
+  }
+
+  .auth-welcome::before {
+    top: 28px;
+    right: 18px;
+    bottom: auto;
+    width: min(170px, 22%);
+    opacity: 0.72;
+  }
+
   .auth-welcome {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
@@ -770,6 +817,14 @@
   .auth-welcome {
     gap: 18px;
     padding: 20px;
+  }
+
+  .auth-welcome::before {
+    top: 16px;
+    right: 12px;
+    bottom: auto;
+    width: 70px;
+    opacity: 0.7;
   }
 
   .auth-brand-lockup {
