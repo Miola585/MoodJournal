@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   buildMemoryView,
   detectMemoryCategory,
-  groupMemoriesByMonth,
-  jarAssets
+  groupMemoriesByMonth
 } from './gameUtils';
 import { MemoryJarSvg } from './MemoryJarSvg';
 import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
@@ -31,29 +30,25 @@ export function MemoryJarCollection({ entries, moods }) {
         <span>{memories.length} saved memor{memories.length === 1 ? 'y' : 'ies'}</span>
       </div>
       {groups.length === 0 ? <p>Add a positive memory from the featured game.</p> : <div className="memory-month-grid">
-        {groups.map((group, index) => {
-          const jarImage = jarAssets[index % jarAssets.length];
-          const jarPosition = index % 2 === 0 ? 'left center' : 'right center';
-          return (
-            <article className="memory-month-card" key={group.monthKey}>
-              <h3>{group.label}</h3>
-              <div className="large-memory-jar svg-jar" style={{ '--jar-image': `url("${jarImage}")`, '--jar-position': jarPosition }}>
-                {group.memories.map((memory) => (
-                  <button
-                    className={`memory-ball rarity-${memory.rarity}`}
-                    key={memory.id}
-                    onClick={() => setSelectedMemory(memory)}
-                    style={{ '--memory-color': memory.color }}
-                    title={memory.text}
-                    type="button"
-                  >
-                    {memory.day}
-                  </button>
-                ))}
-              </div>
-            </article>
-          );
-        })}
+        {groups.map((group) => (
+          <article className="memory-month-card" key={group.monthKey}>
+            <h3>{group.label}</h3>
+            <div className="large-memory-jar svg-jar">
+              {group.memories.map((memory) => (
+                <button
+                  className={`memory-ball rarity-${memory.rarity}`}
+                  key={memory.id}
+                  onClick={() => setSelectedMemory(memory)}
+                  style={{ '--memory-color': memory.color }}
+                  title={memory.text}
+                  type="button"
+                >
+                  {memory.day}
+                </button>
+              ))}
+            </div>
+          </article>
+        ))}
       </div>}
       {selectedMemory && <article className="memory-detail">
         <span className={`memory-rarity rarity-${selectedMemory.rarity}`}>{selectedMemory.rarity}</span>

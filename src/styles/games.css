@@ -1443,8 +1443,7 @@
   overflow: hidden;
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.54), rgba(255, 255, 255, 0.08)),
-    var(--jar-image);
-  background-position: center, var(--jar-position);
+    color-mix(in srgb, var(--accent-color-light) 50%, transparent);
   background-repeat: no-repeat;
   background-size: auto, 185% auto;
 }
@@ -1967,8 +1966,7 @@
   background:
     linear-gradient(110deg, rgba(255, 255, 255, 0.48), transparent 18% 72%, rgba(255, 255, 255, 0.26)),
     linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.04)),
-    var(--jar-image);
-  background-position: center, center, var(--jar-position);
+    color-mix(in srgb, var(--accent-color-light) 50%, transparent);
   background-repeat: no-repeat;
   background-size: auto, auto, cover;
   box-shadow:

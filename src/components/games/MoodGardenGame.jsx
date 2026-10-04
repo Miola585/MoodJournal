@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { todayKey } from '../../utils/journalUtils';
 
 const gardenSprites = [
-  new URL('../../../img/1111x_PixelPlants/pixelplants_sunflowers/Growing Sunflowers/PP_SF1-1.png', import.meta.url).href,
-  new URL('../../../img/1111x_PixelPlants/pixelplants_rosesred/Baby Roses/PP_RR11-1.png', import.meta.url).href,
-  new URL('../../../img/1111x_PixelPlants/pixelplants_flowerswhite_allfixed/Baby White flowers/PP_WF1-10.png', import.meta.url).href,
-  new URL('../../../img/1111x_PixelPlants/pixelplants_mixedfoliage/Leaves and mixed single flowers/PP_MF12-10.png', import.meta.url).href,
-  new URL('../../../img/1111x_PixelPlants/pixelplants_sunflowers/Matured Sunflowers/PP_SF10-1.png', import.meta.url).href
+  new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/00_Shared_Growth_Stages/growth-01-sprout.png', import.meta.url).href,
+  new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/01_Low_Intensity/low-04-daisy.png', import.meta.url).href,
+  new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/02_Medium_Intensity/medium-03-sunflower-pair.png', import.meta.url).href,
+  new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/04_Neutral_Foliage/foliage-04-broad.png', import.meta.url).href,
+  new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/03_High_Intensity/high-04-daisy-cluster.png', import.meta.url).href
 ];
 
 const weatherByMood = {
