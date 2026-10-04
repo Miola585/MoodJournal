@@ -4,7 +4,7 @@ import { navLabels } from '../../data/journalData';
 
 const primaryViews = ['checkin', 'entries', 'calendar', 'activities'];
 
-export function AppNav({ activeView, views, onOpen, variant = 'body', includeSettings = false, moreActions = null }) {
+export function AppNav({ activeView, views, onOpen, variant = 'body', includeSettings = false, moreActions = null, badgeCounts = {}, badgeErrors = {} }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navRef = useRef(null);
@@ -12,6 +12,9 @@ export function AppNav({ activeView, views, onOpen, variant = 'body', includeSet
   const primary = primaryViews.filter((item) => viewSet.has(item));
   const secondary = views.filter((item) => !primaryViews.includes(item));
   if (includeSettings) secondary.push('settings');
+  const badge = (item) => badgeErrors[item]
+    ? <span className="nav-count error" title={badgeErrors[item]} aria-label="Request count unavailable">!</span>
+    : badgeCounts[item] > 0 ? <span className="nav-count">{badgeCounts[item]}</span> : null;
   const openView = (item) => {
     setMenuOpen(false);
     setMobileOpen(false);
@@ -58,17 +61,17 @@ export function AppNav({ activeView, views, onOpen, variant = 'body', includeSet
         <div className={mobileOpen ? 'topnav open' : 'topnav'} id="primary-app-navigation">
           {primary.map((item) => (
             <button className={activeView === item ? 'topnav-link active' : 'topnav-link'} key={item} onClick={() => openView(item)} type="button">
-              {navLabels[item] || item}
+              {navLabels[item] || item}{badge(item)}
             </button>
           ))}
           {secondary.length > 0 && (
             <div className="more-nav">
-              <button className="topnav-link" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} type="button">More</button>
+              <button className="topnav-link" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)} type="button">More{badge('admin')}</button>
               {menuOpen && (
                 <div className="more-nav-menu">
                   {secondary.map((item) => (
                     <button className={activeView === item ? 'active' : ''} key={item} onClick={() => openView(item)} type="button">
-                      {navLabels[item] || item}
+                      {navLabels[item] || item}{badge(item)}
                     </button>
                   ))}
                   {moreActions}

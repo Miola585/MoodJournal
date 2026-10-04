@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, ExternalLink, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
+import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
 import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, isMissingEntryTypeError, normalizeDailyPrimaries, normalizeReminder, normalizeUsername, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
 import {
@@ -30,6 +30,9 @@ import { ProfileMenu } from './components/layout/ProfileMenu';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { PasswordUpdateScreen } from './components/auth/PasswordUpdateScreen';
 import { AdminPanel } from './components/auth/AdminPanel';
+import { Support } from './screens/Support';
+import { countNewSupportRequests } from './utils/supportApi';
+import { supportErrorMessage } from './utils/support';
 import { Home } from './screens/Home';
 import { About } from './screens/About';
 import { Newsletter } from './screens/Newsletter';
@@ -83,6 +86,10 @@ function App() {
   const [dataError, setDataError] = useState('');
   const [importMessage, setImportMessage] = useState('');
   const [profile, setProfile] = useState(null);
+  const [newSupportCount, setNewSupportCount] = useState(0);
+  const [supportCountError, setSupportCountError] = useState('');
+  const [supportRefreshRevision, setSupportRefreshRevision] = useState(0);
+  const [supportOriginPage, setSupportOriginPage] = useState(() => location.pathname);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const [siteTheme, setSiteTheme] = useState(() => localStorage.getItem('siteTheme') || 'warm');
@@ -641,6 +648,25 @@ function App() {
   }, [user]);
 
   useEffect(() => {
+    if (profile?.role !== 'admin') {
+      setNewSupportCount(0);
+      setSupportCountError('');
+      return undefined;
+    }
+    let active = true;
+    const refreshCount = () => {
+      countNewSupportRequests().then((count) => {
+        if (active) { setNewSupportCount(count); setSupportCountError(''); }
+      }).catch((error) => {
+        if (active) { setNewSupportCount(0); setSupportCountError(supportErrorMessage(error)); }
+      });
+    };
+    refreshCount();
+    const interval = window.setInterval(refreshCount, 60000);
+    return () => { active = false; window.clearInterval(interval); };
+  }, [profile?.role, view, supportRefreshRevision]);
+
+  useEffect(() => {
     if (!reminder.enabled || !('Notification' in window) || Notification.permission !== 'granted') return undefined;
     const now = new Date();
     const upcoming = reminder.times.map((time) => {
@@ -673,6 +699,8 @@ function App() {
       views={visibleViews}
       onOpen={openApp}
       variant="top"
+      badgeCounts={{ admin: newSupportCount }}
+      badgeErrors={{ admin: supportCountError }}
       moreActions={<ReminderBell reminder={reminder} setReminder={updateReminder} variant="menu" />}
     />
   ) : null;
@@ -705,7 +733,7 @@ function App() {
         {canUseApp && passwordRecovery && (!accountDataReady
           ? <section className="screen app-screen"><div className="panel auth-panel"><p>{dataLoading ? 'Preparing secure password recovery...' : dataError || 'Your encrypted journal settings could not be loaded safely.'}</p></div></section>
           : <PasswordUpdateScreen requiresRecoveryKey={Boolean(encryptionConfig)} onUpdate={resetAccountPassword} onDone={() => setPasswordRecovery(false)} />)}
-        {canUseApp && !passwordRecovery && (locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} onRecover={(password) => recoverLocalLock('pin', password)} /> : <>
+        {canUseApp && !passwordRecovery && (locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} onRecover={(password) => recoverLocalLock('pin', password)} /> : view === 'support' ? <Support user={user} siteTheme={siteTheme} theme={theme} originPage={supportOriginPage} onRequestChanged={() => setSupportRefreshRevision((current) => current + 1)} /> : view === 'admin' ? (!user ? <Navigate to="/" replace /> : !profile ? <section className="screen app-screen"><p>Checking admin access...</p></section> : profile.role === 'admin' ? <AdminPanel user={user} onRequestChanged={() => setSupportRefreshRevision((current) => current + 1)} /> : <Navigate to="/" replace />) : <>
         {isSupabaseConfigured && <AccountStatus localEntries={localEntries} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />}
         {!accountDataReady ? (
           <section className="screen app-screen"><div className="panel auth-panel"><p>{dataLoading ? 'Preparing your private journal...' : dataError || 'Your journal could not be loaded safely.'}</p></div></section>
@@ -734,7 +762,6 @@ function App() {
           <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Summary nav={null} entries={entries} /></JournalPrivacyGate>} />
           <Route path="/about" element={<About nav={null} />} />
           <Route path="/newsletter" element={<Newsletter nav={null} />} />
-          <Route path="/admin" element={profile?.role === 'admin' ? <AdminPanel nav={null} /> : <Navigate to="/" replace />} />
           <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} replaceJournalEntries={replaceJournalEntries} checkJournalReplaceAvailable={checkJournalReplaceAvailable} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
@@ -742,6 +769,7 @@ function App() {
         )}
         </>)}
       </main>
+      {canUseApp && !locked && !passwordRecovery && view !== 'support' && <button className={`support-help-bubble${view === 'checkin' ? ' checkin-help-bubble' : ''}`} onClick={() => { setSupportOriginPage(location.pathname); openApp('support'); }} title="Help & feedback" aria-label="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={23} /></button>}
       <footer className="footer">
         <div className="footer-brand">
           <img src={logoUrl} alt="" />

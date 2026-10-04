@@ -227,3 +227,80 @@ drop trigger if exists create_profile_after_signup on auth.users;
 create trigger create_profile_after_signup
 after insert on auth.users
 for each row execute function public.create_profile_for_new_user();
+
+-- Feedback is separate from encrypted journal content. Only request authors and
+-- admins can read a request or its conversation.
+create table if not exists public.support_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  category text not null check (category in ('bug', 'feature', 'feedback')),
+  title text not null check (char_length(btrim(title)) between 1 and 120),
+  body text not null check (char_length(btrim(body)) between 1 and 5000),
+  steps text not null default '' check (char_length(steps) <= 2000),
+  diagnostics jsonb,
+  status text not null default 'new' check (status in ('new', 'in_review', 'planned', 'resolved')),
+  priority text not null default 'normal' check (priority in ('low', 'normal', 'high')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists support_requests_user_created_idx
+on public.support_requests (user_id, created_at desc);
+
+create index if not exists support_requests_status_created_idx
+on public.support_requests (status, created_at desc);
+
+alter table public.support_requests enable row level security;
+revoke all on table public.support_requests from anon, authenticated;
+grant select on table public.support_requests to authenticated;
+grant insert (user_id, category, title, body, steps, diagnostics) on table public.support_requests to authenticated;
+grant update (status, priority) on table public.support_requests to authenticated;
+
+drop policy if exists "Users and admins can read support requests" on public.support_requests;
+create policy "Users and admins can read support requests"
+on public.support_requests for select to authenticated
+using (user_id = (select auth.uid()) or (select public.current_user_is_admin()));
+
+drop policy if exists "Users can create their own support requests" on public.support_requests;
+create policy "Users can create their own support requests"
+on public.support_requests for insert to authenticated
+with check (user_id = (select auth.uid()) and status = 'new' and priority = 'normal');
+
+drop policy if exists "Admins can triage support requests" on public.support_requests;
+create policy "Admins can triage support requests"
+on public.support_requests for update to authenticated
+using ((select public.current_user_is_admin()))
+with check ((select public.current_user_is_admin()));
+
+create table if not exists public.support_messages (
+  id uuid primary key default gen_random_uuid(),
+  request_id uuid not null references public.support_requests(id) on delete cascade,
+  sender_id uuid not null references auth.users(id) on delete cascade,
+  body text not null check (char_length(btrim(body)) between 1 and 3000),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists support_messages_request_created_idx
+on public.support_messages (request_id, created_at);
+
+alter table public.support_messages enable row level security;
+revoke all on table public.support_messages from anon, authenticated;
+grant select on table public.support_messages to authenticated;
+grant insert (request_id, sender_id, body) on table public.support_messages to authenticated;
+
+drop policy if exists "Participants can read support messages" on public.support_messages;
+create policy "Participants can read support messages"
+on public.support_messages for select to authenticated
+using (exists (
+  select 1 from public.support_requests as request
+  where request.id = request_id
+    and (request.user_id = (select auth.uid()) or (select public.current_user_is_admin()))
+));
+
+drop policy if exists "Participants can reply to support requests" on public.support_messages;
+create policy "Participants can reply to support requests"
+on public.support_messages for insert to authenticated
+with check (sender_id = (select auth.uid()) and exists (
+  select 1 from public.support_requests as request
+  where request.id = request_id
+    and (request.user_id = (select auth.uid()) or (select public.current_user_is_admin()))
+));

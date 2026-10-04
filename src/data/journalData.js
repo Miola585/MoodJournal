@@ -225,6 +225,7 @@ export const viewPaths = {
   summary: '/summary',
   about: '/about',
   newsletter: '/newsletter',
+  support: '/support',
   admin: '/admin',
   settings: '/settings'
 };
@@ -237,6 +238,7 @@ export const navLabels = {
   summary: 'Summary',
   about: 'About',
   newsletter: 'Newsletter',
+  support: 'Help & Feedback',
   admin: 'Admin',
   settings: 'Settings'
 };

@@ -89,6 +89,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 Then run the SQL schema inside Supabase SQL Editor.
 Full setup in docs\supabase-schema.sql
 
+The feedback inbox uses the `support_requests` and `support_messages` tables in that schema. After applying it, assign your own account the `admin` role in the Supabase SQL Editor or dashboard; the browser cannot grant admin access. Requests and replies are delivered through Supabase only when accounts are configured. No screenshots, journal entries, or device details are sent automatically.
+
 ## Deployment
 
 This project is configured for Vercel deployment.
