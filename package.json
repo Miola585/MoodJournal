@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "npm run build",
-    "test": "node --test && npm run build"
+    "test": "node --test && npm run build",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
@@ -26,5 +27,8 @@
     "react-router-dom": "^7.16.0",
     "recharts": "^3.10.1",
     "vite": "^8.0.13"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
   }
 }

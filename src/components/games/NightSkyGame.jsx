@@ -1,4 +1,4 @@
-import { getStarColor } from './gameUtils';
+import { getGalaxyStarShape, getStarColor } from './gameUtils';
 
 export function NightSkyGalaxy({ entries, moods, groupEntriesByDate, getPrimaryEntry }) {
   const grouped = groupEntriesByDate(entries);
@@ -6,11 +6,13 @@ export function NightSkyGalaxy({ entries, moods, groupEntriesByDate, getPrimaryE
     const entry = getPrimaryEntry(dayEntries);
     const mood = moods.find((item) => item.key === entry?.mood) || moods[0];
     const intensity = Number(entry?.intensity || mood.score || 5);
+    const shape = getGalaxyStarShape(intensity);
     return {
       id: dateKey,
       dateKey,
       mood,
       intensity,
+      shape,
       starColor: getStarColor(mood, intensity),
       x: 8 + ((index * 23) % 84),
       y: 10 + ((index * 37) % 78)
@@ -26,12 +28,17 @@ export function NightSkyGalaxy({ entries, moods, groupEntriesByDate, getPrimaryE
       <div className="galaxy-map">
         {stars.length === 0 && <p>Add journal entries to begin your sky.</p>}
         {stars.map((star) => (
-          <span
+          <svg
+            aria-label={`${star.dateKey}: ${star.mood.key}, intensity ${star.intensity} of 10, ${star.shape.points}-point star`}
             className="galaxy-star"
             key={star.id}
+            role="img"
             style={{ '--star-x': `${star.x}%`, '--star-y': `${star.y}%`, '--star-size': `${10 + star.intensity * 2}px`, '--star-color': star.starColor }}
-            title={`${star.dateKey}: ${star.mood.key}`}
-          />
+            viewBox="0 0 100 100"
+          >
+            <polygon className="galaxy-star-glow" points={star.shape.polygon} />
+            <polygon className="galaxy-star-core" points={star.shape.polygon} />
+          </svg>
         ))}
       </div>
     </section>

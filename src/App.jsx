@@ -689,6 +689,9 @@ function App() {
   const accountDataReady = !isSupabaseConfigured || !user || accountDataLoadedFor === user.id;
   const encryptedJournalLocked = Boolean(encryptionConfig && !encryptionKey)
     || Boolean(isSupabaseConfigured && user && accountDataReady && !encryptionConfig);
+  const immersiveGameActive = canUseApp && !locked && !passwordRecovery && accountDataReady
+    && !encryptedJournalLocked && !journalIsHidden
+    && /^\/games\/(?:garden|constellation|orbit)\/?$/u.test(location.pathname);
   const isSunsetMode = siteTheme === 'sunrise' && theme === 'dark';
   const ThemeToggleIcon = isSunsetMode ? Sunset : theme === 'dark' ? Moon : Sun;
   const colorModeLabel = siteTheme === 'sunrise' ? (theme === 'dark' ? 'Sunset mode' : 'Sunrise mode') : (theme === 'dark' ? 'Dark mode' : 'Light mode');
@@ -706,9 +709,9 @@ function App() {
   ) : null;
 
   return (
-    <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} ${showingAuth ? 'auth-active' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
+    <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} ${showingAuth ? 'auth-active' : ''} ${immersiveGameActive ? 'immersive-game-active' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
       <ThemeAtmosphere siteTheme={siteTheme} dark={theme === 'dark'} />
-      <header className="topbar">
+      {!immersiveGameActive && <header className="topbar">
         <div className="topbar-inner app-container">
           <button className="brand" onClick={() => openApp('home')} type="button">
             <img src={logoUrl} alt="" />
@@ -726,7 +729,7 @@ function App() {
             {user && <ProfileMenu user={user} profile={profile} openApp={openApp} />}
           </div>
         </div>
-      </header>
+      </header>}
       <main className="app-container">
         {authLoading && <section className="screen app-screen"><div className="panel auth-panel"><p>Loading your account...</p></div></section>}
         {showingAuth && <AuthScreen mode={authMode} setMode={setAuthMode} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} onAuthenticated={(credential) => { setAuthEncryptionCredential(credential); setAutomaticSetupAttemptedFor(null); }} />}
@@ -769,8 +772,8 @@ function App() {
         )}
         </>)}
       </main>
-      {canUseApp && !locked && !passwordRecovery && view !== 'support' && <button className={`support-help-bubble${view === 'checkin' ? ' checkin-help-bubble' : ''}`} onClick={() => { setSupportOriginPage(location.pathname); openApp('support'); }} title="Help & feedback" aria-label="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={23} /></button>}
-      <footer className="footer">
+      {canUseApp && !locked && !passwordRecovery && view !== 'support' && !immersiveGameActive && <button className={`support-help-bubble${view === 'checkin' ? ' checkin-help-bubble' : ''}`} onClick={() => { setSupportOriginPage(location.pathname); openApp('support'); }} title="Help & feedback" aria-label="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={23} /></button>}
+      {!immersiveGameActive && <footer className="footer">
         <div className="footer-brand">
           <img src={logoUrl} alt="" />
           <div>
@@ -790,7 +793,7 @@ function App() {
             <ExternalLink aria-hidden="true" size={13} strokeWidth={2.4} />
           </a>
         </nav>
-      </footer>
+      </footer>}
     </div>
   );
 }

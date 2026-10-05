@@ -1,0 +1,1234 @@
+.app.immersive-game-active main.app-container {
+  padding: 0;
+}
+
+.app.immersive-game-active .app-screen.standalone-game-screen-garden,
+.app.immersive-game-active .app-screen.standalone-game-screen-constellation {
+  min-height: 100dvh;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.app.immersive-game-active .standalone-game-screen-garden .game-route-shell,
+.app.immersive-game-active .standalone-game-screen-garden .garden-surface,
+.app.immersive-game-active .standalone-game-screen-constellation .game-route-shell,
+.app.immersive-game-active .standalone-game-screen-constellation .constellation-surface,
+.app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
+  min-height: 100dvh;
+}
+
+.app-screen.standalone-game-screen-garden {
+  position: relative;
+  min-height: calc(100dvh - 70px);
+  margin-top: -28px;
+  margin-bottom: -48px;
+  overflow: hidden;
+  gap: 0;
+}
+
+.standalone-game-screen-garden .game-route-shell,
+.standalone-game-screen-garden .garden-surface {
+  width: 100%;
+  min-height: calc(100dvh - 70px);
+}
+
+.standalone-game-screen-garden .game-route-shell {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.standalone-game-screen-garden .garden-surface {
+  display: block;
+}
+
+.standalone-game-screen-garden .garden-route-header {
+  position: absolute;
+  inset: 24px clamp(20px, 4vw, 68px) auto;
+  z-index: 8;
+  grid-template-columns: 1fr auto 1fr;
+  padding: 0;
+  pointer-events: none;
+}
+
+.garden-route-header .back-to-games {
+  pointer-events: auto;
+  border-color: rgba(255, 247, 232, 0.3);
+  background: rgba(35, 57, 53, 0.72);
+  color: #fff7e8;
+}
+
+.garden-route-header .back-to-games:hover,
+.garden-route-header .back-to-games:focus-visible {
+  border-color: #fff0ca;
+  background: rgba(35, 57, 53, 0.9);
+  color: #fff7e8;
+}
+
+.garden-route-label {
+  grid-column: 2;
+  color: #fff5e4;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.standalone-game-screen-garden .garden-surface .garden-preview {
+  display: block;
+  width: 100%;
+  min-height: max(740px, calc(100dvh - 70px));
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(180deg, #394e5e 0%, #756d82 42%, #ad8b96 72%, #baaa91 100%);
+  box-shadow: none;
+  filter: none;
+}
+
+.app.immersive-game-active .standalone-game-screen-garden .garden-surface .garden-preview {
+  min-height: max(740px, 100dvh);
+}
+
+.garden-hill {
+  position: absolute;
+  pointer-events: none;
+}
+
+.garden-hill-back {
+  z-index: 0;
+  bottom: 14%;
+  left: -26%;
+  width: 102%;
+  height: 42%;
+  border-radius: 55% 55% 0 0 / 75% 75% 0 0;
+  background: #92939a;
+  transform: rotate(-5deg);
+}
+
+.garden-hill-middle {
+  z-index: 0;
+  right: -18%;
+  bottom: 8%;
+  width: 100%;
+  height: 45%;
+  border-radius: 55% 55% 0 0 / 72% 72% 0 0;
+  background: #657f7d;
+  transform: rotate(4deg);
+}
+
+.garden-hill-front {
+  z-index: 1;
+  bottom: -19%;
+  left: -12%;
+  width: 128%;
+  height: 47%;
+  border-radius: 48% 50% 0 0 / 78% 75% 0 0;
+  background: #3c5a52;
+}
+
+.standalone-game-screen-garden .garden-sky-detail {
+  top: 23%;
+  right: 18%;
+  z-index: 1;
+  width: 94px;
+  background: #fff0ca;
+  box-shadow: 0 0 24px rgba(255, 240, 202, 0.28);
+  filter: none;
+  opacity: 1;
+}
+
+.garden-scene-intro {
+  position: absolute;
+  top: 15%;
+  left: clamp(24px, 5vw, 82px);
+  z-index: 3;
+  width: min(700px, calc(100% - 48px));
+  color: #fff7e8;
+}
+
+.garden-kicker {
+  color: #ffd4ae;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.garden-scene-intro h1 {
+  margin: 18px 0 12px;
+  color: inherit;
+  font-size: 4rem;
+  line-height: 1.08;
+}
+
+.garden-scene-intro p {
+  max-width: 420px;
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.garden-today {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 26px;
+  font-size: 0.9rem;
+}
+
+.garden-today strong,
+.garden-today span:last-child {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 247, 232, 0.3);
+  border-radius: 999px;
+  background: rgba(35, 57, 53, 0.72);
+}
+
+.garden-today strong {
+  background: #fff0ca;
+  color: #344d48;
+}
+
+.standalone-game-screen-garden .garden-plant {
+  z-index: 2;
+  width: clamp(72px, 10vw, 128px);
+}
+
+.garden-moment-panel {
+  position: absolute;
+  right: 24px;
+  bottom: 30px;
+  left: 24px;
+  z-index: 5;
+  width: min(610px, calc(100% - 48px));
+  margin-inline: auto;
+  padding: 18px 22px;
+  border: 1px solid rgba(255, 247, 232, 0.22);
+  border-radius: 8px;
+  background: rgba(34, 57, 51, 0.94);
+  color: #fff7e8;
+  box-shadow: 0 18px 36px rgba(18, 33, 32, 0.25);
+}
+
+.garden-moment-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.garden-moment-main img {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.garden-moment-main span {
+  color: #eacb9e;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.garden-moment-main h2 {
+  margin: 3px 0;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.garden-moment-main p {
+  margin: 0;
+  color: #e4e9de;
+  font-size: 0.9rem;
+}
+
+.garden-moment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 247, 232, 0.2);
+  font-size: 0.88rem;
+}
+
+.garden-moment-footer .primary {
+  flex: none;
+  min-height: 38px;
+  margin: 0;
+  padding: 8px 18px;
+  border-color: #fff0ca;
+  background: #fff0ca;
+  color: #344d48;
+}
+
+.garden-moment-footer .primary:disabled {
+  opacity: 0.75;
+}
+
+@media (max-width: 760px) {
+  .app-screen.standalone-game-screen-garden {
+    margin-top: -16px;
+  }
+
+  .standalone-game-screen-garden .garden-route-header {
+    inset: 14px 18px auto;
+  }
+
+  .garden-route-label {
+    font-size: 0.7rem;
+  }
+
+  .standalone-game-screen-garden .garden-surface .garden-preview {
+    min-height: max(730px, calc(100dvh - 70px));
+  }
+
+  .app.immersive-game-active .standalone-game-screen-garden .garden-surface .garden-preview {
+    min-height: max(730px, 100dvh);
+  }
+
+  .garden-scene-intro {
+    top: 14%;
+  }
+
+  .garden-scene-intro h1 {
+    font-size: 2.8rem;
+  }
+
+  .standalone-game-screen-garden .garden-sky-detail {
+    top: 38%;
+    right: 9%;
+    width: 70px;
+  }
+
+  .standalone-game-screen-garden .garden-plant {
+    width: clamp(52px, 12vw, 80px);
+  }
+}
+
+@media (max-width: 520px) {
+  .garden-route-label {
+    display: none;
+  }
+
+  .garden-scene-intro {
+    top: 12%;
+    left: 20px;
+    width: calc(100% - 40px);
+  }
+
+  .garden-scene-intro h1 {
+    font-size: 2.4rem;
+  }
+
+  .garden-scene-intro p {
+    font-size: 0.95rem;
+  }
+
+  .garden-today {
+    margin-top: 18px;
+  }
+
+  .garden-hill-back {
+    left: -50%;
+    width: 140%;
+  }
+
+  .garden-hill-middle {
+    right: -55%;
+    width: 140%;
+  }
+
+  .garden-moment-panel {
+    right: 16px;
+    bottom: 18px;
+    left: 16px;
+    width: calc(100% - 32px);
+    padding: 14px;
+  }
+
+  .garden-moment-footer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .garden-moment-footer .primary {
+    width: 100%;
+  }
+}
+
+/* Immersive routes own the whole viewport, including the page backdrop. */
+.app.immersive-game-active,
+body:has(.app.immersive-game-active),
+html:has(.app.immersive-game-active) {
+  background: #11142d;
+}
+
+.app.immersive-game-active:has(.standalone-game-screen-garden),
+body:has(.app.immersive-game-active .standalone-game-screen-garden),
+html:has(.app.immersive-game-active .standalone-game-screen-garden) {
+  background: #394e5e;
+}
+
+.app.immersive-game-active .theme-atmosphere {
+  display: none;
+}
+
+.app.immersive-game-active main.app-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+.app.immersive-game-active .app-screen.standalone-game-screen {
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.app.immersive-game-active .game-route-shell,
+.app.immersive-game-active .game-surface {
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app.immersive-game-active .game-route-shell {
+  display: block;
+  background: transparent;
+}
+
+.app.immersive-game-active .game-surface {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.app.immersive-game-active .immersive-route-header {
+  position: absolute;
+  inset: 16px clamp(18px, 3vw, 50px) auto;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.immersive-route-header > .back-to-games {
+  grid-column: 1;
+  grid-row: 1;
+  pointer-events: auto;
+}
+
+.app.immersive-game-active .immersive-route-header .back-to-games {
+  border: 1px solid rgba(255, 247, 242, 0.34);
+  border-radius: 999px;
+  background: rgba(16, 19, 44, 0.5);
+  color: #fff7f2;
+}
+
+.app.immersive-game-active .immersive-route-header .back-to-games:hover,
+.app.immersive-game-active .immersive-route-header .back-to-games:focus-visible {
+  border-color: rgba(255, 247, 242, 0.72);
+  background: rgba(27, 31, 64, 0.8);
+  color: #fff7f2;
+}
+
+.immersive-route-header > .garden-route-label {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  letter-spacing: 0;
+}
+
+.immersive-route-header > .game-how-to {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  pointer-events: auto;
+}
+
+.game-how-to summary {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 8px 18px;
+  border: 1px solid rgba(255, 247, 242, 0.35);
+  border-radius: 999px;
+  background: rgba(16, 19, 44, 0.46);
+  color: #fff7f2;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.game-how-to summary::-webkit-details-marker {
+  display: none;
+}
+
+.game-how-to summary:hover,
+.game-how-to summary:focus-visible {
+  background: rgba(27, 31, 64, 0.78);
+  border-color: rgba(255, 247, 242, 0.7);
+}
+
+.game-how-to p {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(330px, calc(100vw - 36px));
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(255, 247, 242, 0.26);
+  border-radius: 8px;
+  background: rgba(26, 28, 55, 0.97);
+  color: #fff7f2;
+  line-height: 1.55;
+  box-shadow: 0 18px 36px rgba(8, 9, 27, 0.28);
+}
+
+.app.immersive-game-active .immersive-route-header .game-how-to p {
+  display: block;
+  width: min(330px, calc(100vw - 36px));
+}
+
+.immersive-route-header > .immersive-game-intro {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.immersive-game-intro h1,
+.garden-scene-intro h1 {
+  display: block;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #fff7f2;
+  text-align: inherit;
+  text-shadow: none;
+}
+
+.immersive-game-intro h1 {
+  font-size: clamp(2.2rem, 3.6vw, 3.6rem);
+  line-height: 1.08;
+}
+
+.app.immersive-game-active .immersive-game-intro h1 {
+  width: auto;
+  padding: 0;
+  font-size: clamp(2.2rem, 3vw, 3rem);
+}
+
+.immersive-game-intro p {
+  margin: 0;
+  padding: 0;
+  color: rgba(255, 247, 242, 0.84);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.immersive-game-intro .constellation-prompt-chips {
+  position: static;
+  display: flex;
+  width: auto;
+  margin-top: 12px;
+  gap: 8px;
+  transform: none;
+}
+
+.immersive-game-intro .constellation-prompt-chips span,
+.immersive-game-intro .constellation-prompt-chips span:first-child {
+  padding: 7px 13px;
+  border: 1px solid rgba(255, 247, 242, 0.3);
+  border-radius: 999px;
+  background: rgba(26, 28, 55, 0.54);
+  color: #fff7f2;
+  font-weight: 600;
+  font-size: 0.86rem;
+}
+
+.immersive-game-intro .constellation-prompt-chips span:first-child {
+  background: rgba(183, 176, 255, 0.25);
+}
+
+.garden-scene-intro h1 {
+  margin: 18px 0 12px;
+  font-size: 4rem;
+  line-height: 1.08;
+  text-align: left;
+}
+
+.garden-scene-intro p,
+.garden-moment-main p {
+  padding: 0;
+}
+
+.app.immersive-game-active .standalone-game-screen-garden .garden-surface .garden-preview {
+  min-height: max(740px, 100dvh);
+}
+
+.garden-moment-footer .primary {
+  border-radius: 999px;
+}
+
+.app.immersive-game-active .standalone-game-screen-constellation .constellation-surface {
+  background: radial-gradient(circle at 22% 30%, rgba(93, 83, 144, 0.2), transparent 35%), linear-gradient(155deg, #11142d, #191b3b 62%, #242044);
+}
+
+.app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
+  inset: 0;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app.immersive-game-active .standalone-game-screen-constellation .constellation-stage::before {
+  background-image:
+    radial-gradient(circle at 4% 42%, rgba(230, 225, 255, 0.34) 0 1px, transparent 2px),
+    radial-gradient(circle at 17% 26%, rgba(230, 225, 255, 0.25) 0 1px, transparent 2px),
+    radial-gradient(circle at 26% 39%, rgba(230, 225, 255, 0.32) 0 1px, transparent 2px),
+    radial-gradient(circle at 36% 21%, rgba(230, 225, 255, 0.28) 0 1px, transparent 2px),
+    radial-gradient(circle at 43% 32%, rgba(230, 225, 255, 0.3) 0 1px, transparent 2px),
+    radial-gradient(circle at 58% 28%, rgba(230, 225, 255, 0.29) 0 1px, transparent 2px),
+    radial-gradient(circle at 71% 38%, rgba(230, 225, 255, 0.25) 0 1px, transparent 2px),
+    radial-gradient(circle at 89% 27%, rgba(230, 225, 255, 0.28) 0 1px, transparent 2px),
+    radial-gradient(circle at 96% 47%, rgba(230, 225, 255, 0.31) 0 1px, transparent 2px),
+    radial-gradient(circle at 11% 49%, rgba(230, 225, 255, 0.23) 0 1px, transparent 2px),
+    radial-gradient(circle at 32% 57%, rgba(230, 225, 255, 0.3) 0 1px, transparent 2px),
+    radial-gradient(circle at 53% 51%, rgba(230, 225, 255, 0.26) 0 1px, transparent 2px),
+    radial-gradient(circle at 74% 61%, rgba(230, 225, 255, 0.32) 0 1px, transparent 2px),
+    radial-gradient(circle at 94% 68%, rgba(230, 225, 255, 0.28) 0 1px, transparent 2px),
+    radial-gradient(circle at 7% 82%, rgba(230, 225, 255, 0.29) 0 1px, transparent 2px),
+    radial-gradient(circle at 21% 69%, rgba(230, 225, 255, 0.27) 0 1px, transparent 2px),
+    radial-gradient(circle at 38% 84%, rgba(230, 225, 255, 0.3) 0 1px, transparent 2px),
+    radial-gradient(circle at 66% 72%, rgba(230, 225, 255, 0.28) 0 1px, transparent 2px),
+    radial-gradient(circle at 80% 88%, rgba(230, 225, 255, 0.25) 0 1px, transparent 2px),
+    radial-gradient(circle at 98% 81%, rgba(230, 225, 255, 0.3) 0 1px, transparent 2px);
+  background-position: 0 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.app.immersive-game-active .standalone-game-screen-constellation .constellation-toolbar {
+  right: 18px;
+  bottom: 16px;
+  left: 18px;
+  width: min(850px, calc(100% - 36px));
+  border-radius: 8px;
+}
+
+.standalone-game-screen-constellation .constellation-toolbar input,
+.standalone-game-screen-constellation .constellation-toolbar button {
+  border-radius: 999px;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-surface {
+  background:
+    radial-gradient(ellipse at 50% 53%, rgba(81, 62, 103, 0.28), transparent 58%),
+    radial-gradient(ellipse at 18% 40%, rgba(67, 61, 101, 0.22), transparent 48%),
+    #17182d;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-surface::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background:
+    radial-gradient(circle, #aa9cb9 1px, transparent 1.5px) 14% 25% / 180px 210px no-repeat,
+    radial-gradient(circle, #aa9cb9 1px, transparent 1.5px) 75% 21% / 220px 170px no-repeat,
+    radial-gradient(circle, #aa9cb9 1px, transparent 1.5px) 25% 55% / 210px 200px no-repeat,
+    radial-gradient(circle, #aa9cb9 1px, transparent 1.5px) 82% 64% / 190px 180px no-repeat,
+    radial-gradient(circle, #aa9cb9 1px, transparent 1.5px) 40% 73% / 200px 190px no-repeat;
+  opacity: 0.38;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-map {
+  position: absolute;
+  top: clamp(175px, 20vh, 220px);
+  bottom: clamp(115px, 13vh, 155px);
+  left: 50%;
+  width: min(1024px, calc(100% - 32px));
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: radial-gradient(ellipse at center, rgba(80, 61, 95, 0.2), transparent 65%);
+  box-shadow: none;
+  transform: translateX(-50%);
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring-line {
+  fill: none;
+  stroke: #9c89a9;
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.48;
+  transition: stroke 160ms ease, opacity 160ms ease;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring-line.close,
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring-line.far {
+  stroke-dasharray: 2 5;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring-line.active {
+  stroke: #d7c3e8;
+  opacity: 0.92;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+  position: absolute;
+  right: 18px;
+  bottom: 20px;
+  left: 18px;
+  z-index: 10;
+  display: flex;
+  width: min(910px, calc(100% - 36px));
+  min-height: 66px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-inline: auto;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 247, 242, 0.22);
+  border-radius: 8px;
+  background: rgba(33, 30, 57, 0.84);
+  color: #fff7f2;
+  backdrop-filter: blur(10px);
+}
+
+.standalone-game-screen-orbit .orbit-footer-copy {
+  display: grid;
+  gap: 4px;
+  color: #f6f0ff;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.standalone-game-screen-orbit .orbit-footer-copy span {
+  color: #c9bed4;
+  font-size: 0.76rem;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons button,
+.standalone-game-screen-orbit .finish-orbit {
+  border-radius: 999px;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-map::before,
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-map::after {
+  display: none;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring {
+  width: calc(var(--ring-radius) * 2);
+  height: calc(var(--ring-radius) * 2);
+  border: 0;
+  pointer-events: none;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-ring span {
+  position: absolute;
+  top: 11%;
+  left: 18%;
+  margin: 0;
+  color: #eee5ff;
+  font-size: 0.68rem;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-center {
+  width: clamp(58px, 7vmin, 80px);
+  border: 1px solid rgba(242, 235, 214, 0.7);
+  background: radial-gradient(circle at 35% 28%, #f8f3df, #b7c4b5);
+  color: #37433e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 0 35px rgba(223, 215, 165, 0.17);
+  pointer-events: none;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-center-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 144px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(224, 195, 228, 0.1);
+  filter: blur(24px);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet,
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.close,
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.between,
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.far {
+  width: clamp(58px, var(--planet-size), 80px);
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  background: radial-gradient(circle at 34% 25%, #fff, var(--planet-color));
+  color: #352f3c;
+  font-size: 0.67rem;
+  font-weight: 600;
+  line-height: 1.1;
+  text-align: center;
+  box-shadow: 0 0 17px color-mix(in srgb, var(--planet-color) 42%, transparent);
+  touch-action: none;
+  user-select: none;
+  transform: translate(-50%, -50%);
+  transition: left 160ms ease, top 160ms ease, box-shadow 160ms ease, scale 160ms ease;
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet:hover,
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.selected,
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet:focus-visible {
+  outline: 2px solid #e9d1ff;
+  outline-offset: 4px;
+  scale: 1.04;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--planet-color) 55%, transparent);
+}
+
+.app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.dragging {
+  z-index: 10;
+  cursor: grabbing;
+  scale: 1.09;
+  transition: none;
+}
+
+.standalone-game-screen-orbit .orbit-guidance {
+  position: absolute;
+  right: 16px;
+  bottom: 110px;
+  left: 16px;
+  z-index: 5;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  color: #f6f0ff;
+  font-size: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.standalone-game-screen-orbit .orbit-guidance strong {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.standalone-game-screen-orbit .orbit-guidance p {
+  margin: 0;
+  color: #b9aac9;
+  font-size: 0.75rem;
+}
+
+.standalone-game-screen-orbit .planet.dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.standalone-game-screen-orbit .planet:not(.dragging) {
+  cursor: grab;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons button {
+  border: 1px solid rgba(225, 213, 248, 0.34);
+  background: rgba(214, 196, 234, 0.12);
+  color: #fff7f2;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons button.selected {
+  border-color: #d7c3e8;
+  background: #d7c3e8;
+  color: #281f39;
+}
+
+.standalone-game-screen-orbit .orbit-distance-button.selected::before,
+.standalone-game-screen-orbit .orbit-distance-button.selected::after {
+  content: none;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons button:disabled {
+  opacity: 0.54;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons {
+  position: absolute;
+  right: 16px;
+  bottom: 99px;
+  left: 16px;
+  z-index: 6;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons button {
+  min-height: 30px;
+  padding: 4px 11px;
+  font-size: 0.74rem;
+}
+
+.standalone-game-screen-orbit .orbit-surface:has(.orbit-ring-buttons) .orbit-guidance {
+  bottom: 144px;
+}
+
+.standalone-game-screen-orbit .orbit-ring-buttons + .orbit-message {
+  bottom: 190px;
+}
+
+.orbit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.orbit-actions button {
+  display: inline-flex;
+  width: auto;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 7px 16px;
+  border-radius: 999px;
+}
+
+.standalone-game-screen-orbit .orbit-actions .secondary {
+  border: 1px solid rgba(225, 213, 248, 0.38);
+  background: rgba(214, 196, 234, 0.1);
+  color: #fff7f2;
+}
+
+.standalone-game-screen-orbit .orbit-actions .primary {
+  border-color: #d7c3e8;
+  background: #d7c3e8;
+  color: #281f39;
+}
+
+.orbit-message {
+  position: absolute;
+  right: 18px;
+  bottom: 175px;
+  left: 18px;
+  z-index: 11;
+  width: fit-content;
+  max-width: calc(100% - 36px);
+  margin: 0 auto;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(17, 20, 45, 0.88);
+  color: #fff7f2;
+  text-align: center;
+}
+
+.orbit-reflection-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 22px;
+  border: 1px solid rgba(225, 213, 248, 0.42);
+  border-radius: 8px;
+  background: #26213c;
+  color: #fff7f2;
+  box-shadow: 0 25px 70px rgba(5, 7, 24, 0.5);
+}
+
+.orbit-reflection-dialog::backdrop {
+  background: rgba(7, 8, 25, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.orbit-dialog-close {
+  float: right;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 5px;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff7f2;
+}
+
+.orbit-reflection-dialog h2 {
+  margin: 0 32px 10px 0;
+  padding: 0;
+  background: transparent;
+  color: #fff7f2;
+  font-size: 1.8rem;
+  text-align: left;
+}
+
+.orbit-reflection-dialog p,
+.orbit-reflection-dialog label {
+  color: #e1d8e9;
+  line-height: 1.5;
+}
+
+.orbit-reflection-list {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.orbit-reflection-row {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid rgba(225, 213, 248, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.orbit-reflection-row strong {
+  color: #d7c3e8;
+}
+
+.orbit-reflection-dialog label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.orbit-reflection-dialog textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 10px;
+  border: 1px solid rgba(225, 213, 248, 0.34);
+  border-radius: 6px;
+  background: #1d192e;
+  color: #fff7f2;
+}
+
+.orbit-reflection-dialog > .primary {
+  width: 100%;
+  margin-top: 14px;
+  border-radius: 999px;
+  border-color: #d7c3e8;
+  background: #d7c3e8;
+  color: #281f39;
+}
+
+@media (max-width: 720px) {
+  .app.immersive-game-active .immersive-route-header {
+    inset: 14px 14px auto;
+    grid-template-columns: 1fr auto;
+  }
+
+  .immersive-route-header > .garden-route-label {
+    display: none;
+  }
+
+  .immersive-route-header > .game-how-to {
+    grid-column: 2;
+  }
+
+  .immersive-route-header > .immersive-game-intro {
+    grid-column: 1 / -1;
+    margin-top: 20px;
+  }
+
+  .immersive-game-intro h1 {
+    font-size: 2.15rem;
+  }
+
+  .app.immersive-game-active .immersive-game-intro h1 {
+    font-size: 2.15rem;
+  }
+
+  .immersive-game-intro p {
+    font-size: 0.85rem;
+  }
+
+  .app.immersive-game-active .immersive-route-header .immersive-game-intro p {
+    display: block;
+  }
+
+  .app.immersive-game-active .immersive-route-header .back-to-games span {
+    display: inline;
+  }
+
+  .immersive-game-intro .constellation-prompt-chips {
+    margin-top: 6px;
+    gap: 5px;
+  }
+
+  .immersive-game-intro .constellation-prompt-chips span,
+  .immersive-game-intro .constellation-prompt-chips span:first-child {
+    padding: 7px 9px;
+    font-size: 0.74rem;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
+    inset: 60px 0 128px;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-constellation .constellation-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app.immersive-game-active .standalone-game-screen-constellation .mini-insight {
+    display: block;
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+
+  .standalone-game-screen-constellation .constellation-toolbar input {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  .standalone-game-screen-constellation .constellation-toolbar button {
+    width: 100%;
+    padding-inline: 10px;
+    font-size: 0.78rem;
+  }
+
+  .garden-scene-intro h1 {
+    font-size: 2.8rem;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-map {
+    top: 160px;
+    bottom: 180px;
+    width: calc(100% - 48px);
+  }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+    bottom: 12px;
+    min-height: 62px;
+    padding: 8px 10px;
+  }
+
+  .standalone-game-screen-orbit .orbit-footer-copy {
+    font-size: 0.72rem;
+  }
+
+  .standalone-game-screen-orbit .orbit-footer-copy span {
+    font-size: 0.64rem;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet,
+  .app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.close,
+  .app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.between,
+  .app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.far {
+    width: clamp(46px, calc(var(--planet-size) * 0.7), 58px);
+    padding: 3px;
+    font-size: 0.53rem;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-center {
+    width: 48px;
+    font-size: 0.6rem;
+  }
+
+  .standalone-game-screen-orbit .orbit-guidance {
+    bottom: 102px;
+  }
+
+  .standalone-game-screen-orbit .orbit-surface:has(.orbit-ring-buttons) .orbit-guidance {
+    bottom: 145px;
+  }
+
+  .standalone-game-screen-orbit .orbit-ring-buttons {
+    bottom: 101px;
+  }
+
+  .orbit-actions {
+    width: auto;
+  }
+
+  .orbit-actions button {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding-inline: 8px;
+    font-size: 0.7rem;
+  }
+
+  .orbit-message {
+    bottom: 180px;
+  }
+}
+
+@media (max-width: 420px) {
+  .immersive-route-header > .back-to-games {
+    padding-inline: 10px;
+    font-size: 0.78rem;
+  }
+
+  .game-how-to summary {
+    min-height: 38px;
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  .garden-scene-intro h1 {
+    font-size: 2.4rem;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
+    inset: 65px 0 128px;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-map {
+    top: 155px;
+    bottom: 170px;
+  }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+    display: grid;
+    justify-content: stretch;
+    gap: 6px;
+  }
+
+  .standalone-game-screen-orbit .orbit-footer-copy {
+    text-align: center;
+  }
+
+  .orbit-actions {
+    justify-content: center;
+  }
+}

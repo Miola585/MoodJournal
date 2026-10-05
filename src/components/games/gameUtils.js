@@ -34,51 +34,63 @@ export const gameLabels = {
 };
 
 export const constellationStars = [
-  { id: 1, x: 8, y: 12, size: 15, glow: 14, opacity: 0.72 },
-  { id: 2, x: 19, y: 16, size: 18, glow: 16, opacity: 0.82 },
-  { id: 3, x: 31, y: 10, size: 14, glow: 13, opacity: 0.68 },
-  { id: 4, x: 45, y: 18, size: 21, glow: 20, opacity: 0.94 },
-  { id: 5, x: 58, y: 12, size: 16, glow: 15, opacity: 0.76 },
-  { id: 6, x: 72, y: 17, size: 19, glow: 18, opacity: 0.86 },
-  { id: 7, x: 87, y: 13, size: 15, glow: 14, opacity: 0.7 },
-  { id: 8, x: 12, y: 30, size: 17, glow: 15, opacity: 0.78 },
-  { id: 9, x: 26, y: 35, size: 22, glow: 21, opacity: 0.96 },
-  { id: 10, x: 39, y: 30, size: 15, glow: 14, opacity: 0.72 },
-  { id: 11, x: 54, y: 34, size: 18, glow: 17, opacity: 0.84 },
-  { id: 12, x: 68, y: 29, size: 16, glow: 15, opacity: 0.74 },
-  { id: 13, x: 82, y: 36, size: 20, glow: 19, opacity: 0.88 },
-  { id: 14, x: 93, y: 28, size: 15, glow: 14, opacity: 0.7 },
-  { id: 15, x: 9, y: 51, size: 20, glow: 18, opacity: 0.88 },
-  { id: 16, x: 22, y: 56, size: 16, glow: 15, opacity: 0.74 },
-  { id: 17, x: 36, y: 49, size: 19, glow: 18, opacity: 0.86 },
-  { id: 18, x: 50, y: 54, size: 22, glow: 21, opacity: 0.96 },
-  { id: 19, x: 64, y: 50, size: 16, glow: 15, opacity: 0.76 },
-  { id: 20, x: 78, y: 57, size: 18, glow: 17, opacity: 0.82 },
-  { id: 21, x: 91, y: 49, size: 15, glow: 14, opacity: 0.7 },
-  { id: 22, x: 14, y: 76, size: 17, glow: 16, opacity: 0.8 },
-  { id: 23, x: 29, y: 82, size: 15, glow: 14, opacity: 0.72 },
-  { id: 24, x: 44, y: 75, size: 19, glow: 18, opacity: 0.86 },
-  { id: 25, x: 61, y: 82, size: 16, glow: 15, opacity: 0.76 },
-  { id: 26, x: 79, y: 77, size: 21, glow: 20, opacity: 0.92 }
+  { id: 1, x: 12, y: 34, size: 15, glow: 14, opacity: 0.72 },
+  { id: 2, x: 30, y: 29, size: 18, glow: 16, opacity: 0.82 },
+  { id: 3, x: 52, y: 37, size: 14, glow: 13, opacity: 0.68 },
+  { id: 4, x: 76, y: 31, size: 21, glow: 20, opacity: 0.94 },
+  { id: 5, x: 91, y: 40, size: 16, glow: 15, opacity: 0.76 },
+  { id: 6, x: 20, y: 43, size: 19, glow: 18, opacity: 0.86 },
+  { id: 7, x: 39, y: 46, size: 15, glow: 14, opacity: 0.7 },
+  { id: 8, x: 62, y: 43, size: 17, glow: 15, opacity: 0.78 },
+  { id: 9, x: 82, y: 48, size: 22, glow: 21, opacity: 0.96 },
+  { id: 10, x: 8, y: 55, size: 15, glow: 14, opacity: 0.72 },
+  { id: 11, x: 27, y: 52, size: 18, glow: 17, opacity: 0.84 },
+  { id: 12, x: 47, y: 58, size: 16, glow: 15, opacity: 0.74 },
+  { id: 13, x: 69, y: 54, size: 20, glow: 19, opacity: 0.88 },
+  { id: 14, x: 92, y: 59, size: 15, glow: 14, opacity: 0.7 },
+  { id: 15, x: 16, y: 65, size: 20, glow: 18, opacity: 0.88 },
+  { id: 16, x: 34, y: 63, size: 16, glow: 15, opacity: 0.74 },
+  { id: 17, x: 57, y: 68, size: 19, glow: 18, opacity: 0.86 },
+  { id: 18, x: 78, y: 65, size: 22, glow: 21, opacity: 0.96 },
+  { id: 19, x: 6, y: 75, size: 16, glow: 15, opacity: 0.76 },
+  { id: 20, x: 24, y: 77, size: 18, glow: 17, opacity: 0.82 },
+  { id: 21, x: 44, y: 73, size: 15, glow: 14, opacity: 0.7 },
+  { id: 22, x: 63, y: 79, size: 17, glow: 16, opacity: 0.8 },
+  { id: 23, x: 85, y: 76, size: 15, glow: 14, opacity: 0.72 },
+  { id: 24, x: 14, y: 83, size: 19, glow: 18, opacity: 0.86 },
+  { id: 25, x: 51, y: 84, size: 16, glow: 15, opacity: 0.76 },
+  { id: 26, x: 74, y: 83, size: 21, glow: 20, opacity: 0.92 }
 ];
 
-export const orbitRings = ['close', 'near', 'middle', 'far'];
+export const orbitRings = ['close', 'between', 'far'];
 
 export const orbitRingLabels = {
   close: 'Close',
-  near: 'Near',
-  middle: 'Middle',
-  far: 'Far'
+  between: 'In between',
+  far: 'Further away'
 };
 
 export const planetSeeds = [
-  { name: 'Emotion', type: 'emotion', orbit: 'close', angle: 18, size: 78, color: '#f0a7a0' },
-  { name: 'Thought', type: 'thought', orbit: 'near', angle: 88, size: 74, color: '#98dce0' },
-  { name: 'Goal', type: 'goal', orbit: 'middle', angle: 152, size: 72, color: '#f3c969' },
-  { name: 'Habit', type: 'habit', orbit: 'far', angle: 224, size: 70, color: '#b9d49b' },
-  { name: 'Relationship', type: 'relationship', orbit: 'near', angle: 292, size: 84, color: '#b7b0ff' },
-  { name: 'Body', type: 'body', orbit: 'middle', angle: 338, size: 68, color: '#e8b8c7' }
+  { name: 'Emotion', type: 'emotion', orbit: 'close', angle: -20, size: 78, color: '#f0a7a0' },
+  { name: 'Thought', type: 'thought', orbit: 'between', angle: 70, size: 74, color: '#98dce0' },
+  { name: 'Goal', type: 'goal', orbit: 'far', angle: 270, size: 72, color: '#f3c969' },
+  { name: 'Habit', type: 'habit', orbit: 'far', angle: 330, size: 70, color: '#b9d49b' },
+  { name: 'Relationship', type: 'relationship', orbit: 'far', angle: 210, size: 84, color: '#b7b0ff' },
+  { name: 'Body', type: 'body', orbit: 'between', angle: 150, size: 68, color: '#e8b8c7' }
 ];
+
+export const normalizeStoredOrbit = (stored) => {
+  const savedPlanets = Array.isArray(stored) ? stored : Array.isArray(stored?.planets) ? stored.planets : [];
+  return planetSeeds.map((seed) => {
+    const saved = savedPlanets.find((planet) => planet?.name === seed.name);
+    const orbit = saved?.orbit === 'near' || saved?.orbit === 'middle' ? 'between' : saved?.orbit;
+    return {
+      ...seed,
+      orbit: orbitRings.includes(orbit) ? orbit : seed.orbit,
+      angle: typeof saved?.angle === 'number' && Number.isFinite(saved.angle) ? saved.angle : seed.angle
+    };
+  });
+};
 
 const gameDataMarker = '::game-data::';
 const blackbodyStops = ['#ff5f3a', '#ff8f45', '#ffd166', '#fff4c1', '#f4fbff', '#b8d8ff'];
@@ -163,24 +175,16 @@ export const detectConstellationArchetype = (stars, connections) => {
   return 'constellation';
 };
 
-export const getOrbitStability = (planets) => {
-  const counts = orbitRings.map((orbit) => planets.filter((planet) => planet.orbit === orbit).length);
-  const spreadPenalty = Math.max(...counts) - Math.min(...counts);
-  return Math.max(35, 100 - spreadPenalty * 16);
-};
-
-export const getOrbitBalanceLabel = (score) => {
-  if (score >= 86) return 'Steady';
-  if (score >= 68) return 'Settling';
-  if (score >= 50) return 'Shifting';
-  return 'Scattered';
-};
-
 export const getOrbitPrompt = (planet) => {
-  if (!planet) return 'What feels closest today?';
-  if (planet.orbit === 'close') return `${planet.name} is closest today. What is pulling it close?`;
-  if (planet.orbit === 'far') return `What can let ${planet.name.toLowerCase()} stay farther away for now?`;
-  return `What would help ${planet.name.toLowerCase()} feel more balanced?`;
+  const questions = {
+    Emotion: 'How present do your emotions feel today?',
+    Thought: 'How much space are your thoughts taking up?',
+    Body: 'How connected do you feel to your body?',
+    Relationship: 'Where do your relationships sit today?',
+    Goal: 'How present do your goals feel right now?',
+    Habit: 'How close do your everyday habits feel?'
+  };
+  return questions[planet?.name] || 'Choose a planet to explore its place in your day.';
 };
 
 const hexToRgb = (hex) => {
@@ -208,4 +212,20 @@ export const getStarColor = (mood, intensity) => {
   const normalized = Math.max(0, Math.min(1, (Number(intensity || 5) - 1) / 9));
   const index = Math.min(blackbodyStops.length - 1, Math.floor(normalized * blackbodyStops.length));
   return blendHex(blackbodyStops[index], mood?.color || '#fff7c7', 0.28);
+};
+
+const galaxyStarPolygons = Object.fromEntries([4, 5, 6].map((points) => {
+  const innerRadius = points === 4 ? 13 : points === 5 ? 22 : 27;
+  const polygon = Array.from({ length: points * 2 }, (_, index) => {
+    const angle = index * Math.PI / points - Math.PI / 2;
+    const radius = index % 2 === 0 ? 47 : innerRadius;
+    return `${(50 + Math.cos(angle) * radius).toFixed(2)},${(50 + Math.sin(angle) * radius).toFixed(2)}`;
+  }).join(' ');
+  return [points, polygon];
+}));
+
+export const getGalaxyStarShape = (intensity) => {
+  const value = Math.max(1, Math.min(10, Number(intensity) || 5));
+  const points = value <= 3 ? 4 : value <= 7 ? 5 : 6;
+  return { points, polygon: galaxyStarPolygons[points] };
 };

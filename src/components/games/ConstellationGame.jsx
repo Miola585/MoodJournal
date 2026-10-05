@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { Undo2 } from 'lucide-react';
 import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
 import {
   buildConnections,
@@ -38,7 +39,6 @@ const starSprites = [
   new URL('../../../img/stars/trimmed/star18.png', import.meta.url).href,
   new URL('../../../img/stars/trimmed/yellow_star.png', import.meta.url).href
 ];
-const promptChips = ['Make a path', 'Make a shelter', 'Make something steady', 'Make today\'s shape'];
 
 export function ConstellationGallery({ entries, moods }) {
   const constellations = entries.filter((entry) => (entry.tags || []).includes('constellation'));
@@ -62,12 +62,12 @@ export function ConstellationGallery({ entries, moods }) {
 
 export function ConstellationGame({ mood, privateStorage }) {
   const starfieldRef = useRef(null);
+  const previewLineRef = useRef(null);
+  const pointerGestureRef = useRef(null);
   const [selectedStars, setSelectedStars] = useState([]);
   const [connections, setConnections] = useState([]);
   const [dragStart, setDragStart] = useState(null);
   const [targetStar, setTargetStar] = useState(null);
-  const [previewPoint, setPreviewPoint] = useState(null);
-  const [fadingPreview, setFadingPreview] = useState(null);
   const [pulsingStars, setPulsingStars] = useState([]);
   const [name, setName] = useState('');
   const [savedConstellation, setSavedConstellation] = useState(null);
@@ -79,8 +79,6 @@ export function ConstellationGame({ mood, privateStorage }) {
   );
   const selectedStarData = constellationStars.filter((star) => selectedStars.includes(star.id));
   const archetype = detectConstellationArchetype(selectedStarData, connections);
-  const lineColor = getMoodColor([mood], mood.key);
-  const previewStart = constellationStars.find((star) => star.id === dragStart);
 
   const savedPreview = useMemo(() => {
     if (!savedConstellation) return null;
@@ -92,13 +90,48 @@ export function ConstellationGame({ mood, privateStorage }) {
 
   const addStar = (starId) => setSelectedStars((current) => current.includes(starId) ? current : [...current, starId]);
 
-  const updatePreviewPoint = (event) => {
-    if (!dragStart || !starfieldRef.current) return;
-    const bounds = starfieldRef.current.getBoundingClientRect();
-    setPreviewPoint({
-      x: Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100)),
-      y: Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100))
-    });
+  const nearestStar = (clientX, clientY, excludeId) => {
+    const bounds = starfieldRef.current?.getBoundingClientRect();
+    if (!bounds) return null;
+    let nearest = null;
+    let distance = 34;
+    for (const star of constellationStars) {
+      if (star.id === excludeId) continue;
+      const nextDistance = Math.hypot(
+        bounds.left + (star.x / 100) * bounds.width - clientX,
+        bounds.top + (star.y / 100) * bounds.height - clientY
+      );
+      if (nextDistance < distance) {
+        nearest = star;
+        distance = nextDistance;
+      }
+    }
+    return nearest;
+  };
+
+  const hidePreview = () => {
+    previewLineRef.current?.setAttribute('visibility', 'hidden');
+    setTargetStar(null);
+  };
+
+  const updatePreview = (event) => {
+    const gesture = pointerGestureRef.current;
+    if (gesture && gesture.pointerId !== event.pointerId) return;
+    const fromId = gesture?.fromId || dragStart;
+    const from = constellationStars.find((star) => star.id === fromId);
+    const bounds = starfieldRef.current?.getBoundingClientRect();
+    const line = previewLineRef.current;
+    if (!from || !bounds || !line) return;
+    const target = nearestStar(event.clientX, event.clientY, fromId);
+    const x = target?.x ?? Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100));
+    const y = target?.y ?? Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100));
+    line.setAttribute('x1', from.x);
+    line.setAttribute('y1', from.y);
+    line.setAttribute('x2', x);
+    line.setAttribute('y2', y);
+    line.style.setProperty('--preview-color', target ? '#ffe2a3' : '#d8c8ff');
+    line.setAttribute('visibility', 'visible');
+    setTargetStar((current) => current === target?.id ? current : target?.id || null);
   };
 
   const connectStars = (fromId, toId) => {
@@ -117,16 +150,25 @@ export function ConstellationGame({ mood, privateStorage }) {
 
   const stopDragging = () => {
     setDragStart(null);
-    setTargetStar(null);
-    setPreviewPoint(null);
+    hidePreview();
   };
 
-  const fadeInvalidPreview = () => {
-    if (previewStart && previewPoint) {
-      setFadingPreview({ id: `${dragStart}-${Date.now()}`, from: previewStart, to: previewPoint });
-      window.setTimeout(() => setFadingPreview(null), 280);
+  const finishPointerGesture = (event) => {
+    const gesture = pointerGestureRef.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
+    pointerGestureRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    stopDragging();
+    const target = nearestStar(event.clientX, event.clientY, gesture.fromId);
+    if (target) {
+      connectStars(gesture.fromId, target.id);
+      stopDragging();
+    } else if (gesture.hadSelection || Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) >= 8) {
+      stopDragging();
+    } else {
+      hidePreview();
+    }
   };
 
   const removeLastConnection = () => {
@@ -152,41 +194,18 @@ export function ConstellationGame({ mood, privateStorage }) {
 
   return (
     <div className="game-surface constellation-surface">
-      <p className="game-instruction">Drag from one star to another to connect them.</p>
-      <div className="constellation-prompt-chips" aria-label="Constellation shape ideas">
-        <span>Try:</span>
-        {promptChips.map((chip) => <span key={chip}>{chip}</span>)}
-      </div>
       <div
         className="star-map constellation-builder constellation-stage"
-        onPointerMove={updatePreviewPoint}
-        onPointerLeave={fadeInvalidPreview}
-        onPointerUp={fadeInvalidPreview}
+        onPointerMove={updatePreview}
+        onPointerLeave={() => { if (!pointerGestureRef.current) hidePreview(); }}
+        onPointerUp={finishPointerGesture}
+        onPointerCancel={() => { pointerGestureRef.current = null; stopDragging(); }}
         ref={starfieldRef}
       >
         <ConstellationLines stars={selectedStarData} connections={connections} mood={mood.key} moods={[mood]} />
-        {previewStart && previewPoint && (
-          <svg className="constellation-lines preview-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <line
-              x1={previewStart.x}
-              y1={previewStart.y}
-              x2={targetStar ? constellationStars.find((star) => star.id === targetStar)?.x : previewPoint.x}
-              y2={targetStar ? constellationStars.find((star) => star.id === targetStar)?.y : previewPoint.y}
-              style={{ '--line-color': lineColor }}
-            />
-          </svg>
-        )}
-        {fadingPreview && (
-          <svg className="constellation-lines fading-preview-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <line
-              x1={fadingPreview.from.x}
-              y1={fadingPreview.from.y}
-              x2={fadingPreview.to.x}
-              y2={fadingPreview.to.y}
-              style={{ '--line-color': lineColor }}
-            />
-          </svg>
-        )}
+        <svg className="constellation-lines preview-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <line ref={previewLineRef} visibility="hidden" />
+        </svg>
         {constellationStars.map((star) => {
           const connected = selectedStars.includes(star.id);
           const validTarget = dragStart && dragStart !== star.id && targetStar === star.id;
@@ -206,26 +225,23 @@ export function ConstellationGame({ mood, privateStorage }) {
                 }
                 setDragStart(star.id);
                 addStar(star.id);
-                setPreviewPoint({ x: star.x, y: star.y });
               }}
               onPointerDown={(event) => {
+                if (!event.isPrimary || event.button !== 0 || pointerGestureRef.current) return;
                 event.preventDefault();
-                setDragStart(star.id);
-                addStar(star.id);
-                updatePreviewPoint(event);
+                starfieldRef.current?.setPointerCapture(event.pointerId);
+                pointerGestureRef.current = {
+                  pointerId: event.pointerId,
+                  fromId: dragStart || star.id,
+                  hadSelection: Boolean(dragStart),
+                  x: event.clientX,
+                  y: event.clientY
+                };
+                if (!dragStart) {
+                  setDragStart(star.id);
+                  addStar(star.id);
+                }
               }}
-              onPointerEnter={() => {
-                if (dragStart && dragStart !== star.id) setTargetStar(star.id);
-              }}
-              onPointerLeave={() => {
-                if (targetStar === star.id) setTargetStar(null);
-              }}
-              onPointerUp={(event) => {
-                event.stopPropagation();
-                connectStars(dragStart, star.id);
-                stopDragging();
-              }}
-              onPointerCancel={stopDragging}
               style={{
                 '--star-left': `${star.x}%`,
                 '--star-top': `${star.y}%`,
@@ -234,15 +250,12 @@ export function ConstellationGame({ mood, privateStorage }) {
                 '--star-glow': `${star.glow}px`,
                 '--star-opacity': star.opacity,
                 '--star-sprite': `url("${starSprites[star.id % starSprites.length]}")`,
-                '--star-hover-sprite': `url("${starSprites[(star.id + 2) % starSprites.length]}")`,
-                '--star-connected-sprite': `url("${starSprites[(star.id + 7) % starSprites.length]}")`
+                '--star-active-sprite': `url("${starSprites[(star.id + 2) % starSprites.length]}")`
               }}
               type="button"
             >
               <span className="star-hit-label">{connected ? `Connected star ${star.id}` : `Star ${star.id}`}</span>
-              <span className="playable-star-sprite default" aria-hidden="true" />
-              <span className="playable-star-sprite hover" aria-hidden="true" />
-              <span className="playable-star-sprite connected" aria-hidden="true" />
+              <span className="playable-star-sprite" aria-hidden="true" />
               {pulsingStars.includes(star.id) && <span className="endpoint-sparkle" aria-hidden="true" />}
             </button>
           );
@@ -251,7 +264,7 @@ export function ConstellationGame({ mood, privateStorage }) {
       <div className="constellation-toolbar">
         <span className="mini-insight">{connections.length} connection{connections.length === 1 ? '' : 's'} · {archetype}</span>
         <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name your constellation" />
-        <button className="secondary" disabled={connections.length === 0} onClick={removeLastConnection} type="button">Undo line</button>
+        <button className="secondary constellation-undo" disabled={connections.length === 0} onClick={removeLastConnection} type="button" title="Undo last connection"><Undo2 aria-hidden="true" size={17} /> Undo</button>
         <button className="primary" disabled={connections.length === 0} onClick={finishConstellation} type="button">Finish constellation</button>
       </div>
       {savedPreview && (

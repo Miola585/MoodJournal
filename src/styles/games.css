@@ -1028,19 +1028,27 @@
   transform: translate(-50%, -50%);
 }
 
-.star.selected::after,
-.star.valid-target::after {
+.star.selected::after {
   position: absolute;
-  inset: 4px;
-  border: 1px dashed color-mix(in srgb, var(--star-color) 58%, #ffffff);
+  inset: 5px;
+  border: 1px solid rgba(216, 200, 255, 0.7);
   border-radius: 50%;
   content: "";
-  opacity: 0.78;
+  box-shadow: 0 0 14px rgba(216, 200, 255, 0.4);
+  opacity: 0.85;
+}
+
+.star.valid-target::after {
+  position: absolute;
+  inset: 2px;
+  border: 2px solid #ffe2a3;
+  border-radius: 50%;
+  content: "";
+  box-shadow: 0 0 20px rgba(255, 226, 163, 0.8), inset 0 0 10px rgba(255, 226, 163, 0.25);
 }
 
 .star.dragging {
-  outline: 3px solid color-mix(in srgb, var(--star-color) 50%, #ffffff);
-  outline-offset: 2px;
+  box-shadow: 0 0 0 1px rgba(216, 200, 255, 0.7), 0 0 20px rgba(216, 200, 255, 0.45);
 }
 
 .star.valid-target {
@@ -1071,43 +1079,24 @@
   transition: opacity 0.18s ease, transform 0.18s ease, filter 0.18s ease;
 }
 
-.playable-star-sprite.hover,
-.playable-star-sprite.connected {
-  opacity: 0;
-}
-
-.playable-star-sprite.hover {
-  background-image: var(--star-hover-sprite);
-}
-
-.playable-star-sprite.connected {
-  width: calc(var(--star-size, 22px) * 1.45);
-  background-image: var(--star-connected-sprite);
+.star:hover .playable-star-sprite,
+.star:focus-visible .playable-star-sprite,
+.star.valid-target .playable-star-sprite {
+  background-image: var(--star-active-sprite);
+  transform: scale(1.14);
   filter:
-    drop-shadow(0 0 calc(var(--star-glow, 20px) * 0.36) var(--star-color, #fff7c7))
-    drop-shadow(0 0 9px rgba(255, 247, 199, 0.42));
+    drop-shadow(0 0 calc(var(--star-glow, 20px) * 0.42) var(--star-color, #fff7c7))
+    drop-shadow(0 0 10px rgba(255, 247, 199, 0.45));
 }
 
-.star:hover .playable-star-sprite.default,
-.star:focus-visible .playable-star-sprite.default,
-.star.valid-target .playable-star-sprite.default,
-.star.selected .playable-star-sprite.default {
-  opacity: 0;
+.star.selected .playable-star-sprite {
+  background-image: var(--star-active-sprite);
+  filter:
+    drop-shadow(0 0 calc(var(--star-glow, 20px) * 0.42) var(--star-color, #fff7c7))
+    drop-shadow(0 0 10px rgba(255, 247, 199, 0.45));
 }
 
-.star:hover .playable-star-sprite.hover,
-.star:focus-visible .playable-star-sprite.hover,
-.star.valid-target .playable-star-sprite.hover {
-  opacity: 1;
-  transform: scale(1.08);
-}
-
-.star.selected .playable-star-sprite.connected {
-  opacity: 1;
-}
-
-.star.pulse .playable-star-sprite.connected,
-.star.pulse .playable-star-sprite.hover {
+.star.pulse .playable-star-sprite {
   animation: star-connection-pulse 0.48s ease both;
 }
 
@@ -1117,7 +1106,7 @@
   top: 4px;
   width: 14px;
   aspect-ratio: 1;
-  background-image: var(--star-hover-sprite);
+  background-image: var(--star-active-sprite);
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain;
@@ -1148,9 +1137,9 @@
 
 .constellation-lines line {
   stroke: var(--line-color, #fff7c7);
-  stroke-width: 0.7px;
+  stroke-width: 1.25px;
   stroke-linecap: round;
-  opacity: 0.46;
+  opacity: 0.82;
   vector-effect: non-scaling-stroke;
   filter:
     drop-shadow(0 0 2px var(--line-color, #fff7c7))
@@ -1158,13 +1147,13 @@
 }
 
 .preview-lines line {
-  stroke-width: 0.95px;
-  stroke-dasharray: 2 4;
-  opacity: 0.7;
+  stroke: var(--preview-color, #d8c8ff);
+  stroke-width: 1.7px;
+  opacity: 0.95;
   vector-effect: non-scaling-stroke;
   filter:
-    drop-shadow(0 0 3px var(--line-color, #fff7c7))
-    drop-shadow(0 0 6px rgba(255, 247, 199, 0.38));
+    drop-shadow(0 0 3px var(--preview-color, #d8c8ff))
+    drop-shadow(0 0 7px var(--preview-color, #d8c8ff));
 }
 
 .fading-preview-lines line {
@@ -1850,9 +1839,23 @@
   top: var(--star-y);
   width: var(--star-size);
   aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--star-color);
-  box-shadow: 0 0 22px var(--star-color);
+  overflow: visible;
+  color: var(--star-color);
+  transform: translate(-50%, -50%);
+}
+
+.galaxy-star-glow,
+.galaxy-star-core {
+  fill: currentColor;
+}
+
+.galaxy-star-glow {
+  opacity: 0.75;
+  filter: blur(10px);
+}
+
+.galaxy-star-core {
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 .collection-grid {

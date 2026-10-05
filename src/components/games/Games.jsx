@@ -21,6 +21,14 @@ const gameRouteCopy = {
   orbit: 'Place what feels close, far, or in between today.'
 };
 
+const gameInstructions = {
+  garden: 'Choose a plant to see what it reflects. Tend the garden once a day. A check-in helps it grow.',
+  constellation: 'Drag between two stars, or tap one and then another. Use Tab and Enter to connect with a keyboard. Undo removes the last line. Name your shape and finish when it feels complete.',
+  orbit: 'Drag a planet between distances, or select it and use the distance buttons. The numbered keys also move a focused planet. Distance shows presence, not importance. Reflect or finish to save your arrangement.'
+};
+
+const constellationIdeas = ['Make today\'s shape', 'Make a shelter', 'Make a path'];
+
 const gameLibraryDetails = {
   match: {
     Icon: Heart,
@@ -60,13 +68,37 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
     return (
       <section className={`screen app-screen games-screen standalone-game-screen standalone-game-screen-${selectedGame}`}>
         {nav}
-        <div className="game-route-header">
-          <button className="secondary back-to-games" onClick={() => navigate('/games')} type="button">
-            <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.4} />
-            <span>Back to games</span>
-          </button>
-          <PageHeader align="center" title={gameLabels[selectedGame]} subtitle={gameRouteCopy[selectedGame]} />
-        </div>
+        {gameInstructions[selectedGame] ? (
+          <div className={`game-route-header immersive-route-header ${selectedGame === 'garden' ? 'garden-route-header' : ''}`}>
+            <button className="secondary back-to-games" onClick={() => navigate('/games')} type="button">
+              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.4} />
+              <span>Back to games</span>
+            </button>
+            <details className="game-how-to">
+              <summary>How to play</summary>
+              <p>{gameInstructions[selectedGame]}</p>
+            </details>
+            {selectedGame !== 'garden' && (
+              <div className="immersive-game-intro">
+                <h1>{gameLabels[selectedGame]}</h1>
+                <p>{gameRouteCopy[selectedGame]}</p>
+                {selectedGame === 'constellation' && (
+                  <div className="constellation-prompt-chips" aria-label="Constellation shape ideas">
+                    {constellationIdeas.map((idea) => <span key={idea}>{idea}</span>)}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="game-route-header">
+            <button className="secondary back-to-games" onClick={() => navigate('/games')} type="button">
+              <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.4} />
+              <span>Back to games</span>
+            </button>
+            <PageHeader align="center" title={gameLabels[selectedGame]} subtitle={gameRouteCopy[selectedGame]} />
+          </div>
+        )}
         <GameStage
           game={selectedGame}
           entries={entries}
