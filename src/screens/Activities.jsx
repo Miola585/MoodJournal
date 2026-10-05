@@ -1,5 +1,5 @@
-import { ArrowRight, CheckCircle2, Heart, Pause, Play, RotateCcw, Sparkles, Wind } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, CheckCircle2, Heart, Pause, Play, RotateCcw, Sparkles, Wind, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DailyGroundingTools } from '../components/games/DailyGroundingTools';
 import { quickActivityGroups } from '../data/journalData';
 import { todayKey } from '../utils/journalUtils';
@@ -11,26 +11,32 @@ export function Activities({ nav, privateStorage }) {
   const today = todayKey();
   const list = useMemo(() => selectDailyActivities(quickActivityGroups, today), [today]);
   const featured = useMemo(() => selectFeaturedDailyActivity(list, today), [list, today]);
+  const choices = useMemo(() => featured ? [featured, ...list.filter((activity) => activity !== featured)] : [], [featured, list]);
   const storageKey = `activityCompletions:${today}`;
   const notesStorageKey = `activityNotes:${today}`;
   const [completed, setCompleted] = useState(() => readStoredObject(storageKey));
   const [notes, setNotes, notesStorageError] = usePrivateStorageState(privateStorage, notesStorageKey, {});
-  const [selectedTitle, setSelectedTitle] = useState(list[0]?.title || '');
+  const [selectedTitle, setSelectedTitle] = useState(featured?.title || '');
+  const [openedTitle, setOpenedTitle] = useState('');
   const [focusTitle, setFocusTitle] = useState('');
+  const beginButtonRef = useRef(null);
+  const selectedActivity = choices.find((activity) => activity.title === selectedTitle) || featured;
+  const selectedIndex = choices.indexOf(selectedActivity);
 
   useEffect(() => {
     if (!list.some((activity) => activity.title === selectedTitle)) {
-      setSelectedTitle(list[0]?.title || '');
+      setSelectedTitle(featured?.title || '');
+      setOpenedTitle('');
     }
-  }, [list, selectedTitle]);
+  }, [featured, list, selectedTitle]);
 
   useEffect(() => {
-    if (!focusTitle || selectedTitle !== focusTitle) return;
+    if (!focusTitle || openedTitle !== focusTitle) return;
     const panel = document.getElementById(`activity-panel-${toId(focusTitle)}`);
     panel?.focus({ preventScroll: true });
     panel?.scrollIntoView({ block: 'start' });
     setFocusTitle('');
-  }, [focusTitle, selectedTitle]);
+  }, [focusTitle, openedTitle]);
 
   useEffect(() => {
     localStorage.setItem(storageKey, JSON.stringify(completed));
@@ -49,6 +55,19 @@ export function Activities({ nav, privateStorage }) {
     setNotes((current) => ({ ...current, [title]: note }));
   };
 
+  const browseActivity = (direction) => {
+    const next = choices[(selectedIndex + direction + choices.length) % choices.length];
+    setSelectedTitle(next.title);
+    setOpenedTitle('');
+    setFocusTitle('');
+  };
+
+  const closeActivity = () => {
+    setOpenedTitle('');
+    beginButtonRef.current?.focus({ preventScroll: true });
+    beginButtonRef.current?.scrollIntoView({ block: 'nearest' });
+  };
+
   return (
     <section className="screen app-screen activities-screen">
       <PageHeader align="center" eyebrow={formatActivityDate(today)} title="Quick Activities" subtitle="Choose a small pause for right now." />
@@ -56,51 +75,42 @@ export function Activities({ nav, privateStorage }) {
 
       <section className="activities-focus" aria-labelledby="activity-picker-title">
         {notesStorageError && <p className="form-error" role="alert">{notesStorageError}</p>}
-        {featured && (
+        <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
+        {selectedActivity && (
           <div className="activity-feature" aria-labelledby="activity-feature-title">
             <div className="activity-feature-copy">
-              <span className="activities-eyebrow">Suggested for today &middot; {featured.minutes} min</span>
-              <h2 id="activity-feature-title">{featured.title}</h2>
-              <p>{featured.detail}</p>
-              <button className="primary activity-feature-button" onClick={() => { setSelectedTitle(featured.title); setFocusTitle(featured.title); }} type="button">
-                {completed[featured.title] ? 'Open activity' : 'Begin activity'}
+              <span className="activities-eyebrow">{selectedActivity === featured ? 'Suggested for today' : activityLabels[selectedActivity.kind]} &middot; {selectedActivity.minutes} min</span>
+              <h2 id="activity-feature-title">{selectedActivity.title}</h2>
+              <p>{selectedActivity.detail}</p>
+              {completed[selectedActivity.title] && <span className="activity-feature-completed"><CheckCircle2 aria-hidden="true" size={17} /> Completed today</span>}
+              <button
+                aria-controls={`activity-panel-${toId(selectedActivity.title)}`}
+                aria-expanded={openedTitle === selectedActivity.title}
+                className="primary activity-feature-button"
+                onClick={() => { setOpenedTitle(selectedActivity.title); setFocusTitle(selectedActivity.title); }}
+                ref={beginButtonRef}
+                type="button"
+              >
+                {completed[selectedActivity.title] || openedTitle === selectedActivity.title ? 'Open activity' : 'Begin activity'}
                 <ArrowRight aria-hidden="true" size={18} />
               </button>
             </div>
             <span className="activity-feature-art" aria-hidden="true" />
+            <div className="activity-feature-navigation" role="group" aria-label="Browse quick activities">
+              <button className="secondary activity-browse-button" aria-label="Previous activity" title="Previous activity" onClick={() => browseActivity(-1)} disabled={choices.length < 2} type="button"><ArrowLeft aria-hidden="true" size={20} /></button>
+              <span role="status" aria-live="polite" aria-atomic="true">
+                {selectedIndex + 1} / {choices.length}
+                <span className="visually-hidden">: {selectedActivity.title}</span>
+              </span>
+              <button className="secondary activity-browse-button" aria-label="Next activity" title="Next activity" onClick={() => browseActivity(1)} disabled={choices.length < 2} type="button"><ArrowRight aria-hidden="true" size={20} /></button>
+            </div>
           </div>
         )}
-        <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
-        <div className="activity-selector" role="tablist" aria-label="Quick activities">
-          {list.map((activity) => {
-            const Icon = activityIcons[activity.kind] || Heart;
-            const selected = activity.title === selectedTitle;
-            return (
-              <button
-                aria-controls={`activity-panel-${toId(activity.title)}`}
-                aria-selected={selected}
-                className={selected ? 'activity-selector-button selected' : 'activity-selector-button'}
-                id={`activity-tab-${toId(activity.title)}`}
-                key={activity.title}
-                onClick={() => setSelectedTitle(activity.title)}
-                role="tab"
-                type="button"
-              >
-                <Icon aria-hidden="true" size={20} />
-                <span>
-                  <strong>{activity.title}</strong>
-                  <small>{activity.minutes} min</small>
-                </span>
-                {completed[activity.title] && <CheckCircle2 aria-label="Completed today" size={17} />}
-              </button>
-            );
-          })}
-        </div>
 
         <div className="activity-sheet-stack">
           {list.map((activity) => (
             <ActivitySheet
-              active={activity.title === selectedTitle}
+              active={activity.title === openedTitle}
               activity={activity}
               dateLabel={formatActivityDate(today)}
               done={Boolean(completed[activity.title])}
@@ -108,6 +118,7 @@ export function Activities({ nav, privateStorage }) {
               note={notes[activity.title] || ''}
               onDoneChange={(done) => setActivityDone(activity.title, done)}
               onNoteChange={(note) => setActivityNote(activity.title, note)}
+              onClose={closeActivity}
             />
           ))}
         </div>
@@ -141,7 +152,9 @@ const activityIcons = {
   action: Sparkles
 };
 
-function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, onNoteChange }) {
+const activityLabels = { body: 'A moment for your body', reflection: 'A moment to reflect', action: 'A small step' };
+
+function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, onNoteChange, onClose }) {
   const [secondsLeft, setSecondsLeft] = useState(activity.minutes * 60);
   const [running, setRunning] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -167,7 +180,7 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
   const seconds = String(secondsLeft % 60).padStart(2, '0');
   const Icon = activityIcons[activity.kind] || Heart;
   const panelId = `activity-panel-${toId(activity.title)}`;
-  const tabId = `activity-tab-${toId(activity.title)}`;
+  const headingId = `activity-heading-${toId(activity.title)}`;
 
   const toggleTimer = () => {
     setHasStarted(true);
@@ -182,19 +195,21 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
 
   return (
     <article
-      aria-labelledby={tabId}
+      aria-labelledby={headingId}
       className={done ? 'activity-journal-sheet done' : 'activity-journal-sheet'}
       hidden={!active}
       id={panelId}
-      role="tabpanel"
       tabIndex={-1}
     >
-      <div className="activity-sheet-date">{dateLabel}</div>
+      <div className="activity-sheet-topline">
+        <span className="activity-sheet-date">{dateLabel}</span>
+        <button className="secondary activity-browse-button" aria-label="Close activity" title="Close activity" onClick={onClose} type="button"><X aria-hidden="true" size={20} /></button>
+      </div>
       <header className="activity-sheet-heading">
         <span className="activity-sheet-icon"><Icon aria-hidden="true" size={24} /></span>
         <div>
           <span>{activity.minutes} minute pause</span>
-          <h2>{activity.title}</h2>
+          <h2 id={headingId}>{activity.title}</h2>
         </div>
         {done && (
           <span className="activity-sheet-status">
