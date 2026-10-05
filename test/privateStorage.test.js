@@ -47,3 +47,15 @@ test('encrypted device drafts can be removed without leaving plaintext copies', 
   await privateStorage.remove('journalDraft:entry:1');
   assert.equal(await privateStorage.read('journalDraft:entry:1', null), null);
 });
+
+test('garden care is separate for each account and ignores the unowned legacy flag', async () => {
+  const storage = new MemoryStorage();
+  const key = 'gardenCare:2026-10-04';
+  storage.setItem('gardenTendedToday:2026-10-04', 'true');
+  const firstUser = createPrivateStorage({ ownerId: 'user-1', storage });
+  const secondUser = createPrivateStorage({ ownerId: 'user-2', storage });
+  assert.equal(await firstUser.read(key, false), false);
+  await firstUser.write(key, true);
+  assert.equal(await firstUser.read(key, false), true);
+  assert.equal(await secondUser.read(key, false), false);
+});

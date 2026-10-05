@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { getOrbitPrompt, normalizeStoredOrbit, orbitRingLabels, orbitRings, planetSeeds } from './gameUtils';
 import { todayKey } from '../../utils/journalUtils';
+import { orbitArtwork } from './gameArtwork';
 
 const ringRadii = { close: 0.17, between: 0.3, far: 0.43 };
-const planetLabels = { Emotion: 'Emotions', Thought: 'Thoughts', Goal: 'Goals', Habit: 'Habits', Relationship: 'Relationships' };
+const planetLabels = Object.fromEntries(Object.entries(orbitArtwork).map(([name, artwork]) => [name, artwork.label]));
 
 export function OrbitGame({ privateStorage }) {
   const today = todayKey();
@@ -143,12 +144,14 @@ export function OrbitGame({ privateStorage }) {
             style={{
               '--planet-color': planet.color,
               '--planet-size': `${planet.size}px`,
+              '--planet-art-scale': orbitArtwork[planet.name].scale,
               left: `${50 + Math.cos((planet.angle * Math.PI) / 180) * ringRadii[planet.orbit] * 100}%`,
               top: `${50 + Math.sin((planet.angle * Math.PI) / 180) * ringRadii[planet.orbit] * 100}%`
             }}
             type="button"
           >
-            <span>{planetLabels[planet.name] || planet.name}</span>
+            <img src={orbitArtwork[planet.name].image} alt="" draggable={false} />
+            <span className="orbit-planet-label">{planetLabels[planet.name] || planet.name}</span>
           </button>
         ))}
       </div>

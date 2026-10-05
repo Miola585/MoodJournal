@@ -168,7 +168,7 @@ function FeaturedGame({ game, mood, mainToday, todayEntries, privateStorage }) {
   const games = {
     match: <EmotionalMatchGame />,
     constellation: <ConstellationGame mood={mood} privateStorage={privateStorage} />,
-    garden: <MoodGardenGame mood={mood} mainToday={mainToday} todayEntries={todayEntries} />,
+    garden: <MoodGardenGame mood={mood} mainToday={mainToday} todayEntries={todayEntries} privateStorage={privateStorage} />,
     memory: <MemoryJarGame mood={mood} mainToday={mainToday} privateStorage={privateStorage} />,
     orbit: <OrbitGame privateStorage={privateStorage} />
   };

@@ -1,12 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { todayKey } from '../../utils/journalUtils';
+import { gardenArtwork } from './gameArtwork';
 
 const gardenSprites = [
-  { label: 'New sprout', image: new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/00_Shared_Growth_Stages/growth-01-sprout.png', import.meta.url).href },
-  { label: 'Daisy', image: new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/01_Low_Intensity/low-04-daisy.png', import.meta.url).href },
-  { label: 'Sunflowers', image: new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/02_Medium_Intensity/medium-03-sunflower-pair.png', import.meta.url).href },
-  { label: 'Green leaves', image: new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/04_Neutral_Foliage/foliage-04-broad.png', import.meta.url).href },
-  { label: 'Daisy cluster', image: new URL('../../../img/1111x_PixelPlants/MoodGarden_Selected/03_High_Intensity/high-04-daisy-cluster.png', import.meta.url).href }
+  gardenArtwork.growth.sprout,
+  { label: 'Daisy', image: gardenArtwork.flowers.daisy.low },
+  { label: 'Sunflowers', image: gardenArtwork.flowers.sunflower.medium },
+  gardenArtwork.foliage,
+  { label: 'Daisy cluster', image: gardenArtwork.flowers.daisy.high }
 ];
 
 const weatherByMood = {
@@ -25,15 +26,29 @@ const weatherByMood = {
   Numb: 'resting'
 };
 
-export function MoodGardenGame({ mood, mainToday, todayEntries = [] }) {
+export function MoodGardenGame({ mood, mainToday, todayEntries = [], privateStorage }) {
   const today = todayKey();
-  const storageKey = `gardenTendedToday:${today}`;
+  // The old unscoped flag has no known owner, so do not adopt it into an account.
+  const storageKey = `gardenCare:${today}`;
   const hasCheckIn = Boolean(mainToday?.mood);
   const intensity = Number(mainToday?.intensity || mood.score || 5);
   const growthSignal = Math.max(1, Math.min(5, Math.ceil(intensity / 2)));
   const weather = hasCheckIn ? weatherByMood[mood.key] || 'steady' : 'resting';
-  const [selectedPlant, setSelectedPlant] = useState(null);
-  const [tended, setTended] = useState(() => localStorage.getItem(storageKey) === 'true');
+  const [selectedPlantId, setSelectedPlantId] = useState(null);
+  const [careState, setCareState] = useState(null);
+  const care = careState?.storage === privateStorage && careState.key === storageKey
+    ? careState : { tended: false, pending: true, error: '' };
+  const tended = care.tended;
+
+  useEffect(() => {
+    let active = true;
+    const initial = { storage: privateStorage, key: storageKey, tended: false, pending: true, error: '' };
+    setCareState(initial);
+    privateStorage.read(storageKey, false)
+      .then((value) => { if (active) setCareState({ ...initial, tended: value === true, pending: false }); })
+      .catch((error) => { if (active) setCareState({ ...initial, pending: false, error: error.message }); });
+    return () => { active = false; };
+  }, [privateStorage, storageKey]);
 
   const plants = useMemo(() => {
     if (!hasCheckIn) {
@@ -62,11 +77,20 @@ export function MoodGardenGame({ mood, mainToday, todayEntries = [] }) {
   }, [growthSignal, hasCheckIn, mainToday, mood.key, mood.score, weather]);
 
   const extraMoments = Math.max(0, todayEntries.length - plants.length);
-  const activePlant = selectedPlant || plants[0];
+  const activePlant = plants.find((plant) => plant.id === selectedPlantId) || plants[0];
 
-  const tendGarden = () => {
-    setTended(true);
-    localStorage.setItem(storageKey, 'true');
+  const tendGarden = async () => {
+    if (care.pending || tended) return;
+    const updateCare = (change) => setCareState((current) => (
+      current?.storage === privateStorage && current.key === storageKey ? { ...current, ...change } : current
+    ));
+    updateCare({ pending: true, error: '' });
+    try {
+      await privateStorage.write(storageKey, true);
+      updateCare({ tended: true, pending: false });
+    } catch (error) {
+      updateCare({ pending: false, error: error.message });
+    }
   };
 
   return (
@@ -87,7 +111,7 @@ export function MoodGardenGame({ mood, mainToday, todayEntries = [] }) {
             aria-label={`${plant.sprite.label}, ${plant.mood}`}
             className={activePlant.id === plant.id ? 'garden-plant selected' : 'garden-plant'}
             key={plant.id}
-            onClick={() => setSelectedPlant(plant)}
+            onClick={() => setSelectedPlantId(plant.id)}
             style={{
               '--plant-delay': `${plant.delay}s`,
               '--plant-left': plants.length === 1 ? '50%' : `${12 + (index * 76) / (plants.length - 1)}%`,
@@ -113,8 +137,9 @@ export function MoodGardenGame({ mood, mainToday, todayEntries = [] }) {
           </div>
           <div className="garden-moment-footer">
             <span>{tended ? 'A little care, given.' : hasCheckIn ? `From ${activePlant.from}${extraMoments ? ` · ${extraMoments} more moments` : ''}` : 'Your garden is ready when you are.'}</span>
-            <button className="primary" disabled={tended} onClick={tendGarden} type="button">{tended ? 'Tended today' : 'Tend garden'}</button>
+            <button className="primary" disabled={tended || care.pending} aria-busy={care.pending} onClick={tendGarden} type="button">{tended ? 'Tended today' : 'Tend garden'}</button>
           </div>
+          {care.error && <p className="form-error" role="alert">{care.error}</p>}
         </div>
       </div>
     </div>

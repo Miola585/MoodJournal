@@ -82,6 +82,8 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     expect(await spriteImage()).toBe(activeSprite);
     await page.getByRole('button', { name: 'Undo' }).click();
     await expect(page.locator('.mini-insight')).toContainText('0 connections');
+    await expect(firstStar).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByRole('button', { name: 'Star 2', exact: true })).toHaveAttribute('aria-pressed', 'false');
     const start = await firstStar.boundingBox();
     const end = await page.getByRole('button', { name: 'Star 3', exact: true }).boundingBox();
     await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
@@ -102,6 +104,8 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await expect(page.locator('.orbit-map')).toBeVisible();
     await expect(page.locator('.game-route-shell')).toHaveJSProperty('offsetTop', 0);
     await expect(page.locator('.orbit-ring-line')).toHaveCount(3);
+    await expect(page.locator('.planet img')).toHaveCount(6);
+    await expect.poll(() => page.locator('.planet img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true);
     expect(await page.locator('.orbit-ring-line').first().evaluate((ring) => getComputedStyle(ring).fill)).toBe('none');
     await page.screenshot({ path: testInfo.outputPath(`orbit-${viewport.width}.png`), fullPage: true });
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
@@ -141,6 +145,136 @@ test('mood orbit selects without moving, supports distances and saves a reflecti
   await page.reload();
   await page.getByRole('button', { name: 'Reflect' }).click();
   await expect(page.getByRole('textbox', { name: 'Anything you would like to remember?' })).toHaveValue('A little closer today.');
+});
+
+test('constellation undo preserves shared endpoints and saves only remaining connected stars', async ({ page }) => {
+  await page.goto('/games/constellation');
+  const star = (id) => page.getByRole('button', { name: `Star ${id}`, exact: true });
+  await star(1).press('Enter');
+  await star(2).press('Enter');
+  await star(2).press('Enter');
+  await star(3).press('Enter');
+  await page.getByRole('button', { name: 'Undo', exact: true }).click();
+  await expect(star(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect(star(2)).toHaveAttribute('aria-pressed', 'true');
+  await expect(star(3)).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Finish constellation' }).click();
+  await expect.poll(() => page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('moodJournalPrivateV1:local-browser:gameConstellations') || '[]');
+    return saved[0]?.stars;
+  })).toEqual([1, 2]);
+});
+
+test('garden care ignores the old shared flag and survives a reload', async ({ page }) => {
+  await page.addInitScript((today) => localStorage.setItem(`gardenTendedToday:${today}`, 'true'), dateKey(0));
+  await page.goto('/games/garden');
+  await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Tend garden' }).click();
+  await expect(page.getByRole('button', { name: 'Tended today' })).toBeDisabled();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Tended today' })).toBeDisabled();
+});
+
+test('constellation rejects duplicate connections in either direction without a preview or twinkle', async ({ page }) => {
+  await page.goto('/games/constellation');
+  const star = (id) => page.getByRole('button', { name: `Star ${id}`, exact: true });
+  await star(1).click();
+  await star(2).click();
+  await expect(page.locator('.endpoint-sparkle')).toHaveCount(0);
+  for (const [fromId, toId] of [[1, 2], [2, 1]]) {
+    const from = await star(fromId).boundingBox();
+    const to = await star(toId).boundingBox();
+    await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 8 });
+    await expect(page.locator('.preview-lines line')).toHaveAttribute('visibility', 'hidden');
+    await expect(page.locator('.valid-target')).toHaveCount(0);
+    await page.mouse.up();
+    await expect(page.locator('.mini-insight')).toContainText('1 connection');
+    await expect(page.locator('.endpoint-sparkle')).toHaveCount(0);
+  }
+  await star(2).press('Enter');
+  await star(1).press('Enter');
+  await expect(page.locator('.mini-insight')).toContainText('1 connection');
+  await expect(page.locator('.endpoint-sparkle')).toHaveCount(0);
+});
+
+test('constellation undo has a clear enabled style distinct from its disabled state', async ({ page }, testInfo) => {
+  await page.goto('/games/constellation');
+  const undo = page.getByRole('button', { name: 'Undo', exact: true });
+  await expect(undo).toBeDisabled();
+  await expect(undo).toHaveCSS('background-color', 'rgb(37, 34, 57)');
+  await page.getByRole('button', { name: 'Star 1', exact: true }).click();
+  await page.getByRole('button', { name: 'Star 2', exact: true }).click();
+  await expect(undo).toBeEnabled();
+  await expect(undo).toHaveCSS('opacity', '1');
+  await expect(undo).toHaveCSS('color', 'rgb(244, 239, 255)');
+  await expect(undo).toHaveCSS('background-color', 'rgb(64, 57, 87)');
+  await page.screenshot({ path: testInfo.outputPath('constellation-undo-enabled.png'), fullPage: true });
+  await undo.hover();
+  await expect(undo).toHaveCSS('background-color', 'rgb(85, 73, 112)');
+  await undo.click();
+  await expect(undo).toBeDisabled();
+  await expect(undo).toHaveCSS('background-color', 'rgb(37, 34, 57)');
+});
+
+test('garden care shows a save error without claiming it was tended', async ({ page }) => {
+  await page.goto('/games/garden');
+  await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
+  await page.evaluate(() => {
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.includes('gardenCare')) throw new Error('Garden storage is full.');
+      return setItem.call(this, key, value);
+    };
+  });
+  await page.getByRole('button', { name: 'Tend garden' }).click();
+  await expect(page.getByRole('alert')).toContainText('Garden storage is full.');
+  await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
+});
+
+test.describe('touch games', () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+  test('orbit touch drag and landscape keep artwork and controls usable', async ({ page }, testInfo) => {
+    await page.goto('/games/orbit');
+    const planet = page.getByRole('button', { name: 'Move Emotions planet' });
+    const bounds = await planet.boundingBox();
+    const scene = await page.locator('.orbit-map').boundingBox();
+    const session = await page.context().newCDPSession(page);
+    await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }] });
+    await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: scene.x + scene.width * 0.9, y: scene.y + scene.height / 2 }] });
+    await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(planet).toHaveClass(/far/u);
+    await page.setViewportSize({ width: 844, height: 390 });
+    await expect(page.locator('.orbit-map')).toBeVisible();
+    const landscapeScene = await page.locator('.orbit-map').boundingBox();
+    expect(landscapeScene.height).toBeGreaterThan(180);
+    await expect(page.getByRole('button', { name: 'Finish orbit', exact: true })).toBeInViewport();
+    await page.screenshot({ path: testInfo.outputPath('orbit-landscape.png'), fullPage: true });
+  });
+
+  test('constellation touch connections and landscape avoid the title and toolbar', async ({ page }, testInfo) => {
+    await page.goto('/games/constellation');
+    await page.getByRole('button', { name: 'Star 1', exact: true }).tap();
+    await page.getByRole('button', { name: 'Star 2', exact: true }).tap();
+    await expect(page.locator('.mini-insight')).toContainText('1 connection');
+    await expect(page.locator('.endpoint-sparkle')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Star 2', exact: true }).tap();
+    await page.getByRole('button', { name: 'Star 1', exact: true }).tap();
+    await expect(page.locator('.mini-insight')).toContainText('1 connection');
+    await expect(page.locator('.endpoint-sparkle')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Undo', exact: true }).tap();
+    await expect(page.getByRole('button', { name: 'Star 1', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await page.setViewportSize({ width: 844, height: 390 });
+    const layout = await page.evaluate(() => ({
+      introBottom: document.querySelector('.immersive-game-intro').getBoundingClientRect().bottom,
+      toolbarTop: document.querySelector('.constellation-toolbar').getBoundingClientRect().top,
+      stars: [...document.querySelectorAll('.constellation-stage .star')].map((star) => ({ top: star.getBoundingClientRect().top, bottom: star.getBoundingClientRect().bottom }))
+    }));
+    expect(Math.min(...layout.stars.map((star) => star.top))).toBeGreaterThan(layout.introBottom);
+    expect(Math.max(...layout.stars.map((star) => star.bottom))).toBeLessThan(layout.toolbarTop);
+    await page.screenshot({ path: testInfo.outputPath('constellation-landscape.png'), fullPage: true });
+  });
 });
 
 test('mood orbit fits a narrow phone even when a planet moves to the far edge', async ({ page }) => {

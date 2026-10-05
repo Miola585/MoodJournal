@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Undo2 } from 'lucide-react';
 import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
+import { constellationArtwork as starSprites } from './gameArtwork';
 import {
   buildConnections,
   constellationStars,
@@ -12,33 +13,6 @@ import {
 } from './gameUtils';
 
 const constellationStorageKey = 'gameConstellations';
-const starSprites = [
-  new URL('../../../img/stars/trimmed/four_point_star.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/four_point_star_purple.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/inv_fp.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/inv_purp.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/p_star.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/purple_star.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star1.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star2.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star3.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star4.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star5.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star6.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star7.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star8.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star9.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star10.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star11.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star12.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star13.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star14.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star15.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star16.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star17.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/star18.png', import.meta.url).href,
-  new URL('../../../img/stars/trimmed/yellow_star.png', import.meta.url).href
-];
 
 export function ConstellationGallery({ entries, moods }) {
   const constellations = entries.filter((entry) => (entry.tags || []).includes('constellation'));
@@ -64,7 +38,6 @@ export function ConstellationGame({ mood, privateStorage }) {
   const starfieldRef = useRef(null);
   const previewLineRef = useRef(null);
   const pointerGestureRef = useRef(null);
-  const [selectedStars, setSelectedStars] = useState([]);
   const [connections, setConnections] = useState([]);
   const [dragStart, setDragStart] = useState(null);
   const [targetStar, setTargetStar] = useState(null);
@@ -77,6 +50,7 @@ export function ConstellationGame({ mood, privateStorage }) {
     [],
     (value) => Array.isArray(value) ? value.slice(0, 12) : []
   );
+  const selectedStars = [...new Set(connections.flat())];
   const selectedStarData = constellationStars.filter((star) => selectedStars.includes(star.id));
   const archetype = detectConstellationArchetype(selectedStarData, connections);
 
@@ -87,8 +61,6 @@ export function ConstellationGame({ mood, privateStorage }) {
       stars: constellationStars.filter((star) => savedConstellation.stars.includes(star.id))
     };
   }, [savedConstellation]);
-
-  const addStar = (starId) => setSelectedStars((current) => current.includes(starId) ? current : [...current, starId]);
 
   const nearestStar = (clientX, clientY, excludeId) => {
     const bounds = starfieldRef.current?.getBoundingClientRect();
@@ -114,6 +86,10 @@ export function ConstellationGame({ mood, privateStorage }) {
     setTargetStar(null);
   };
 
+  const hasConnection = (fromId, toId) => connections.some(([from, to]) => (
+    (from === fromId && to === toId) || (from === toId && to === fromId)
+  ));
+
   const updatePreview = (event) => {
     const gesture = pointerGestureRef.current;
     if (gesture && gesture.pointerId !== event.pointerId) return;
@@ -123,6 +99,10 @@ export function ConstellationGame({ mood, privateStorage }) {
     const line = previewLineRef.current;
     if (!from || !bounds || !line) return;
     const target = nearestStar(event.clientX, event.clientY, fromId);
+    if (target && hasConnection(fromId, target.id)) {
+      hidePreview();
+      return;
+    }
     const x = target?.x ?? Math.max(0, Math.min(100, ((event.clientX - bounds.left) / bounds.width) * 100));
     const y = target?.y ?? Math.max(0, Math.min(100, ((event.clientY - bounds.top) / bounds.height) * 100));
     line.setAttribute('x1', from.x);
@@ -135,9 +115,8 @@ export function ConstellationGame({ mood, privateStorage }) {
   };
 
   const connectStars = (fromId, toId) => {
-    if (!fromId || !toId || fromId === toId) return;
-    addStar(fromId);
-    addStar(toId);
+    if (!fromId || !toId || fromId === toId || hasConnection(fromId, toId)) return;
+    setSavedConstellation(null);
     setConnections((current) => {
       const exists = current.some(([from, to]) => (
         (from === fromId && to === toId) || (from === toId && to === fromId)
@@ -173,6 +152,8 @@ export function ConstellationGame({ mood, privateStorage }) {
 
   const removeLastConnection = () => {
     setConnections((current) => current.slice(0, -1));
+    stopDragging();
+    setPulsingStars([]);
     setSavedConstellation(null);
   };
 
@@ -213,7 +194,7 @@ export function ConstellationGame({ mood, privateStorage }) {
             <button
               aria-label={`Star ${star.id}`}
               aria-pressed={connected}
-              className={`${connected ? 'star selected' : 'star'} ${dragStart === star.id ? 'dragging' : ''} ${validTarget ? 'valid-target' : ''} ${pulsingStars.includes(star.id) ? 'pulse' : ''}`}
+              className={`${connected || dragStart === star.id ? 'star selected' : 'star'} ${dragStart === star.id ? 'dragging' : ''} ${validTarget ? 'valid-target' : ''} ${pulsingStars.includes(star.id) ? 'pulse' : ''}`}
               key={star.id}
               onKeyDown={(event) => {
                 if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -224,7 +205,6 @@ export function ConstellationGame({ mood, privateStorage }) {
                   return;
                 }
                 setDragStart(star.id);
-                addStar(star.id);
               }}
               onPointerDown={(event) => {
                 if (!event.isPrimary || event.button !== 0 || pointerGestureRef.current) return;
@@ -239,7 +219,6 @@ export function ConstellationGame({ mood, privateStorage }) {
                 };
                 if (!dragStart) {
                   setDragStart(star.id);
-                  addStar(star.id);
                 }
               }}
               style={{
