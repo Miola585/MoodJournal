@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { getOrbitPrompt, normalizeStoredOrbit, orbitRingLabels, orbitRings, planetSeeds } from './gameUtils';
 import { todayKey } from '../../utils/journalUtils';
-import { orbitArtwork } from './gameArtwork';
+import { orbitArtwork, orbitCenterArtwork } from './gameArtwork';
 
 const ringRadii = { close: 0.17, between: 0.3, far: 0.43 };
 const planetLabels = Object.fromEntries(Object.entries(orbitArtwork).map(([name, artwork]) => [name, artwork.label]));
@@ -92,7 +92,7 @@ export function OrbitGame({ privateStorage }) {
           ))}
         </svg>
         <span className="orbit-center-glow" aria-hidden="true" />
-        <div className="orbit-center" aria-hidden="true"><span>Me today</span></div>
+        <div className="orbit-center"><img src={orbitCenterArtwork} alt="" draggable={false} /><span className="orbit-planet-label">Me today</span></div>
         {orbitRings.map((orbit) => (
           <div className={`orbit-ring ${orbit}`} key={orbit} style={{ '--ring-radius': `${ringRadii[orbit] * 100}%` }}>
             <span>{orbitRingLabels[orbit]}</span>

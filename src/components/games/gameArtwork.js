@@ -1,4 +1,6 @@
 // Keep the transparent canvas and filenames when recoloring; these mappings own the artwork.
+export const orbitCenterArtwork = new URL('../../../img/Planets for orbit/Sun.png', import.meta.url).href;
+
 export const orbitArtwork = {
   Emotion: { label: 'Emotions', image: new URL('../../../img/Planets for orbit/Neptune.png', import.meta.url).href, scale: 1.25 },
   Thought: { label: 'Thoughts', image: new URL('../../../img/Planets for orbit/Uranus.png', import.meta.url).href, scale: 1 },

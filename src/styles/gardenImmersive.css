@@ -807,13 +807,21 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 
 .app.immersive-game-active .standalone-game-screen-orbit .orbit-center {
   width: clamp(58px, 7vmin, 80px);
-  border: 1px solid rgba(242, 235, 214, 0.7);
-  background: radial-gradient(circle at 35% 28%, #f8f3df, #b7c4b5);
+  border: 0;
+  background: transparent;
   color: #37433e;
   font-size: 0.75rem;
   font-weight: 600;
-  box-shadow: 0 0 35px rgba(223, 215, 165, 0.17);
+  box-shadow: none;
   pointer-events: none;
+}
+
+.standalone-game-screen-orbit .orbit-center img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 12px rgba(255, 226, 140, 0.3));
 }
 
 .app.immersive-game-active .standalone-game-screen-orbit .orbit-center-glow {

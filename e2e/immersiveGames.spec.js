@@ -105,6 +105,9 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await expect(page.locator('.game-route-shell')).toHaveJSProperty('offsetTop', 0);
     await expect(page.locator('.orbit-ring-line')).toHaveCount(3);
     await expect(page.locator('.planet img')).toHaveCount(6);
+    await expect(page.locator('.orbit-center img')).toHaveAttribute('src', /Sun\.png/u);
+    await expect.poll(() => page.locator('.orbit-center img').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+    await expect(page.locator('.orbit-center')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect.poll(() => page.locator('.planet img').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0))).toBe(true);
     expect(await page.locator('.orbit-ring-line').first().evaluate((ring) => getComputedStyle(ring).fill)).toBe('none');
     await page.screenshot({ path: testInfo.outputPath(`orbit-${viewport.width}.png`), fullPage: true });
