@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Accessibility, Bell, BookOpen, Check, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, ShieldCheck, Sun, Sunset, Type, UserRound } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Accessibility, Bell, BookOpen, Check, ChevronRight, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, ShieldCheck, Sun, Sunset, Type, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { todayKey } from '../utils/journalUtils';
 import { buildImportedJournal, compareJournalImports, MAX_IMPORT_FILE_BYTES, parseJournalBackup } from '../utils/journalImport';
@@ -14,6 +14,7 @@ export function Settings({
   const usesSunriseWorld = siteTheme === 'sunrise';
   const DarkModeIcon = usesSunriseWorld ? Sunset : Moon;
   const [pinDraft, setPinDraft] = useState(pin);
+  const [privacyPanel, setPrivacyPanel] = useState('');
   const [pinRecoveryOpen, setPinRecoveryOpen] = useState(false);
   const [pinRecoveryPassword, setPinRecoveryPassword] = useState('');
   const [pinRecoveryMessage, setPinRecoveryMessage] = useState('');
@@ -172,6 +173,17 @@ export function Settings({
     setPinRecoveryOpen(false);
     setPinRecoveryMessage('The device PIN was removed. You can set a new one whenever you are ready.');
   };
+  const closePrivacy = () => {
+    if (journalEncryption.busy || pinRecoveryBusy || recoveryKey) return;
+    setPrivacyPanel('');
+    setPinDraft('');
+    setJournalCodeDraft('');
+    setEncryptionPassphrase('');
+    setEncryptionConfirmation('');
+    setNewEncryptionPassphrase('');
+    setPinRecoveryPassword('');
+    setPinRecoveryOpen(false);
+  };
 
   return (
     <section className="screen app-screen settings-screen">
@@ -236,6 +248,12 @@ export function Settings({
       </SettingsSection>
 
       <SettingsSection icon={ShieldCheck} title="Privacy" description="Protect what you write in storage and add privacy screens on this device.">
+        <PrivacyRow icon={LockKeyhole} title="Journal lock" description={journalLockCode ? 'On. Hide journal views on this device.' : 'Cover your journal with a separate code on this device.'} action={journalLockCode ? 'Manage' : 'Set up'} onClick={() => { setJournalCodeDraft(''); setPrivacyPanel('journal'); }} />
+        <PrivacyRow icon={KeyRound} title="App PIN" description={pin ? 'On. Cover the app when it is locked.' : 'Add a four-digit privacy screen for this app.'} action={pin ? 'Manage' : 'Set up'} onClick={() => { setPinDraft(''); setPinRecoveryMessage(''); setPrivacyPanel('pin'); }} />
+        <PrivacyRow icon={ShieldCheck} title="Stored-entry encryption" description={journalEncryption.enabled ? 'On. Saved journal content is encrypted.' : 'Protect saved content with a separate passphrase.'} action={journalEncryption.enabled ? 'Manage' : 'Learn more'} onClick={() => { setEncryptionMessage(''); setPrivacyPanel('encryption'); }} />
+        <p className="privacy-note"><LockKeyhole aria-hidden="true" size={16} />PIN and journal locks only hide the interface. They do not encrypt browser storage. Stored-entry encryption protects saved content.</p>
+
+        {privacyPanel === 'encryption' && <PrivacyDialog title="Stored-entry encryption" icon={ShieldCheck} onClose={closePrivacy} busy={journalEncryption.busy || Boolean(recoveryKey)}>
         <div className={journalEncryption.enabled ? 'encryption-status enabled' : 'encryption-status'}>
           <span className="encryption-status-icon"><KeyRound aria-hidden="true" size={20} /></span>
           <div>
@@ -261,7 +279,7 @@ export function Settings({
           <label>New journal passphrase<input autoComplete="new-password" onChange={(event) => setNewEncryptionPassphrase(event.target.value)} placeholder="At least 12 characters" type="password" value={newEncryptionPassphrase} /></label>
           <div className="settings-actions">
             <button className="secondary-button" disabled={journalEncryption.busy || !newEncryptionPassphrase} onClick={changeEncryptionPassphrase} type="button">Change passphrase</button>
-            <button className="ghost-button" onClick={journalEncryption.lock} type="button"><LockKeyhole aria-hidden="true" size={16} />Lock journal now</button>
+            <button className="ghost-button" disabled={Boolean(recoveryKey) || journalEncryption.busy} onClick={journalEncryption.lock} type="button"><LockKeyhole aria-hidden="true" size={16} />Lock journal now</button>
           </div>
         </div>}
 
@@ -277,21 +295,28 @@ export function Settings({
         </div>}
         {encryptionMessage && <p className="settings-message" role="status">{encryptionMessage}</p>}
         {journalEncryption.error && <p className="form-error" role="alert">{journalEncryption.error}</p>}
+        </PrivacyDialog>}
 
-        <h3 className="settings-subheading">Local privacy screens</h3>
+        {privacyPanel === 'pin' && <PrivacyDialog title={pin ? 'Manage your app PIN' : 'A little privacy for your app'} icon={KeyRound} onClose={closePrivacy} busy={pinRecoveryBusy}>
+        <p>Choose four digits to cover the app. This PIN is stored on this browser and is not encryption. Do not reuse a banking or device PIN.</p>
         <div className="settings-control-grid">
-          <label>App PIN<input inputMode="numeric" onChange={(event) => setPinDraft(event.target.value)} placeholder="4 digits" type="password" value={pinDraft} /></label>
-          <div className="settings-field-actions"><button className="secondary-button" onClick={() => setPin(pinDraft)} type="button">{pin ? 'Update PIN' : 'Set PIN'}</button>{pin && <button className="ghost-button" onClick={() => { setPinDraft(''); setPin(''); }} type="button">Remove</button>}{pin && user && <button className="ghost-button" onClick={() => { setPinRecoveryOpen((open) => !open); setPinRecoveryMessage(''); }} type="button">Forgot PIN?</button>}</div>
+          <label>New app PIN<input autoComplete="new-password" inputMode="numeric" maxLength={4} onChange={(event) => setPinDraft(event.target.value.replace(/\D/g, ''))} placeholder="4 digits" type="password" value={pinDraft} /></label>
+          <div className="settings-field-actions"><button className="primary-button" disabled={!/^\d{4}$/.test(pinDraft)} onClick={() => { setPrivacyPanel(''); setPin(pinDraft); setPinDraft(''); }} type="button">{pin ? 'Update PIN' : 'Set PIN'}</button>{pin && <button className="ghost-button" onClick={() => { setPinDraft(''); setPin(''); }} type="button">Remove PIN</button>}{pin && user && <button className="ghost-button" onClick={() => { setPinRecoveryOpen((open) => !open); setPinRecoveryMessage(''); }} type="button">Forgot PIN?</button>}</div>
           {pinRecoveryOpen && <div className="settings-inline-recovery">
             <p>Confirm your account password to remove the forgotten device PIN. This does not change your encrypted-journal passphrase.</p>
             <label>Account password<input autoComplete="current-password" onChange={(event) => setPinRecoveryPassword(event.target.value)} type="password" value={pinRecoveryPassword} /></label>
             <div className="settings-actions"><button className="secondary-button" disabled={pinRecoveryBusy || !pinRecoveryPassword} onClick={resetForgottenPin} type="button">{pinRecoveryBusy ? 'Checking...' : 'Reset PIN'}</button><button className="ghost-button" onClick={() => { setPinRecoveryOpen(false); setPinRecoveryPassword(''); setPinRecoveryMessage(''); }} type="button">Cancel</button></div>
           </div>}
-          <label>Journal lock<input onChange={(event) => setJournalCodeDraft(event.target.value)} placeholder="Passphrase or PIN" type="password" value={journalCodeDraft} /></label>
-          <div className="settings-field-actions"><button className="secondary-button" onClick={() => setJournalLockCode(journalCodeDraft)} type="button">{journalLockCode ? 'Update lock' : 'Enable lock'}</button>{journalLockCode && <button className="ghost-button" onClick={() => { setJournalCodeDraft(''); setJournalLockCode(''); }} type="button">Remove</button>}{journalLockCode && <button className="ghost-button" onClick={() => setJournalUnlocked(!journalUnlocked)} type="button">{journalUnlocked ? 'Hide now' : 'Keep revealed'}</button>}</div>
         </div>
         {pinRecoveryMessage && <p className="settings-message" role="status">{pinRecoveryMessage}</p>}
-        <p className="privacy-note"><LockKeyhole aria-hidden="true" size={16} />These PIN and journal-lock controls only hide the interface on this device. Stored-content encryption above is what prevents readable entries from being saved.</p>
+        </PrivacyDialog>}
+        {privacyPanel === 'journal' && <PrivacyDialog title={journalLockCode ? 'Manage your journal lock' : 'A little privacy for your journal'} icon={LockKeyhole} onClose={closePrivacy}>
+        <p>Choose a separate code to hide journal views on this device. This code is stored in your browser; it is an interface lock, not encryption.</p>
+        <div className="settings-control-grid">
+          <label>Journal lock<input onChange={(event) => setJournalCodeDraft(event.target.value)} placeholder="Passphrase or PIN" type="password" value={journalCodeDraft} /></label>
+          <div className="settings-field-actions"><button className="primary-button" disabled={!journalCodeDraft.trim()} onClick={() => { setJournalLockCode(journalCodeDraft); closePrivacy(); }} type="button">{journalLockCode ? 'Update lock' : 'Enable lock'}</button>{journalLockCode && <button className="ghost-button" onClick={() => { setJournalCodeDraft(''); setJournalLockCode(''); }} type="button">Remove lock</button>}{journalLockCode && <button className="ghost-button" onClick={() => setJournalUnlocked(!journalUnlocked)} type="button">{journalUnlocked ? 'Hide now' : 'Keep revealed'}</button>}</div>
+        </div>
+        </PrivacyDialog>}
       </SettingsSection>
 
       <SettingsSection icon={Database} title="Privacy & Data" description="Keep a copy of your journal or restore one you exported earlier.">
@@ -322,6 +347,34 @@ export function Settings({
       </SettingsSection>
     </section>
   );
+}
+
+function PrivacyRow({ icon: Icon, title, description, action, onClick }) {
+  return <div className="settings-privacy-row">
+    <span className="settings-section-icon"><Icon aria-hidden="true" size={20} /></span>
+    <div><strong>{title}</strong><p>{description}</p></div>
+    <button type="button" className="secondary-button" aria-label={`${action}: ${title}`} onClick={onClick}>{action}<ChevronRight size={16} aria-hidden="true" /></button>
+  </div>;
+}
+
+function PrivacyDialog({ title, icon: Icon, onClose, busy = false, children }) {
+  const dialogRef = useRef(null);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const trigger = document.activeElement;
+    dialog.showModal();
+    dialog.querySelector('h2')?.focus();
+    return () => { dialog.close(); trigger?.focus(); };
+  }, []);
+  return <dialog ref={dialogRef} className="settings-privacy-dialog" aria-labelledby="privacy-dialog-title" onCancel={(event) => { event.preventDefault(); onClose(); }}>
+    <header>
+      <span className="settings-section-icon"><Icon aria-hidden="true" size={24} /></span>
+      <button className="ghost-button" aria-label="Close privacy settings" title="Close" disabled={busy} onClick={onClose} type="button"><X aria-hidden="true" size={20} /></button>
+    </header>
+    <h2 id="privacy-dialog-title" tabIndex={-1}>{title}</h2>
+    {children}
+    <div className="settings-actions"><button className="secondary-button" disabled={busy} onClick={onClose} type="button">Done</button></div>
+  </dialog>;
 }
 
 function SettingsSection({ icon: Icon, title, description, children }) {
