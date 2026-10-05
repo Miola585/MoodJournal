@@ -8,7 +8,7 @@ const seafoamSeashellUrl = new URL('../../../img/Theme Img/seashell.png', import
 const seafoamFishUrl = new URL('../../../img/Theme Img/fish.png', import.meta.url).href;
 const seafoamStarfishUrl = new URL('../../../img/Theme Img/starfish.png', import.meta.url).href;
 const seafoamCoralUrl = new URL('../../../img/Theme Img/coral.png', import.meta.url).href;
-const nightCelestialUrl = new URL('../../../img/Theme Img/night-celestial-accent.png', import.meta.url).href;
+const nightCrescentUrl = new URL('../../../img/Theme Img/cresent_moon.png', import.meta.url).href;
 const nightLightMoonUrl = new URL('../../../img/Theme Img/night-moon2-light-accent.png', import.meta.url).href;
 const nightStarFlareUrl = new URL('../../../img/Theme Img/star_flare.png', import.meta.url).href;
 const nightBannerUrl = new URL('../../../img/Theme Img/night-banner-accent.png', import.meta.url).href;
@@ -37,7 +37,7 @@ export function ThemeAtmosphere({ siteTheme, dark }) {
       <img className="theme-art-image theme-art-ocean-starfish" src={seafoamStarfishUrl} alt="" />
       <img className="theme-art-image theme-art-ocean-coral" src={seafoamCoralUrl} alt="" />
       {siteTheme === 'night' && (dark
-        ? <img className="theme-art-image theme-art-night-celestial" src={nightCelestialUrl} alt="" />
+        ? <img className="theme-art-image theme-art-night-crescent" src={nightCrescentUrl} alt="" />
         : <>
             <img className="theme-art-image theme-art-night-moon-light" src={nightLightMoonUrl} alt="" />
             <img className="theme-art-image theme-art-night-star-flare" src={nightStarFlareUrl} alt="" />

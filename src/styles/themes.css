@@ -395,7 +395,7 @@
 }
 
 .app.theme-night.dark {
-  --world-motif-image: url('../../img/Theme Img/night-celestial-accent.png');
+  --world-motif-image: url('../../img/Theme Img/cresent_moon.png');
   --bg: #121327;
   --text: #f5f1ff;
   --link-text: #d8d1ff;
@@ -919,9 +919,9 @@
   animation: none;
 }
 
-.theme-art-night-celestial {
-  width: min(440px, 34vw);
-  height: min(440px, 34vw);
+.theme-art-night-crescent {
+  width: min(220px, 20vw);
+  height: min(220px, 20vw);
   inset: 7% 4% auto auto;
   opacity: 0.14;
   transform: rotate(8deg);
@@ -984,7 +984,7 @@
 .app.theme-night:not(.dark) .theme-art-night-moon-light,
 .app.theme-night:not(.dark) .theme-art-night-star-flare,
 .app.theme-night:not(.dark) .theme-art-night-banner-light,
-.app.theme-night.dark .theme-art-night-celestial {
+.app.theme-night.dark .theme-art-night-crescent {
   display: block;
 }
 
@@ -995,7 +995,7 @@
 
 .app.theme-night:not(.dark) .theme-art-night-twinkle-dark,
 .app.theme-night:not(.dark) .theme-art-night-accent-dark,
-.app.theme-night:not(.dark) .theme-art-night-celestial,
+.app.theme-night:not(.dark) .theme-art-night-crescent,
 .app.theme-night.dark .theme-art-night-star-flare,
 .app.theme-night.dark .theme-art-night-banner-light,
 .app.theme-night.dark .theme-art-night-moon-light {
@@ -1028,7 +1028,7 @@
   opacity: 0.52;
 }
 
-.app.theme-night.dark .theme-art-night-celestial {
+.app.theme-night.dark .theme-art-night-crescent {
   opacity: 0.17;
   filter: saturate(0.9) brightness(1.18);
 }

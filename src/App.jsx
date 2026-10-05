@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
 import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, isMissingEntryTypeError, normalizeDailyPrimaries, normalizeReminder, normalizeUsername, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
@@ -782,6 +782,7 @@ function App() {
           </div>
         </div>
         <nav className="footer-links" aria-label="Journaling resources">
+          <Link to="/about#art-credits">Art credits</Link>
           <a href="https://positivepsychology.com/benefits-of-journaling/" target="_blank" rel="noreferrer">
             <BookOpen aria-hidden="true" size={16} strokeWidth={2.2} />
             Learn More
