@@ -3201,6 +3201,15 @@ button.topnav-menu-button {
     display: grid;
   }
 
+  .topnav-shell:has(.reminder-menu) {
+    position: static;
+  }
+
+  .topnav.open:has(.reminder-menu) {
+    right: 16px;
+    max-height: calc(100dvh - 120px);
+  }
+
   .topnav-link,
   .more-nav,
   .more-nav > .topnav-link {

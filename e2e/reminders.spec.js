@@ -49,6 +49,11 @@ for (const width of [1280, 390]) {
     await page.locator('.reminder-menu').getByRole('button', { name: 'Turn off', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Turn reminders on', exact: true })).toHaveCount(1);
     await expect(page.locator('.reminder-menu')).toContainText('Reminders are off.');
+    const menu = page.locator(width > 720 ? '.more-nav-menu' : '.topnav.open');
+    expect(await menu.evaluate((node) => {
+      const box = node.getBoundingClientRect();
+      return box.left >= 0 && box.right <= innerWidth + 1 && box.top >= 0 && box.bottom <= innerHeight;
+    })).toBe(true);
     await page.screenshot({ path: info.outputPath(`reminders-${width}.png`) });
     expect(await page.locator('.reminder-menu').evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('journalReminder')).enabled)).toBe(false);

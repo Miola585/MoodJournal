@@ -674,6 +674,15 @@ main.main-home {
   box-shadow: none;
 }
 
+@media (min-width: 721px) {
+  .more-nav-menu:has(.reminder-menu) {
+    width: min(360px, calc(100vw - 32px));
+    max-height: calc(100dvh - 100px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
 .profile-menu {
   position: relative;
   flex: 0 0 auto;
