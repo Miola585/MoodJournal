@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { JournalTags } from '../components/journal/JournalTags';
 import { CalendarDays, ChevronDown, Sparkles } from 'lucide-react';
 import { createEntry, factors, guidedPrompts, moods } from '../data/journalData';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -250,9 +251,7 @@ export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
               </Disclosure>
               <Disclosure hint="Add searchable words or one kind next step." number="2" title="Tiny extras" open={showExtraContext} onToggle={() => setShowExtraContext((current) => !current)}>
                 <div className="two-col">
-                  <label>Tags
-                    <input value={entry.tags.join(', ')} onChange={(event) => setField('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="school, family, tired, nervous" />
-                  </label>
+                  <JournalTags entry={entry} onChange={(tags) => setField('tags', tags)} />
                   <label>One small next step
                     <input value={entry.copingStep} onChange={(event) => setField('copingStep', event.target.value)} placeholder="drink water, stretch, message someone" />
                   </label>

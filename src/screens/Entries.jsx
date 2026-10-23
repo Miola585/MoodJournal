@@ -3,6 +3,8 @@ import { Bookmark, BookOpen, FileText, List, PenLine, RotateCcw, Save, Search, T
 import { checkInTitleAfterMoodChange, createFreeWriteEntry, moods } from '../data/journalData';
 import { isCheckIn, isJournalDateAllowed, isVisibleJournalEntry, journalDayNumber, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
+import { JournalTags } from '../components/journal/JournalTags';
+import { effectiveEntryTags, matchesEntryTag } from '../utils/journalTags';
 import { PageHeader } from '../components/layout/PageHeader';
 import { useJournalDraft } from '../hooks/useJournalDraft';
 import { DraftRecoveryNotice, SaveState } from '../components/journal/DraftRecoveryNotice';
@@ -30,10 +32,10 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
   }, []);
   const journalEntries = entries.filter(isVisibleJournalEntry).filter((entry) => !pendingDeletes.has(entry.id));
   const filtered = journalEntries.filter((entry) => {
-    const text = `${entry.note} ${entry.mood} ${entry.specificFeeling} ${(entry.tags || []).join(' ')} ${(entry.factors || []).join(' ')}`.toLowerCase();
+    const text = `${entry.note} ${entry.mood} ${entry.specificFeeling} ${effectiveEntryTags(entry).join(' ')} ${(entry.factors || []).join(' ')}`.toLowerCase();
     const matchesKeyword = text.includes(query.toLowerCase());
     const matchesMood = !moodFilter || (isCheckIn(entry) && entry.mood === moodFilter);
-    const matchesTag = !tagFilter || (entry.tags || []).some((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase()));
+    const matchesTag = matchesEntryTag(entry, tagFilter);
     const matchesDate = !dateFilter || entry.dateKey === dateFilter;
     const matchesBookmark = !bookmarkFilter || entry.bookmarked;
     return matchesKeyword && matchesMood && matchesTag && matchesDate && matchesBookmark;
@@ -333,7 +335,6 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onNotesCha
       return;
     }
   };
-  const visibleTags = (draft.tags || []).filter((tag) => tag !== 'free-write');
   const journalNotes = getJournalNotes(draft);
   const addNote = () => {
     if (journalNotes.length >= MAX_JOURNAL_NOTES) return;
@@ -410,12 +411,9 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onNotesCha
         </div>
         {bookOpen && <StickerBook discoveries={discoveries} onChoose={chooseSticker} onClose={onBookClose} onDropSticker={dropSticker} onPageChange={setBookPage} onPlacementRegionChange={setPlacementRegion} pageIndex={bookPage} placementRegion={placementRegion} />}
       </div>
-      {!checkIn && <div className="freewrite-page-footer">
-          <label>Tags
-            <input value={visibleTags.join(', ')} onChange={(event) => onFieldChange('tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} placeholder="memory, school, idea" />
-            {visibleTags.length > 0 && <span className="journal-tag-preview">{visibleTags.map((tag) => <small key={tag}>#{tag}</small>)}</span>}
-          </label>
-      </div>}
+      <div className="freewrite-page-footer">
+        <JournalTags entry={draft} onChange={(tags) => onFieldChange('tags', tags)} />
+      </div>
       <span className="notebook-page-corner" aria-hidden="true" />
     </div>
     <div className="journal-writing-bar">

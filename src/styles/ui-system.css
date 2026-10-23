@@ -2878,9 +2878,17 @@ button.topnav-menu-button {
   background: color-mix(in srgb, var(--surface-secondary) 76%, var(--notebook-paper-surface));
 }
 
-.freewrite-page-footer:has(> label:only-child) {
+.freewrite-page-footer:has(> :only-child) {
   grid-template-columns: 1fr;
 }
+
+.journal-tags { min-width: 0; text-align: left; }
+.journal-tags summary { cursor: pointer; padding-block: 10px; color: var(--text-primary); }
+.journal-tags summary:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: 3px; }
+.journal-tags input { min-width: 0; width: 100%; }
+.journal-inline-tags { display: grid; gap: 8px; margin-top: 12px; color: var(--text-secondary); }
+.journal-tags .journal-tag-preview small { max-width: 100%; overflow-wrap: anywhere; }
+.entry-card .meta > span { overflow-wrap: anywhere; min-width: 0; }
 
 .freewrite-writing-field textarea {
   width: 100%;

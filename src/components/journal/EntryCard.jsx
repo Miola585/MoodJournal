@@ -7,6 +7,7 @@ import { StickerLayer } from './StickerLayer';
 import { RichNoteContent } from './RichNoteContent';
 import { StickyNote } from './StickyNote';
 import { getJournalNotes } from '../../utils/journalNotes';
+import { effectiveEntryTags } from '../../utils/journalTags';
 
 export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, compact = false }) {
   const [expanded, setExpanded] = useState(false);
@@ -70,7 +71,7 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
           {entry.specificFeeling && isCheckIn(entry) && <span>{entry.specificFeeling}</span>}
           {isCheckIn(entry) && <span>{entry.intensity}/10</span>}
           {(entry.factors || []).map((factor) => <span key={factor}>{factor}</span>)}
-          {(entry.tags || []).map((tag) => <span key={tag}>#{tag}</span>)}
+          {effectiveEntryTags(entry).map((tag) => <span key={tag}>#{tag}</span>)}
         </div>
       )}
       {(canToggle || onEdit || onDelete || showPrimaryAction) && <div className="actions entry-card-actions">
