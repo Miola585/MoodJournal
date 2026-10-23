@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
-import { getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, normalizeDailyPrimaries, normalizeReminder, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
+import { getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, normalizeDailyPrimaries, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
+import { useJournalReminders } from './hooks/useJournalReminders';
 import {
   changeJournalPassphrase,
   createEncryptionConfigRow,
@@ -35,7 +36,6 @@ import { countNewSupportRequests } from './utils/supportApi';
 import { supportErrorMessage } from './utils/support';
 import { Home } from './screens/Home';
 import { About } from './screens/About';
-import { Newsletter } from './screens/Newsletter';
 import { CheckIn } from './screens/CheckIn';
 import { Calendar } from './screens/Calendar';
 import { Activities } from './screens/Activities';
@@ -117,7 +117,8 @@ function App() {
   // while Supabase RLS remains the database rule that prevents users from reading other users' entries.
   const [journalLockCode, setJournalLockCode] = useState(() => localStorage.getItem('journalPrivacyCode') || '');
   const [journalUnlocked, setJournalUnlocked] = useState(() => !localStorage.getItem('journalPrivacyCode'));
-  const [reminder, setReminder] = useState(() => normalizeReminder(readStorage('journalReminder', { enabled: false, time: '19:00', times: ['19:00'] })));
+  const { reminder: reminderPreferences, update: updateReminder, controls: reminderControls } = useJournalReminders();
+  const reminder = { ...reminderPreferences, controls: reminderControls };
 
   const user = session?.user || null;
   const storageRef = useRef(null);
@@ -557,11 +558,6 @@ function App() {
     if (lockType === 'journal') updateJournalLock('');
     return { ok: true };
   };
-  const updateReminder = (nextReminder) => {
-    const normalizedReminder = normalizeReminder(nextReminder);
-    setReminder(normalizedReminder);
-    localStorage.setItem('journalReminder', JSON.stringify(normalizedReminder));
-  };
 
   useEffect(() => {
     const handleEncryptionChange = async (event) => {
@@ -728,22 +724,6 @@ function App() {
     return () => { active = false; window.clearInterval(interval); };
   }, [profile?.role, view, supportRefreshRevision]);
 
-  useEffect(() => {
-    if (!reminder.enabled || !('Notification' in window) || Notification.permission !== 'granted') return undefined;
-    const now = new Date();
-    const upcoming = reminder.times.map((time) => {
-      const [hours, minutes] = time.split(':').map(Number);
-      const next = new Date();
-      next.setHours(hours, minutes, 0, 0);
-      if (next <= now) next.setDate(next.getDate() + 1);
-      return next;
-    }).sort((a, b) => a - b);
-    const next = upcoming[0];
-    const timeout = setTimeout(() => {
-      new Notification('Mood Journal', { body: 'Take a minute to check in with yourself.' });
-    }, next.getTime() - now.getTime());
-    return () => clearTimeout(timeout);
-  }, [reminder]);
 
   const canUseApp = !authLoading && (!isSupabaseConfigured || user);
   const visibleViews = profile?.role === 'admin' ? [...appViews, 'admin'] : appViews;
@@ -827,7 +807,7 @@ function App() {
           <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Summary nav={null} entries={entries} /></JournalPrivacyGate>} />
           <Route path="/game-archive" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><GameArchive privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/about" element={<About nav={null} />} />
-          <Route path="/newsletter" element={<Newsletter nav={null} />} />
+          <Route path="/newsletter" element={<Navigate to="/about" replace />} />
           <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} replaceJournalEntries={replaceJournalEntries} checkJournalReplaceAvailable={checkJournalReplaceAvailable} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

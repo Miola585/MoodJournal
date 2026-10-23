@@ -214,7 +214,7 @@ export const resourceLinks = [
   { href: 'https://www.youtube.com/live/dnBAU8Co6PA?si=J-u4VaLRCmOt_Npu', title: 'Music Playlist', tag: 'Calm / Focus', className: 'focus', text: 'Soothing instrumental tracks to calm your mind.' },
   { href: 'https://positivepsychology.com/emotion-regulation/', title: 'Emotional Regulation', tag: 'Learn', className: 'learn', text: 'Clear tips to stay balanced, spot triggers, and respond to challenges in healthier ways.' }
 ];
-export const appViews = ['checkin', 'activities', 'games', 'gameArchive', 'entries', 'calendar', 'summary', 'about', 'newsletter'];
+export const appViews = ['checkin', 'activities', 'games', 'gameArchive', 'entries', 'calendar', 'summary', 'about'];
 export const viewPaths = {
   home: '/',
   checkin: '/checkin',

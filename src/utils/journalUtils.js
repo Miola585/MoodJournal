@@ -86,10 +86,7 @@ export const calculateStreak = (entries) => {
   }
   return streak;
 };
-export const normalizeReminder = (value) => {
-  const times = Array.isArray(value?.times) && value.times.length > 0 ? value.times : [value?.time || '19:00'];
-  return { enabled: Boolean(value?.enabled), time: times[0], times };
-};
+export { normalizeReminder } from './reminders.js';
 export const entryToRow = (entry, userId) => ({
   id: String(entry.id || crypto.randomUUID()),
   user_id: userId,

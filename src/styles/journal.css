@@ -838,7 +838,7 @@
 
 .reminder-time-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 14px;
 }
 
@@ -846,7 +846,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
+
+.reminder-time-row input { min-width: 0; flex: 1 1 140px; }
+.reminder-status { min-width: 0; color: var(--text-secondary, var(--text)); }
+.reminder-status p { margin: 8px 0; overflow-wrap: anywhere; }
 
 .activities-screen {
   display: grid;

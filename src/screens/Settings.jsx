@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Bell, BookOpen, Check, ChevronRight, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, ShieldCheck, Sun, Sunset, Type, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
+import { ReminderStatus } from '../components/layout/ReminderStatus';
 import { todayKey } from '../utils/journalUtils';
 import { buildImportedJournal, compareJournalImports, MAX_IMPORT_FILE_BYTES, parseJournalBackup } from '../utils/journalImport';
 import { themeChoices } from '../data/themeChoices';
@@ -41,7 +42,9 @@ export function Settings({
     setReminder({ ...reminder, time: nextTimes[0], times: nextTimes });
   };
   const addReminderTime = () => {
-    const nextTimes = [...reminderTimes, '19:00'];
+    const available = Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, '0')}:00`).find((time) => !reminderTimes.includes(time));
+    if (!available) return;
+    const nextTimes = [...reminderTimes, available];
     setReminder({ ...reminder, time: nextTimes[0], times: nextTimes });
   };
   const removeReminderTime = (index) => {
@@ -250,8 +253,9 @@ export function Settings({
         </div>
         <div className="settings-actions">
           <button className="secondary-button" onClick={addReminderTime} type="button">Add reminder</button>
-          <button className="primary-button" onClick={async () => { if ('Notification' in window && Notification.permission === 'default') await Notification.requestPermission(); setReminder({ ...reminder, enabled: !reminder.enabled }); }} type="button">{reminder.enabled ? 'Turn reminders off' : 'Turn reminders on'}</button>
+          <button className="primary-button" disabled={reminder.controls.busy} onClick={reminder.controls.toggle} type="button">{reminder.enabled ? 'Turn reminders off' : 'Turn reminders on'}</button>
         </div>
+        <ReminderStatus controls={reminder.controls} />
       </SettingsSection>
 
       <SettingsSection icon={ShieldCheck} title="Privacy" description="Protect what you write in storage and add privacy screens on this device.">
@@ -350,7 +354,7 @@ export function Settings({
       </SettingsSection>
 
       <SettingsSection icon={BookOpen} title="About" description="Mood Journal is a quiet place to notice what is here without judgment.">
-        <div className="settings-actions"><button className="ghost-button" onClick={() => onOpen('about')} type="button">About Mood Journal</button><button className="ghost-button" onClick={() => onOpen('newsletter')} type="button">Community updates</button></div>
+        <div className="settings-actions"><button className="ghost-button" onClick={() => onOpen('about')} type="button">About Mood Journal</button></div>
       </SettingsSection>
     </section>
   );
