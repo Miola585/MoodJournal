@@ -38,7 +38,6 @@ import { About } from './screens/About';
 import { Newsletter } from './screens/Newsletter';
 import { CheckIn } from './screens/CheckIn';
 import { Calendar } from './screens/Calendar';
-import { Summary } from './screens/Summary';
 import { Activities } from './screens/Activities';
 import { Settings } from './screens/Settings';
 import { createPrivateStorage } from './utils/privateStorage';
@@ -46,6 +45,7 @@ import { confirmJournalNavigation } from './hooks/useJournalDraft';
 
 const Games = lazy(() => import('./components/games/Games').then((module) => ({ default: module.Games })));
 const Entries = lazy(() => import('./screens/Entries').then((module) => ({ default: module.Entries })));
+const Summary = lazy(() => import('./screens/Summary').then((module) => ({ default: module.Summary })));
 const encryptionRevisionKey = 'journalEncryptionRevision';
 const invalidEncryptionConfig = { version: 0, invalid: true };
 

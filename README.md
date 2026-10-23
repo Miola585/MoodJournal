@@ -77,6 +77,19 @@ Preview production build:
 npm run preview
 ```
 
+## Automated Checks
+
+Use Node.js 24 (the supported range is `>=22 <25`). `npm test` runs the Node tests and production build. Browser tests are separate:
+
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+GitHub Actions runs both commands on pushes and pull requests, using `npm ci`, cached npm downloads, and Chromium with its Linux system dependencies. Playwright starts Vite on port 5181; do not start a second server for CI. Failed browser runs retain traces, and reports are available in the `chromium-test-results` workflow artifact for seven days. No Supabase secrets or live database are needed for this suite.
+
+Weekly Summary loads on demand through the existing route loading boundary. Its Recharts code is built into the separate `Summary-*.js` chunk. The browser tests cover deferred loading, direct links, mobile charts, and previous/next week navigation.
+
 ## Supabase Setup
 
 Create a `.env` file:
