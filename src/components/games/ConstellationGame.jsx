@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Undo2 } from 'lucide-react';
-import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
+import { useGameStorageState } from '../../hooks/useGameStorageState';
+import { normalizeConstellations } from './gameArchiveData';
 import { constellationArtwork as starSprites } from './gameArtwork';
 import {
   buildConnections,
@@ -44,11 +45,10 @@ export function ConstellationGame({ mood, privateStorage }) {
   const [pulsingStars, setPulsingStars] = useState([]);
   const [name, setName] = useState('');
   const [savedConstellation, setSavedConstellation] = useState(null);
-  const [, setStoredConstellations, storageError] = usePrivateStorageState(
+  const [, setStoredConstellations, storageError, canSave] = useGameStorageState(
     privateStorage,
     constellationStorageKey,
-    [],
-    (value) => Array.isArray(value) ? value.slice(0, 12) : []
+    normalizeConstellations
   );
   const selectedStars = [...new Set(connections.flat())];
   const selectedStarData = constellationStars.filter((star) => selectedStars.includes(star.id));
@@ -157,8 +157,8 @@ export function ConstellationGame({ mood, privateStorage }) {
     setSavedConstellation(null);
   };
 
-  const finishConstellation = () => {
-    if (connections.length === 0) return;
+  const finishConstellation = async () => {
+    if (connections.length === 0 || !canSave) return;
     const finalName = name.trim() || 'Today\'s constellation';
     const constellation = {
       id: crypto.randomUUID(),
@@ -167,10 +167,10 @@ export function ConstellationGame({ mood, privateStorage }) {
       archetype,
       createdAt: new Date().toISOString(),
       stars: selectedStars,
+      starPositions: selectedStarData,
       connections
     };
-    setStoredConstellations((current) => [constellation, ...current].slice(0, 12));
-    setSavedConstellation(constellation);
+    if (await setStoredConstellations((current) => [constellation, ...current])) setSavedConstellation(constellation);
   };
 
   return (
@@ -242,9 +242,9 @@ export function ConstellationGame({ mood, privateStorage }) {
       </div>
       <div className="constellation-toolbar">
         <span className="mini-insight">{connections.length} connection{connections.length === 1 ? '' : 's'} · {archetype}</span>
-        <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Name your constellation" />
+        <input value={name} onChange={(event) => { setName(event.target.value); setSavedConstellation(null); }} placeholder="Name your constellation" />
         <button className="secondary constellation-undo" disabled={connections.length === 0} onClick={removeLastConnection} type="button" title="Undo last connection"><Undo2 aria-hidden="true" size={17} /> Undo</button>
-        <button className="primary" disabled={connections.length === 0} onClick={finishConstellation} type="button">Finish constellation</button>
+        <button className="primary" disabled={connections.length === 0 || !canSave || Boolean(savedConstellation)} onClick={finishConstellation} type="button">Finish constellation</button>
       </div>
       {savedPreview && (
         <article className="game-success-card">
@@ -275,8 +275,11 @@ function ConstellationPreview({ stars, connections, mood, moods }) {
     <div className="mini-sky">
       <ConstellationLines stars={stars} connections={connections} mood={mood} moods={moods} />
       {stars.map((star) => (
-        <span
+        <img
           key={star.id}
+          src={starSprites[(star.id + 2) % starSprites.length]}
+          alt=""
+          draggable={false}
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,

@@ -1942,6 +1942,15 @@
   transform: translate(-50%, -50%);
 }
 
+.mini-sky img {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 4px var(--star-color, #fff7c7));
+}
+
 .large-memory-jar {
   display: flex;
   flex-wrap: wrap;

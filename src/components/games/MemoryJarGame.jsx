@@ -5,7 +5,7 @@ import {
   groupMemoriesByMonth
 } from './gameUtils';
 import { MemoryJarSvg } from './MemoryJarSvg';
-import { usePrivateStorageState } from '../../hooks/usePrivateStorageState';
+import { useGameStorageState } from '../../hooks/useGameStorageState';
 
 const memoryStorageKey = 'gameMemoryJar';
 const marbleColors = ['#e6ad35', '#d95f6d', '#329a9f', '#7868d4', '#df7841', '#6f9f4f', '#c9589c', '#397dbd'];
@@ -68,10 +68,9 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
   const [memory, setMemory] = useState('');
   const [message, setMessage] = useState('');
   const [selectedMemory, setSelectedMemory] = useState(null);
-  const [memories, setMemories, storageError] = usePrivateStorageState(
+  const [memories, setMemories, storageError, canSave] = useGameStorageState(
     privateStorage,
     memoryStorageKey,
-    [],
     normalizeStoredMemories
   );
   const memoryText = memory.trim();
@@ -92,8 +91,8 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
     return () => window.clearTimeout(timer);
   }, [message]);
 
-  const addMemory = () => {
-    if (!memoryText || duplicateToday) return;
+  const addMemory = async () => {
+    if (!memoryText || duplicateToday || !canSave) return;
     const category = detectMemoryCategory(memoryText);
     const nextMemory = {
       id: crypto.randomUUID(),
@@ -103,18 +102,18 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
       mood: mood.key,
       intensity: Number(mainToday?.intensity || mood.score || 5)
     };
-    setMemories((current) => {
-      return layoutMemories([nextMemory, ...current].slice(0, 24));
-    });
+    const saved = await setMemories((current) => layoutMemories([nextMemory, ...current]));
+    if (!saved) return;
     setSelectedMemory(nextMemory);
-    setMemory('');
+    setMemory((current) => current.trim() === memoryText ? '' : current);
     setMessage('Saved to jar.');
   };
-  const removeMemory = (id) => {
+  const removeMemory = async (id) => {
     if (!window.confirm('Remove this memory from the jar?')) return;
-    setMemories((current) => {
+    const saved = await setMemories((current) => {
       return layoutMemories(current.filter((entry) => entry.id !== id));
     });
+    if (!saved) return;
     setSelectedMemory(null);
     setMessage('');
   };
@@ -126,7 +125,7 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
           <MemoryJarSvg />
           <div className="jar-body">
             {memories.length === 0 && <span className="jar-empty-text">A tiny good thing can live here.</span>}
-            {memories.map((entry) => (
+            {memories.slice(0, 24).map((entry) => (
               <button
                 aria-label={`Memory from ${formatMemoryDate(entry.createdAt)}`}
                 aria-pressed={selectedMemory?.id === entry.id}
@@ -150,7 +149,7 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
               <p>{selectedMemory.text}</p>
               <div className="game-action-row">
                 <button className="secondary" onClick={() => setSelectedMemory(null)} type="button">Close</button>
-                <button className="secondary" onClick={() => removeMemory(selectedMemory.id)} type="button">Remove</button>
+                <button className="secondary" disabled={!canSave} onClick={() => removeMemory(selectedMemory.id)} type="button">Remove</button>
               </div>
             </article>
           )}
@@ -159,8 +158,8 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
       <div className="memory-input-panel">
         <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
         <div className="memory-input-actions">
-          <button className="primary" disabled={!memoryText || duplicateToday} onClick={addMemory} type="button">Add to jar</button>
-          {duplicateToday && <p className="form-error">That memory is already in today's jar.</p>}
+          <button className="primary" disabled={!memoryText || duplicateToday || !canSave} onClick={addMemory} type="button">Add to jar</button>
+          {duplicateToday && <p className="form-error">That memory is already in your jar.</p>}
           <div className="memory-feedback-slot" aria-live="polite">
             {message && <p className="success-message">{message}</p>}
           </div>
@@ -214,12 +213,12 @@ function layoutMemories(entries) {
 }
 
 function normalizeStoredMemories(value) {
-  if (!Array.isArray(value)) return [];
+  if (!Array.isArray(value)) throw new Error('Saved memories could not be read. Nothing was replaced.');
   const normalized = value.map((entry) => ({
     ...entry,
     id: entry.id || crypto.randomUUID(),
     text: entry.text || '',
     createdAt: entry.createdAt || new Date().toISOString()
-  })).filter((entry) => entry.text).slice(0, 24);
+  })).filter((entry) => entry.text);
   return layoutMemories(normalized);
 }

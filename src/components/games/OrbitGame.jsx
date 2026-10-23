@@ -3,6 +3,7 @@ import { RotateCcw, X } from 'lucide-react';
 import { getOrbitPrompt, normalizeStoredOrbit, orbitRingLabels, orbitRings, planetSeeds } from './gameUtils';
 import { todayKey } from '../../utils/journalUtils';
 import { orbitArtwork, orbitCenterArtwork } from './gameArtwork';
+import { appendOrbitSnapshot } from './gameArchiveData';
 
 const ringRadii = { close: 0.17, between: 0.3, far: 0.43 };
 const planetLabels = Object.fromEntries(Object.entries(orbitArtwork).map(([name, artwork]) => [name, artwork.label]));
@@ -13,6 +14,8 @@ export function OrbitGame({ privateStorage }) {
   const stageRef = useRef(null);
   const dialogRef = useRef(null);
   const dragRef = useRef(null);
+  const storageSession = useRef(null);
+  const [canSave, setCanSave] = useState(false);
   const [planets, setPlanets] = useState(planetSeeds);
   const [selectedPlanet, setSelectedPlanet] = useState('');
   const [draggingPlanet, setDraggingPlanet] = useState('');
@@ -24,17 +27,25 @@ export function OrbitGame({ privateStorage }) {
 
   useEffect(() => {
     let active = true;
+    const session = { busy: false };
+    storageSession.current = session;
+    setCanSave(false);
+    setPlanets(planetSeeds);
+    setReflection('');
+    setMessage('');
     privateStorage.read(storageKey, null)
       .then((saved) => {
-        if (!active || !saved) return;
-        setPlanets(normalizeStoredOrbit(saved));
+        if (!active) return;
+        if (saved) setPlanets(normalizeStoredOrbit(saved));
         if (typeof saved?.reflection === 'string') setReflection(saved.reflection.slice(0, 2000));
+        setCanSave(true);
       })
       .catch((error) => {
         if (active) setStorageError(error.message);
       });
     return () => {
       active = false;
+      if (storageSession.current === session) storageSession.current = null;
     };
   }, [privateStorage, storageKey]);
 
@@ -73,13 +84,22 @@ export function OrbitGame({ privateStorage }) {
   };
 
   const finishOrbit = async () => {
+    const session = storageSession.current;
+    if (!canSave || !session || session.busy) return;
+    session.busy = true;
+    setCanSave(false);
     setStorageError('');
     try {
-      await privateStorage.write(storageKey, { version: 2, planets, reflection: reflection.trim() });
+      const snapshot = { id: crypto.randomUUID(), createdAt: new Date().toISOString(), dateKey: today, planets, reflection: reflection.trim() };
+      await privateStorage.update(storageKey, null, (saved) => appendOrbitSnapshot(saved, snapshot));
+      if (storageSession.current !== session) return;
       setMessage('Saved. You can come back later and see what moved.');
       dialogRef.current?.close();
     } catch (error) {
-      setStorageError(error.message);
+      if (storageSession.current === session) setStorageError(error.message);
+    } finally {
+      session.busy = false;
+      if (storageSession.current === session) setCanSave(true);
     }
   };
 
@@ -164,7 +184,7 @@ export function OrbitGame({ privateStorage }) {
         <div className="orbit-actions">
           <button className="secondary" onClick={resetOrbit} type="button"><RotateCcw aria-hidden="true" size={16} /> Reset</button>
           <button className="secondary" onClick={() => dialogRef.current?.showModal()} type="button">Reflect</button>
-          <button className="primary finish-orbit" onClick={finishOrbit} type="button">Finish orbit</button>
+          <button className="primary finish-orbit" disabled={!canSave} onClick={finishOrbit} type="button">Finish orbit</button>
         </div>
       </div>
       {selected && (
@@ -198,7 +218,7 @@ export function OrbitGame({ privateStorage }) {
         </div>
         <label htmlFor="orbit-reflection">Anything you would like to remember?</label>
         <textarea id="orbit-reflection" value={reflection} onChange={(event) => setReflection(event.target.value)} maxLength={2000} rows={3} placeholder="Today I noticed..." />
-        <button className="primary" onClick={finishOrbit} type="button">Save orbit and reflection</button>
+        <button className="primary" disabled={!canSave} onClick={finishOrbit} type="button">Save orbit and reflection</button>
         {storageError && <p className="form-error" role="alert">{storageError}</p>}
       </dialog>
     </div>
