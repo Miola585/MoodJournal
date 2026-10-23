@@ -39,7 +39,7 @@ Because the account password is also sent to the authentication provider, this s
 
 If an authenticated account still has older local-only plaintext entries waiting to be imported, setup stops and asks the user to import them first. A successful import removes that old browser copy before encryption can be enabled. Local-only encrypted data stores the wrapped-key configuration and ciphertext rows in one versioned localStorage record to avoid a partial two-write state.
 
-Older plaintext activity notes and game reflections are migrated into encrypted, account-scoped browser storage when encryption is enabled. These game/activity records remain device-local and do not sync through Supabase. The recovery key can decrypt them only when their ciphertext is still present on that device or in a device backup.
+Older account-scoped plaintext activity notes and game reflections are migrated into that account's encrypted browser storage when encryption is enabled. Unowned legacy activity records belong to the local guest journal; signing in does not claim or remove them. These game/activity records remain device-local and do not sync through Supabase. The recovery key can decrypt them only when their ciphertext is still present on that device or in a device backup.
 
 ## What is not hidden
 
