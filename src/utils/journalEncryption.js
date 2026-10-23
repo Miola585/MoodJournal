@@ -351,7 +351,7 @@ export const createEncryptedEntryRow = (entry, ownerId, payload) => ({
   updated_at: '1970-01-01T00:00:00.000Z'
 });
 
-export const isEncryptionConfigRow = (row) => isEncryptionConfigPayload(row?.note);
+export const isEncryptionConfigRow = (row) => String(row?.id || '').startsWith('journal-encryption-config:') || isEncryptionConfigPayload(row?.note);
 export const isEncryptedEntryRow = (row) => isEncryptedPayload(row?.note);
 
 export async function encryptEntriesToRows(entries, ownerId, dataKey) {
@@ -363,6 +363,7 @@ export async function encryptEntriesToRows(entries, ownerId, dataKey) {
 }
 
 export async function decryptEntryRows(rows, dataKey) {
-  const entries = await Promise.all(rows.filter(isEncryptedEntryRow).map((row) => decryptJournalEntry(row.note, dataKey, row.id)));
+  if (!Array.isArray(rows) || rows.some((row) => !isEncryptedEntryRow(row))) throw new Error('An encrypted journal row is damaged. No rows were discarded.');
+  const entries = await Promise.all(rows.map((row) => decryptJournalEntry(row.note, dataKey, row.id)));
   return entries.sort((left, right) => new Date(right.created || 0) - new Date(left.created || 0));
 }

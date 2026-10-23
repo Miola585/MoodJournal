@@ -33,13 +33,16 @@ export function collectSupportDiagnostics({ pathname, theme, mode, width, height
       : /Chrome\//.test(userAgent) ? 'Chrome'
         : /Safari\//.test(userAgent) ? 'Safari' : 'Other';
   return {
-    page: pathname,
-    theme,
-    mode,
+    page: diagnosticPages.includes(pathname) ? pathname : 'unknown',
+    theme: ['warm', 'ocean', 'garden', 'night', 'sunrise'].includes(theme) ? theme : 'unknown',
+    mode: ['light', 'dark'].includes(mode) ? mode : 'unknown',
     browser,
-    viewport: `${Math.round(width)}x${Math.round(height)}`
+    viewport: `${safeDimension(width)}x${safeDimension(height)}`
   };
 }
+
+const diagnosticPages = ['/', '/checkin', '/entries', '/calendar', '/summary', '/activities', '/settings', '/games', '/games/garden', '/games/constellation', '/games/orbit', '/support', '/about', '/newsletter', '/admin'];
+const safeDimension = (value) => Number.isFinite(value) ? Math.max(1, Math.min(99999, Math.round(value))) : 1;
 
 export function supportErrorMessage(error) {
   if (error?.code === '42P01' || error?.code === 'PGRST205') {

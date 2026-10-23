@@ -17,7 +17,7 @@ The schema now:
 - limits profile reads to the owner or a verified admin
 - uses a protected `current_user_is_admin()` database function for admin checks
 
-Run the complete `docs/supabase-schema.sql` in the Supabase SQL Editor before launch. Updating this repository does not change an already deployed database by itself.
+Run the complete `backend/supabase/supabase-schema.sql` in the Supabase SQL Editor before launch. Updating this repository does not change an already deployed database by itself.
 
 ### High: vulnerable locked dependencies
 
@@ -41,7 +41,7 @@ The Vercel policy now blocks object embedding and inline script attributes, isol
 
 ## Required deployment checks
 
-1. Run `docs/supabase-schema.sql` against the production project and verify RLS is enabled on both tables.
+1. Run `backend/supabase/supabase-schema.sql` against the production project and verify RLS is enabled on both tables.
 2. Test with two ordinary accounts: each account must be unable to select, update, or delete the other account's entries and profile.
 3. Confirm an ordinary account cannot update `profiles.role`; only a trusted server/service process or manual administrator operation should assign admins.
 4. Enable email verification, a server-side password minimum of at least eight characters, leaked-password protection, and appropriate auth rate limits in Supabase.

@@ -29,6 +29,12 @@ export function Settings({
   const [importPreview, setImportPreview] = useState(null);
   const [importBusy, setImportBusy] = useState(false);
   const [replaceAvailable, setReplaceAvailable] = useState(false);
+  useEffect(() => {
+    if (!importPreview) return;
+    setImportPreview((current) => current ? { ...current, comparison: compareJournalImports(entries, current.entries) } : null);
+    setReplaceAvailable(false);
+    setDataMessage('The journal changed. Choose the backup file again to validate replacement against the latest entries.');
+  }, [entries]);
   const reminderTimes = reminder.times?.length ? reminder.times : [reminder.time || '19:00'];
   const updateReminderTime = (index, value) => {
     const nextTimes = reminderTimes.map((time, timeIndex) => timeIndex === index ? value : time);
@@ -67,8 +73,9 @@ export function Settings({
         const importedEntries = parseJournalBackup(reader.result);
         const comparison = compareJournalImports(entries, importedEntries);
         setImportPreview({ entries: importedEntries, comparison, fileName: file.name });
-        setReplaceAvailable(await checkJournalReplaceAvailable());
-        setDataMessage('Backup checked. Review the comparison before choosing how to import it.');
+        const validation = await checkJournalReplaceAvailable(importedEntries);
+        setReplaceAvailable(validation.ok);
+        setDataMessage(validation.ok ? 'Backup parsed and replacement validated. Review the comparison before importing.' : `Backup parsed. Replacement was not validated: ${validation.error}`);
       } catch (error) {
         setDataMessage(error.message || 'Could not import that file.');
       }
@@ -272,7 +279,7 @@ export function Settings({
             <label>Confirm passphrase<input autoComplete="new-password" onChange={(event) => setEncryptionConfirmation(event.target.value)} placeholder="Enter it again" type="password" value={encryptionConfirmation} /></label>
           </div>
           <button className="primary-button" disabled={journalEncryption.busy || !encryptionPassphrase || !encryptionConfirmation} onClick={enableEncryption} type="button"><ShieldCheck aria-hidden="true" size={17} />{journalEncryption.busy ? 'Encrypting journal...' : 'Turn on encryption'}</button>
-          <p className="encryption-fine-print">Encryption cannot recover a forgotten passphrase. You will receive one recovery key to store privately. The service can still see account, usage, record-count, and padded ciphertext-size metadata, but not entry text, moods, journal dates, tags, or titles. This does not protect an unlocked journal from a compromised device or browser.</p>
+          <p className="encryption-fine-print">Keep your recovery key private. Losing both the passphrase and recovery key makes saved writing unrecoverable. Journal fields are encrypted before storage; account, usage, record-count, and ciphertext-size metadata remain visible. Account-password encryption is not independent of the sign-in provider. This does not protect an unlocked journal from a compromised device or browser.</p>
         </div>}
 
         {journalEncryption.enabled && journalEncryption.unlocked && <div className="encryption-unlocked-actions">
@@ -336,7 +343,7 @@ export function Settings({
           <div className="import-choice-list">
             <button className="secondary-button" disabled={importBusy} onClick={() => applyImport('safe')} type="button"><span><strong>Merge safely</strong><small>Add new entries and keep current versions of conflicts.</small></span></button>
             <button className="secondary-button" disabled={importBusy} onClick={() => applyImport('backup')} type="button"><span><strong>Use backup versions</strong><small>Add new entries, replace conflicts, and keep current-only entries.</small></span></button>
-            <button className="danger-button" disabled={importBusy || !replaceAvailable} onClick={() => applyImport('replace')} title={replaceAvailable ? '' : 'Install replace_journal_entries from docs/supabase-schema.sql first'} type="button"><span><strong>Replace journal</strong><small>{replaceAvailable ? 'Download a safety copy, then replace the complete journal.' : 'Unavailable until atomic replacement is installed.'}</small></span></button>
+            <button className="danger-button" disabled={importBusy || !replaceAvailable} onClick={() => applyImport('replace')} title={replaceAvailable ? '' : 'Replacement requires a nonempty backup and successful validation.'} type="button"><span><strong>Replace journal</strong><small>{replaceAvailable ? 'Download a safety copy, then replace the complete journal.' : 'Unavailable until replacement validation succeeds.'}</small></span></button>
           </div>
         </section>}
         {journalEncryption.enabled && <p className="privacy-note"><Download aria-hidden="true" size={16} />Exports are readable JSON created on this device after unlocking. Store exported files as carefully as the journal itself.</p>}

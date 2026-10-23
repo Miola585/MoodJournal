@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
 test('support schema restricts requests and replies to owners and admins', async () => {
-  const schema = await readFile(new URL('../docs/supabase-schema.sql', import.meta.url), 'utf8');
+  const schema = await readFile(new URL('../backend/supabase/supabase-schema.sql', import.meta.url), 'utf8');
   for (const table of ['support_requests', 'support_messages']) {
     assert.match(schema, new RegExp(`alter table public\\.${table} enable row level security`, 'u'));
     assert.match(schema, new RegExp(`revoke all on table public\\.${table} from anon, authenticated`, 'u'));

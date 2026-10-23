@@ -1,8 +1,8 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
-import { entryToRow, getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, isMissingEntryTypeError, normalizeDailyPrimaries, normalizeReminder, normalizeUsername, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
+import { getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, normalizeDailyPrimaries, normalizeReminder, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
 import {
   changeJournalPassphrase,
   createEncryptionConfigRow,
@@ -42,6 +42,10 @@ import { Activities } from './screens/Activities';
 import { Settings } from './screens/Settings';
 import { createPrivateStorage } from './utils/privateStorage';
 import { confirmJournalNavigation } from './hooks/useJournalDraft';
+import { flushJournalDrafts } from './hooks/useJournalDraft';
+import { createJournalStorage, journalChanges, assertExplicitDeletion, JOURNAL_CONFLICT, journalStorageError, readLocalJournal, conflictError } from './utils/journalStorage';
+import { JournalConflictDialog } from './components/layout/JournalConflictDialog';
+import { compareJournalImports } from './utils/journalImport';
 
 const Games = lazy(() => import('./components/games/Games').then((module) => ({ default: module.Games })));
 const Entries = lazy(() => import('./screens/Entries').then((module) => ({ default: module.Entries })));
@@ -50,10 +54,13 @@ const encryptionRevisionKey = 'journalEncryptionRevision';
 const invalidEncryptionConfig = { version: 0, invalid: true };
 
 const storedEncryptedJournal = () => {
+  try { JSON.parse(localStorage.getItem(localEncryptedJournalKey) || 'null'); }
+  catch { return { config: invalidEncryptionConfig, rows: [] }; }
   const stored = readStorage(localEncryptedJournalKey, null);
+  if (localStorage.getItem(localEncryptedJournalKey) !== null && (stored?.version !== 1 || !Array.isArray(stored.rows) || stored.rows.some((row) => !isEncryptedEntryRow(row)) || typeof stored.config !== 'string')) return { config: invalidEncryptionConfig, rows: [] };
   const configPayload = stored?.config || localStorage.getItem(localEncryptionConfigKey) || '';
   const config = parseEncryptionConfig(configPayload);
-  if (!config && !isEncryptionConfigPayload(configPayload)) return null;
+  if (!config && !isEncryptionConfigPayload(configPayload)) return configPayload || stored ? { config: invalidEncryptionConfig, rows: [] } : null;
   return {
     config: config || invalidEncryptionConfig,
     rows: Array.isArray(stored?.rows) ? stored.rows : readStorage(localEntriesKey, [])
@@ -61,14 +68,18 @@ const storedEncryptedJournal = () => {
 };
 
 const storedEncryptionConfig = () => storedEncryptedJournal()?.config || null;
+const localJournalEntries = () => {
+  try { return readLocalJournal(localStorage, localEntriesKey); }
+  catch { return []; }
+};
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const view = viewFromPath(location.pathname, viewPaths);
   const [authMode, setAuthMode] = useState('signin');
-  const [entries, setEntries] = useState(() => isSupabaseConfigured || storedEncryptionConfig() ? [] : normalizeDailyPrimaries(readStorage(localEntriesKey, [])));
-  const [localEntries, setLocalEntries] = useState(() => readStorage(localEntriesKey, []));
+  const [entries, setEntries] = useState(() => isSupabaseConfigured || storedEncryptionConfig() ? [] : normalizeDailyPrimaries(localJournalEntries()));
+  const [localEntries, setLocalEntries] = useState(localJournalEntries);
   const [encryptionConfig, setEncryptionConfig] = useState(() => isSupabaseConfigured ? null : storedEncryptionConfig());
   const [encryptionKey, setEncryptionKey] = useState(null);
   const [encryptedRows, setEncryptedRows] = useState(() => !isSupabaseConfigured ? storedEncryptedJournal()?.rows || [] : []);
@@ -83,7 +94,10 @@ function App() {
   const [pendingRecoveryKey, setPendingRecoveryKey] = useState('');
   const [authLoading, setAuthLoading] = useState(isSupabaseConfigured);
   const [dataLoading, setDataLoading] = useState(false);
-  const [dataError, setDataError] = useState('');
+  const [dataError, setDataError] = useState(() => {
+    try { readLocalJournal(localStorage, localEntriesKey); return ''; }
+    catch (error) { return error.message; }
+  });
   const [importMessage, setImportMessage] = useState('');
   const [profile, setProfile] = useState(null);
   const [newSupportCount, setNewSupportCount] = useState(0);
@@ -105,138 +119,159 @@ function App() {
   const [reminder, setReminder] = useState(() => normalizeReminder(readStorage('journalReminder', { enabled: false, time: '19:00', times: ['19:00'] })));
 
   const user = session?.user || null;
+  const storageRef = useRef(null);
+  const ownerId = isSupabaseConfigured ? user?.id || 'signed-out' : 'local-browser';
+  if (storageRef.current?.ownerId !== ownerId || !storageRef.current?.store.isActive()) {
+    storageRef.current?.store.deactivate();
+    storageRef.current = { ownerId, store: createJournalStorage({ client: isSupabaseConfigured ? supabase : null, ownerId, plainKey: localEntriesKey }) };
+  }
+  const journalStore = storageRef.current.store;
+  const renderSnapshot = journalStore.capture();
+  const saveBusy = useMemo(() => ({ current: false }), [journalStore]);
+  const lastSaveError = useRef(null);
+  const conflictBlocked = useRef(false);
+  const [conflict, setConflict] = useState(null);
+  const conflictResolver = useRef(null);
+  const [externalLock, setExternalLock] = useState(false);
   const privateStorage = useMemo(() => createPrivateStorage({
     ownerId: user?.id || 'local-browser',
     encryptionEnabled: Boolean(encryptionConfig),
     dataKey: encryptionKey
   }), [user?.id, encryptionConfig, encryptionKey]);
   const notifyOtherTabsOfEncryptionChange = () => {
-    localStorage.setItem(encryptionRevisionKey, String(Date.now()));
+    try { localStorage.setItem(encryptionRevisionKey, JSON.stringify({ ownerId, nonce: crypto.randomUUID() })); }
+    catch { setDataError('Journal protection changed, but other tabs could not be notified. Close other journal tabs manually.'); }
   };
-  const upsertJournalRows = async (rows) => {
-    const { error } = await supabase.from('journal_entries').upsert(rows);
-    if (!error) return null;
-    if (!isMissingEntryTypeError(error)) return error;
-    const fallbackRows = rows.map(({ entry_type, ...row }) => row);
-    const { error: fallbackError } = await supabase.from('journal_entries').upsert(fallbackRows);
-    return fallbackError;
-  };
-
-  const persistEncryptedJournal = async (nextEntries, config = encryptionConfig, dataKey = encryptionKey) => {
-    if (!config || !dataKey) throw new Error('Unlock your encrypted journal before changing it.');
-    const ownerId = user?.id || 'local-browser';
-    const rows = await encryptEntriesToRows(nextEntries, ownerId, dataKey);
-    if (!isSupabaseConfigured || !user) {
-      localStorage.setItem(localEncryptedJournalKey, JSON.stringify({
-        version: 1,
-        config: serializeEncryptionConfig(config),
-        rows
-      }));
-      localStorage.removeItem(localEntriesKey);
-      localStorage.removeItem(localEncryptionConfigKey);
-    } else {
-      const error = await upsertJournalRows([createEncryptionConfigRow(config, user.id), ...rows]);
-      if (error) throw new Error(error.message);
-    }
-    setEncryptedRows(rows);
-    setEntries(nextEntries);
-    setDataError('');
+  const persistEncryptedJournal = async (nextEntries, config = encryptionConfig, dataKey = encryptionKey, { replacement = false, dryRun = false, expectedSnapshot = renderSnapshot } = {}) => {
+    if (!config || config.invalid || !dataKey) throw new Error('Unlock your encrypted journal before changing it.');
+    if (conflictBlocked.current && !dryRun) throw conflictError();
+    const delta = journalChanges(entries, nextEntries);
+    const initializing = !encryptionConfig;
+    const changed = await encryptEntriesToRows(replacement || initializing ? nextEntries : delta.changed, user?.id || 'local-browser', dataKey);
+    if (!journalStore.isActive()) throw new Error('The account session changed.');
+    const changedIds = new Set(changed.map((row) => row.id));
+    const remainingIds = new Set(nextEntries.map((entry) => String(entry.id)));
+    const rows = replacement || initializing ? changed : [...encryptedRows.filter((row) => remainingIds.has(row.id) && !changedIds.has(row.id)), ...changed];
+    const configChanged = serializeEncryptionConfig(config) !== (encryptionConfig ? serializeEncryptionConfig(encryptionConfig) : null);
+    const cloudRows = [...(isSupabaseConfigured && (replacement || configChanged) ? [createEncryptionConfigRow(config, user.id)] : []), ...changed];
+    await journalStore.save({
+      rows: isSupabaseConfigured ? cloudRows : rows, deleted: delta.deleted,
+      entries: nextEntries, config: serializeEncryptionConfig(config), replacement, dryRun, expectedSnapshot
+    });
+    if (!journalStore.isActive()) throw new Error('The account session changed.');
+    if (!dryRun) { setEncryptedRows(rows); setEntries(nextEntries); setDataError(''); }
     return rows;
   };
 
-  const saveEntries = async (nextEntries) => {
-    const normalizedEntries = normalizeDailyPrimaries(nextEntries);
-    if (isSupabaseConfigured && user && (!encryptionConfig || !encryptionKey)) {
-      setDataError('Your encrypted journal must be unlocked before anything can be saved.');
-      return false;
+  const recordSaveError = (error) => {
+    if (!journalStore.isActive()) return;
+    const safe = journalStorageError(error);
+    lastSaveError.current = safe;
+    setDataError(safe.message);
+    if (safe.code === JOURNAL_CONFLICT) {
+      conflictBlocked.current = true;
+      setConflict((current) => current || { entry: null, latest: null, error: '' });
     }
-    if (encryptionConfig) {
-      try {
-        await persistEncryptedJournal(normalizedEntries);
-        return true;
-      } catch (error) {
-        setDataError(error.message);
-        return false;
-      }
-    }
-    if (!isSupabaseConfigured || !user) {
-      try {
-        localStorage.setItem(localEntriesKey, JSON.stringify(normalizedEntries));
-        setEntries(normalizedEntries);
-        setDataError('');
-        return true;
-      } catch (error) {
-        setDataError(error.message || 'This browser could not save the journal.');
-        return false;
-      }
-    }
-    const rows = normalizedEntries.map((entry) => entryToRow(entry, user.id));
-    if (rows.length === 0) {
-      setEntries([]);
-      setDataError('');
-      return true;
-    }
-    const { error } = await supabase.from('journal_entries').upsert(rows);
-    if (!error) {
-      setEntries(normalizedEntries);
-      setDataError('');
-      return true;
-    }
-    if (isMissingEntryTypeError(error)) {
-      const fallbackRows = rows.map(({ entry_type, ...row }) => row);
-      const { error: fallbackError } = await supabase.from('journal_entries').upsert(fallbackRows);
-      if (fallbackError) {
-        setDataError(fallbackError.message);
-        return false;
-      }
-      setEntries(normalizedEntries);
-      setDataError('Saved without entry type because Supabase is missing the entry_type column. Run docs/supabase-schema.sql in Supabase SQL Editor to fully enable Check-In, Free Write, and Game entry separation.');
-      return true;
-    }
-    setDataError(error.message);
-    return false;
   };
 
-  const replaceJournalEntries = async (nextEntries) => {
-    const normalizedEntries = normalizeDailyPrimaries(nextEntries);
-    if (!isSupabaseConfigured || !user) {
-      const saved = await saveEntries(normalizedEntries);
-      return { ok: saved, unavailable: false };
-    }
-    if (!encryptionConfig || !encryptionKey) {
-      return { ok: false, unavailable: false, error: 'Unlock your encrypted journal before replacing it.' };
-    }
+  const saveEntries = async (nextEntries, { deletedId } = {}) => {
+    if (saveBusy.current) { setDataError('A journal save is already in progress. Please wait before saving again.'); return false; }
+    saveBusy.current = true;
+    lastSaveError.current = null;
     try {
-      const encrypted = await encryptEntriesToRows(normalizedEntries, user.id, encryptionKey);
-      const replacementRows = [createEncryptionConfigRow(encryptionConfig, user.id), ...encrypted];
-      const { error } = await supabase.rpc('replace_journal_entries', { replacement_rows: replacementRows, dry_run: false });
-      if (error) {
-        const unavailable = /replace_journal_entries|schema cache|function/i.test(error.message || '');
-        return {
-          ok: false,
-          unavailable,
-          error: unavailable
-            ? 'Full replacement is unavailable until replace_journal_entries is installed from docs/supabase-schema.sql.'
-            : error.message
-        };
+      if (conflictBlocked.current) throw conflictError();
+      const normalized = normalizeDailyPrimaries(nextEntries);
+      assertExplicitDeletion(entries, normalized, deletedId);
+      if (isSupabaseConfigured && user && (!encryptionConfig || !encryptionKey)) throw new Error('Unlock your encrypted journal before saving.');
+      if (encryptionConfig) await persistEncryptedJournal(normalized);
+      else {
+        await journalStore.save({ entries: normalized, expectedSnapshot: renderSnapshot });
+        if (journalStore.isActive()) { setEntries(normalized); setDataError(''); }
       }
-      setEncryptedRows(encrypted);
-      setEntries(normalizedEntries);
-      setDataError('');
+      return journalStore.isActive();
+    } catch (error) { recordSaveError(error); return false; }
+    finally { saveBusy.current = false; }
+  };
+
+  const replaceJournalEntries = async (nextEntries, dryRun = false) => {
+    if (!nextEntries.length) return { ok: false, error: 'An empty backup cannot replace your journal.' };
+    if (saveBusy.current) return { ok: false, error: 'Wait for the current save to finish.' };
+    saveBusy.current = true;
+    try {
+      if (conflictBlocked.current) throw conflictError();
+      const normalized = normalizeDailyPrimaries(nextEntries);
+      if (encryptionConfig) await persistEncryptedJournal(normalized, encryptionConfig, encryptionKey, { replacement: true, dryRun });
+      else {
+        if (isSupabaseConfigured) throw new Error('Unlock your encrypted journal before replacing it.');
+        await journalStore.save({ entries: normalized, replacement: true, dryRun, expectedSnapshot: renderSnapshot });
+        if (!dryRun && journalStore.isActive()) setEntries(normalized);
+      }
       return { ok: true, unavailable: false };
     } catch (error) {
-      setDataError(error.message);
-      return { ok: false, unavailable: false, error: error.message };
-    }
+      recordSaveError(error);
+      return { ok: false, unavailable: error.code === 'MJ_SETUP', error: error.message };
+    } finally { saveBusy.current = false; }
   };
 
-  const checkJournalReplaceAvailable = async () => {
-    if (!isSupabaseConfigured || !user) return true;
-    const { error } = await supabase.rpc('replace_journal_entries', { replacement_rows: [], dry_run: true });
-    return !error;
+  const checkJournalReplaceAvailable = (importedEntries) => replaceJournalEntries(importedEntries, true);
+
+  const readLatestJournal = async () => {
+    const snapshot = await journalStore.snapshot();
+    if (!journalStore.isActive()) throw new Error('The account session changed.');
+    const rows = isSupabaseConfigured ? snapshot.rows : snapshot.encrypted?.rows || [];
+    const configRow = isSupabaseConfigured ? rows.find(isEncryptionConfigRow) : null;
+    const configPayload = isSupabaseConfigured ? configRow?.note : snapshot.encrypted?.config || snapshot.legacyConfig;
+    const config = configPayload ? parseEncryptionConfig(configPayload) : null;
+    if (configPayload && !config) throw new Error('The encryption settings are damaged. Do not overwrite this journal.');
+    if (!config && rows.some(isEncryptedEntryRow)) throw new Error('The encryption settings are missing. Do not overwrite this journal.');
+    if ((config || encryptionConfig) && serializeEncryptionConfig(config) !== serializeEncryptionConfig(encryptionConfig)) {
+      throw new Error('Encryption settings changed. Lock and unlock this journal before continuing; keep your draft.');
+    }
+    const latestEntries = config ? await decryptEntryRows(rows.filter(isEncryptedEntryRow), encryptionKey)
+      : isSupabaseConfigured ? rows.map(rowToEntry) : snapshot.entries;
+    return { entries: normalizeDailyPrimaries(latestEntries), rows: rows.filter(isEncryptedEntryRow) };
+  };
+  const reviewConflict = async () => {
+    setConflict((current) => ({ ...current, busy: true, error: '' }));
+    try {
+      const latest = await readLatestJournal();
+      if (journalStore.isActive()) setConflict((current) => ({ ...current, latest, busy: false }));
+    } catch (error) { if (journalStore.isActive()) setConflict((current) => ({ ...current, busy: false, error: error.message })); }
+  };
+  const closeConflict = () => {
+    conflictResolver.current?.(false);
+    conflictResolver.current = null;
+    setConflict(null);
+  };
+  const acceptLatest = () => {
+    setEntries(conflict.latest.entries);
+    setEncryptedRows(conflict.latest.rows);
+    conflictBlocked.current = false;
+    setDataError('');
+    closeConflict();
+  };
+  const saveConflictCopy = async () => {
+    setConflict((current) => ({ ...current, busy: true, error: '' }));
+    try {
+      const latest = await readLatestJournal();
+      const expectedSnapshot = journalStore.capture();
+      const copy = { ...conflict.entry, id: crypto.randomUUID(), primary: false, updated: new Date().toISOString() };
+      const next = normalizeDailyPrimaries([copy, ...latest.entries]);
+      if (encryptionConfig) {
+        const rows = await encryptEntriesToRows([next.find((entry) => entry.id === copy.id)], user?.id || 'local-browser', encryptionKey);
+        await journalStore.save({ rows: isSupabaseConfigured ? rows : [...latest.rows, ...rows], entries: next, config: serializeEncryptionConfig(encryptionConfig), expectedSnapshot });
+        if (journalStore.isActive()) setEncryptedRows([...latest.rows, ...rows]);
+      } else await journalStore.save({ entries: next, expectedSnapshot });
+      if (!journalStore.isActive()) return;
+      setEntries(next); setDataError(''); conflictBlocked.current = false;
+      conflictResolver.current?.(true); conflictResolver.current = null; setConflict(null);
+    } catch (error) { if (journalStore.isActive()) setConflict((current) => ({ ...current, busy: false, error: error.message })); }
   };
 
   const enableJournalEncryption = async (passphrase) => {
+    if (saveBusy.current) throw new Error('Wait for the current journal operation to finish.');
+    saveBusy.current = true;
+    const expectedSnapshot = renderSnapshot;
     setEncryptionBusy(true);
     setEncryptionError('');
     try {
@@ -244,7 +279,7 @@ function App() {
         throw new Error('Import the local entries shown above before turning on encryption, so no readable browser copy is left behind.');
       }
       const created = await createJournalEncryption(passphrase);
-      await persistEncryptedJournal(entries, created.config, created.dataKey);
+      await persistEncryptedJournal(entries, created.config, created.dataKey, { expectedSnapshot });
       setEncryptionConfig(created.config);
       setEncryptionKey(created.dataKey);
       try {
@@ -255,19 +290,24 @@ function App() {
         });
         await encryptedPrivateStorage.migrateKnown();
       } catch (migrationError) {
-        setEncryptionError(`Your journal entries are encrypted, but some older activity data could not be migrated: ${migrationError.message}`);
+        if (journalStore.isActive()) setEncryptionError(`Your journal entries are encrypted, but some older activity data could not be migrated: ${migrationError.message}`);
       }
+      if (!journalStore.isActive()) return false;
       notifyOtherTabsOfEncryptionChange();
       return created.recoveryKey;
     } catch (error) {
-      setEncryptionError(error.message);
+      if (journalStore.isActive()) setEncryptionError(error.message);
       throw error;
     } finally {
-      setEncryptionBusy(false);
+      saveBusy.current = false;
+      if (journalStore.isActive()) setEncryptionBusy(false);
     }
   };
 
   const initializeAccountEncryption = async (accountPassword, verifyAccount = true) => {
+    if (saveBusy.current) return false;
+    saveBusy.current = true;
+    const expectedSnapshot = renderSnapshot;
     setEncryptionBusy(true);
     setEncryptionError('');
     try {
@@ -281,7 +321,7 @@ function App() {
       }
       const created = await createJournalEncryption(accountPassword);
       const automaticConfig = { ...created.config, unlockMethod: 'account-password' };
-      await persistEncryptedJournal(entries, automaticConfig, created.dataKey);
+      await persistEncryptedJournal(entries, automaticConfig, created.dataKey, { expectedSnapshot });
       setEncryptionConfig(automaticConfig);
       setEncryptionKey(created.dataKey);
       setPendingRecoveryKey(created.recoveryKey);
@@ -293,15 +333,17 @@ function App() {
         });
         await encryptedPrivateStorage.migrateKnown();
       } catch (migrationError) {
-        setEncryptionError(`Your journal entries are encrypted, but some older activity data could not be migrated: ${migrationError.message}`);
+        if (journalStore.isActive()) setEncryptionError(`Your journal entries are encrypted, but some older activity data could not be migrated: ${migrationError.message}`);
       }
+      if (!journalStore.isActive()) return false;
       notifyOtherTabsOfEncryptionChange();
       return true;
     } catch (error) {
-      setEncryptionError(error.message);
+      if (journalStore.isActive()) setEncryptionError(error.message);
       return false;
     } finally {
-      setEncryptionBusy(false);
+      saveBusy.current = false;
+      if (journalStore.isActive()) setEncryptionBusy(false);
     }
   };
 
@@ -314,80 +356,97 @@ function App() {
         ? await unlockJournalWithRecoveryKey(encryptionConfig, credential)
         : await unlockJournalWithPassphrase(encryptionConfig, credential);
       const decryptedEntries = normalizeDailyPrimaries(await decryptEntryRows(encryptedRows, dataKey));
+      if (!journalStore.isActive()) return false;
       setEncryptionKey(dataKey);
       setEntries(decryptedEntries);
       return true;
     } catch (error) {
+      if (!journalStore.isActive()) return false;
       setEncryptionKey(null);
       setEntries([]);
-      setEncryptionError(error.message);
+      if (journalStore.isActive()) setEncryptionError(error.message);
       return false;
     } finally {
-      setEncryptionBusy(false);
+      if (journalStore.isActive()) setEncryptionBusy(false);
     }
   };
 
-  const lockEncryptedJournal = () => {
+  const lockEncryptedJournal = async () => {
+    try { await flushJournalDrafts(); }
+    catch { setEncryptionError('The device draft could not be saved. Your draft is kept in this tab until you unlock.'); }
+    if (!journalStore.isActive()) return;
     setEncryptionKey(null);
     setEntries([]);
-    setEncryptionError('');
     notifyOtherTabsOfEncryptionChange();
   };
 
   const updateEncryptionPassphrase = async (newPassphrase) => {
     if (!encryptionConfig || !encryptionKey) throw new Error('Unlock your journal before changing its passphrase.');
+    if (saveBusy.current) throw new Error('Wait for the current journal operation to finish.');
+    saveBusy.current = true;
+    const expectedSnapshot = renderSnapshot;
     setEncryptionBusy(true);
     setEncryptionError('');
     try {
       const changedConfig = await changeJournalPassphrase(encryptionConfig, encryptionKey, newPassphrase);
       const nextConfig = { ...changedConfig, unlockMethod: 'journal-passphrase' };
-      if (!isSupabaseConfigured || !user) {
-        localStorage.setItem(localEncryptedJournalKey, JSON.stringify({
-          version: 1,
-          config: serializeEncryptionConfig(nextConfig),
-          rows: encryptedRows
-        }));
-        localStorage.removeItem(localEncryptionConfigKey);
-      } else {
-        const error = await upsertJournalRows([createEncryptionConfigRow(nextConfig, user.id)]);
-        if (error) throw new Error(error.message);
-      }
+      await persistEncryptedJournal(entries, nextConfig, encryptionKey, { expectedSnapshot });
+      if (!journalStore.isActive()) return false;
       setEncryptionConfig(nextConfig);
+      if (!journalStore.isActive()) return false;
       notifyOtherTabsOfEncryptionChange();
       return true;
     } catch (error) {
-      setEncryptionError(error.message);
+      if (journalStore.isActive()) setEncryptionError(error.message);
       throw error;
     } finally {
-      setEncryptionBusy(false);
+      saveBusy.current = false;
+      if (journalStore.isActive()) setEncryptionBusy(false);
     }
   };
   const resetAccountPassword = async (newPassword, recoveryKey) => {
     if (newPassword.length < 12) return { ok: false, error: 'Use an account password with at least 12 characters.' };
+    if (saveBusy.current) return { ok: false, error: 'Wait for the current journal operation to finish.' };
+    saveBusy.current = true;
     setEncryptionBusy(true);
     setEncryptionError('');
     try {
       let nextConfig = null;
       let recoveredDataKey = null;
-      if (encryptionConfig) {
-        recoveredDataKey = await unlockJournalWithRecoveryKey(encryptionConfig, recoveryKey);
-        const changedConfig = await changeJournalPassphrase(encryptionConfig, recoveredDataKey, newPassword);
+      const snapshot = await journalStore.snapshot();
+      const storedConfig = snapshot.rows.find(isEncryptionConfigRow);
+      const latestConfig = storedConfig ? parseEncryptionConfig(storedConfig.note) : null;
+      if ((storedConfig && !latestConfig) || (!latestConfig && snapshot.rows.some(isEncryptedEntryRow))) throw new Error('Encryption settings are damaged or missing. Password reset cannot safely continue.');
+      const expectedSnapshot = journalStore.capture();
+      if (latestConfig) {
+        recoveredDataKey = await unlockJournalWithRecoveryKey(latestConfig, recoveryKey);
+        const changedConfig = await changeJournalPassphrase(latestConfig, recoveredDataKey, newPassword);
         nextConfig = { ...changedConfig, unlockMethod: 'account-password' };
       }
+      if (!journalStore.isActive()) throw new Error('The account session changed.');
       const { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
       if (passwordError) throw new Error(passwordError.message);
       if (nextConfig) {
-        const storageError = await upsertJournalRows([createEncryptionConfigRow(nextConfig, user.id)]);
-        if (storageError) throw new Error(`Your account password changed, but the journal key update needs to be retried with your recovery key: ${storageError.message}`);
+        try {
+          await journalStore.save({ rows: [createEncryptionConfigRow(nextConfig, user.id)], expectedSnapshot });
+        } catch (storageError) {
+          throw new Error(`Your account password changed, but the journal key update needs to be retried with your recovery key: ${storageError.message}`);
+        }
+        if (!journalStore.isActive()) return { ok: false, error: 'The account session changed.' };
         setEncryptionConfig(nextConfig);
         setEncryptionKey(recoveredDataKey);
+        setEncryptedRows(snapshot.rows.filter(isEncryptedEntryRow));
+        const recoveredEntries = normalizeDailyPrimaries(await decryptEntryRows(snapshot.rows.filter(isEncryptedEntryRow), recoveredDataKey));
+        if (!journalStore.isActive()) return { ok: false, error: 'The account session changed.' };
+        setEntries(recoveredEntries);
       }
       return { ok: true };
     } catch (error) {
-      setEncryptionError(error.message);
+      if (journalStore.isActive()) setEncryptionError(error.message);
       return { ok: false, error: error.message };
     } finally {
-      setEncryptionBusy(false);
+      saveBusy.current = false;
+      if (journalStore.isActive()) setEncryptionBusy(false);
     }
   };
   const saveEntry = async (entry) => {
@@ -406,25 +465,16 @@ function App() {
       moodScore: mood?.score || null,
       updated: new Date().toISOString()
     };
-    return saveEntries(upsertJournalEntry(entries, normalized));
+    const saved = await saveEntries(upsertJournalEntry(entries, normalized));
+    if (!saved && journalStore.isActive() && lastSaveError.current?.code === JOURNAL_CONFLICT) {
+      setConflict({ entry: normalized, latest: null, error: '' });
+      return new Promise((resolve) => { conflictResolver.current = resolve; });
+    }
+    return saved;
   };
   const deleteEntry = async (id) => {
-    const previousEntries = entries;
     const nextEntries = removeJournalEntry(entries, id);
-    if (!isSupabaseConfigured || !user) {
-      return saveEntries(nextEntries);
-    }
-    const prepared = await saveEntries(nextEntries);
-    if (!prepared) return false;
-    const { error } = await supabase.from('journal_entries').delete().eq('id', id);
-    if (!error) {
-      setEncryptedRows((rows) => rows.filter((row) => row.id !== String(id)));
-      setDataError('');
-      return true;
-    }
-    await saveEntries(previousEntries);
-    setDataError(error.message);
-    return false;
+    return saveEntries(nextEntries, { deletedId: id });
   };
   const setPrimaryEntry = async (id) => {
     const target = entries.find((entry) => entry.id === id);
@@ -434,20 +484,18 @@ function App() {
   const setBookmarkedEntry = async (id, bookmarked) => saveEntries(entries.map((entry) => entry.id === id ? { ...entry, bookmarked } : entry));
   const importLocalEntries = async () => {
     if (!user || localEntries.length === 0) return false;
-    const existingIds = new Set(entries.map((entry) => entry.id));
-    const entriesToImport = localEntries.filter((entry) => !existingIds.has(entry.id));
-    if (entriesToImport.length === 0) {
-      localStorage.removeItem(localEntriesKey);
+    try {
+      const raw = localStorage.getItem(localEntriesKey);
+      const local = readLocalJournal(localStorage, localEntriesKey);
+      const comparison = compareJournalImports(entries, local);
+      if (comparison.conflicts.length) throw new Error('Some local entries have the same IDs but different writing. The local copy has been kept. Export and review these entries before importing.');
+      if (comparison.newEntries.length && !await saveEntries([...comparison.newEntries, ...entries])) return false;
+      await journalStore.removeImportedLocal(raw);
+      if (!journalStore.isActive()) return false;
       setLocalEntries([]);
-      setImportMessage('Those local entries are already in this account.');
+      setImportMessage('Local entries were confirmed saved. The old browser copy was removed.');
       return true;
-    }
-    const imported = await saveEntries([...entriesToImport, ...entries]);
-    if (!imported) return false;
-    localStorage.removeItem(localEntriesKey);
-    setLocalEntries([]);
-    setImportMessage(`${entriesToImport.length} local entr${entriesToImport.length === 1 ? 'y' : 'ies'} imported.`);
-    return true;
+    } catch (error) { recordSaveError(error); return false; }
   };
   const openApp = (nextView = 'checkin') => {
     if (!confirmJournalNavigation()) return false;
@@ -515,12 +563,31 @@ function App() {
   };
 
   useEffect(() => {
-    const handleEncryptionChange = (event) => {
-      if (event.key === encryptionRevisionKey) window.location.reload();
+    const handleEncryptionChange = async (event) => {
+      if (event.key !== encryptionRevisionKey) return;
+      let notice;
+      try { notice = JSON.parse(event.newValue); } catch { return; }
+      if (notice?.ownerId !== ownerId) return;
+      setExternalLock(true);
+      try { await flushJournalDrafts(); }
+      catch { if (journalStore.isActive()) setDataError('The device draft could not be saved. Keep this tab open to recover its in-memory draft.'); }
+      if (!journalStore.isActive()) return;
+      setEncryptionKey(null); setEntries([]);
+      closeConflict();
+      conflictBlocked.current = false;
+      try {
+        const snapshot = await journalStore.snapshot();
+        if (!journalStore.isActive()) return;
+        const rows = isSupabaseConfigured ? snapshot.rows : snapshot.encrypted?.rows || snapshot.entries;
+        const payload = isSupabaseConfigured ? rows.find(isEncryptionConfigRow)?.note : snapshot.encrypted?.config || snapshot.legacyConfig;
+        setEncryptionConfig(parseEncryptionConfig(payload) || invalidEncryptionConfig);
+        setEncryptedRows(rows.filter(isEncryptedEntryRow));
+      } catch (error) { if (journalStore.isActive()) { setEncryptionConfig(invalidEncryptionConfig); setEncryptionError(error.message); } }
+      finally { if (journalStore.isActive()) setExternalLock(false); }
     };
     window.addEventListener('storage', handleEncryptionChange);
     return () => window.removeEventListener('storage', handleEncryptionChange);
-  }, []);
+  }, [journalStore, ownerId]);
 
   useEffect(() => {
     if (!isSupabaseConfigured) return undefined;
@@ -531,6 +598,13 @@ function App() {
       setAuthLoading(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      const nextOwner = nextSession?.user?.id || 'signed-out';
+      if (storageRef.current?.ownerId !== nextOwner) {
+        storageRef.current?.store.deactivate();
+        conflictResolver.current?.(false); conflictResolver.current = null;
+        conflictBlocked.current = false; setConflict(null);
+        setEncryptionKey(null); setEntries([]); setEncryptedRows([]); setEncryptionConfig(null);
+      }
       setSession(nextSession);
       setAuthLoading(false);
       setImportMessage('');
@@ -564,21 +638,12 @@ function App() {
     setAccountDataLoadedFor(null);
     setDataLoading(true);
     setDataError('');
-    supabase
-      .from('journal_entries')
-      .select('*')
-      .order('created', { ascending: false })
-      .then(({ data, error }) => {
+    journalStore.snapshot()
+      .then(({ rows }) => {
         if (!active) return;
-        if (error) {
-          setDataError(error.message);
-          setAuthEncryptionCredential('');
-        }
-        else {
-          const rows = data || [];
           const configRow = rows.find(isEncryptionConfigRow);
           const config = configRow ? parseEncryptionConfig(configRow.note) : null;
-          if (configRow) {
+          if (configRow || rows.some(isEncryptedEntryRow)) {
             setEncryptionConfig(config || invalidEncryptionConfig);
             setEncryptionKey(null);
             setEncryptedRows(rows.filter(isEncryptedEntryRow));
@@ -591,8 +656,9 @@ function App() {
             setEntries(normalizeDailyPrimaries(rows.filter((row) => !isEncryptionConfigRow(row)).map(rowToEntry)));
           }
           setAccountDataLoadedFor(user.id);
-        }
         setDataLoading(false);
+      }).catch((error) => {
+        if (active) { setDataError(journalStorageError(error).message); setAuthEncryptionCredential(''); setDataLoading(false); }
       });
     return () => {
       active = false;
@@ -632,12 +698,7 @@ function App() {
           setDataError(error.message);
           return;
         }
-        const username = normalizeUsername(user.user_metadata?.username || user.email?.split('@')[0] || `user_${user.id.slice(0, 8)}`);
-        const { data: createdProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({ user_id: user.id, username })
-          .select('username, role')
-          .single();
+        const { data: createdProfile, error: createError } = await supabase.rpc('ensure_journal_profile');
         if (!active) return;
         if (createError) setDataError(createError.message);
         else setProfile(createdProfile);
@@ -737,12 +798,12 @@ function App() {
           ? <section className="screen app-screen"><div className="panel auth-panel"><p>{dataLoading ? 'Preparing secure password recovery...' : dataError || 'Your encrypted journal settings could not be loaded safely.'}</p></div></section>
           : <PasswordUpdateScreen requiresRecoveryKey={Boolean(encryptionConfig)} onUpdate={resetAccountPassword} onDone={() => setPasswordRecovery(false)} />)}
         {canUseApp && !passwordRecovery && (locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} onRecover={(password) => recoverLocalLock('pin', password)} /> : view === 'support' ? <Support user={user} siteTheme={siteTheme} theme={theme} originPage={supportOriginPage} onRequestChanged={() => setSupportRefreshRevision((current) => current + 1)} /> : view === 'admin' ? (!user ? <Navigate to="/" replace /> : !profile ? <section className="screen app-screen"><p>Checking admin access...</p></section> : profile.role === 'admin' ? <AdminPanel user={user} onRequestChanged={() => setSupportRefreshRevision((current) => current + 1)} /> : <Navigate to="/" replace />) : <>
-        {isSupabaseConfigured && <AccountStatus localEntries={localEntries} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />}
+        <AccountStatus localEntries={isSupabaseConfigured ? localEntries : []} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />
         {!accountDataReady ? (
           <section className="screen app-screen"><div className="panel auth-panel"><p>{dataLoading ? 'Preparing your private journal...' : dataError || 'Your journal could not be loaded safely.'}</p></div></section>
         ) : pendingRecoveryKey ? (
           <RecoveryKeyNotice recoveryKey={pendingRecoveryKey} onStored={() => setPendingRecoveryKey('')} />
-        ) : encryptedJournalLocked ? (
+        ) : externalLock ? <p role="status">Locking your journal and keeping your draft...</p> : encryptedJournalLocked ? (
           <JournalEncryptionGate
             busy={encryptionBusy}
             error={encryptionError}
@@ -772,6 +833,7 @@ function App() {
         )}
         </>)}
       </main>
+      {conflict && !externalLock && !encryptedJournalLocked && <JournalConflictDialog conflict={conflict} onReview={reviewConflict} onCopy={saveConflictCopy} onAccept={acceptLatest} onClose={closeConflict} />}
       {canUseApp && !locked && !passwordRecovery && view !== 'support' && !immersiveGameActive && <button className={`support-help-bubble${view === 'checkin' ? ' checkin-help-bubble' : ''}`} onClick={() => { setSupportOriginPage(location.pathname); openApp('support'); }} title="Help & feedback" aria-label="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={23} /></button>}
       {!immersiveGameActive && <footer className="footer">
         <div className="footer-brand">

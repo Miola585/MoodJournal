@@ -24,16 +24,26 @@ test('private storage encrypts sensitive local data and separates owners', async
   assert.deepEqual(await secondUser.read('gameMemoryJar', []), []);
 });
 
-test('private storage migrates a legacy plaintext value when encryption is on', async () => {
+test('guest private storage migrates a legacy plaintext value when encryption is on', async () => {
   const storage = new MemoryStorage();
   storage.setItem('activityNotes:2026-09-30', JSON.stringify({ Calm: 'A private note' }));
   const { dataKey } = await createJournalEncryption('private storage passphrase', { iterations: 100000 });
-  const privateStorage = createPrivateStorage({ ownerId: 'user-1', encryptionEnabled: true, dataKey, storage });
+  const privateStorage = createPrivateStorage({ ownerId: 'local-browser', encryptionEnabled: true, dataKey, storage });
 
   await privateStorage.migrateKnown();
   assert.deepEqual(await privateStorage.read('activityNotes:2026-09-30', {}), { Calm: 'A private note' });
   assert.equal(storage.getItem('activityNotes:2026-09-30'), null);
   assert.equal([...storage.values.values()].some((value) => value.includes('A private note')), false);
+});
+
+test('accounts cannot adopt or remove unowned legacy game data', async () => {
+  const storage = new MemoryStorage();
+  storage.setItem('gameMemoryJar', JSON.stringify([{ text: 'Guest memory' }]));
+  const account = createPrivateStorage({ ownerId: 'user-1', storage });
+  assert.deepEqual(await account.read('gameMemoryJar', []), []);
+  await account.write('gameMemoryJar', [{ text: 'Account memory' }]);
+  await account.remove('gameMemoryJar');
+  assert.deepEqual(JSON.parse(storage.getItem('gameMemoryJar')), [{ text: 'Guest memory' }]);
 });
 
 test('encrypted device drafts can be removed without leaving plaintext copies', async () => {

@@ -13,7 +13,7 @@ Mood Journal encrypts authenticated users' journal entries in the browser before
 - Reflective data kept only on the device, including activity notes, Memory Jar text, constellation names, and Mood Orbit state, is encrypted with the same unlocked data key and separated by account.
 - Supabase receives neutral placeholder values for required searchable columns.
 - Plaintext is never written to application logs by the encryption code.
-- Enabling encryption, changing the passphrase, or manually locking sends a same-origin storage notification so other open tabs reload into the locked state.
+- Enabling encryption, changing the passphrase, or manually locking sends an account-scoped notification. Other tabs preserve their drafts and lock without a forced page reload. Draft persistence failures are shown; keep the tab open to retain its in-memory copy.
 
 Encryption envelopes are versioned so a future migration can retain backward compatibility.
 
@@ -35,6 +35,8 @@ Activity and game reflections described below remain device-local and do not yet
 
 Mood Journal never stores an account password in its own tables or browser storage. Supabase Auth receives it over HTTPS and stores a salted bcrypt hash. The browser holds the password briefly in component memory during sign-in and journal-key derivation, then clears it. Passwords are not reversibly encrypted or copied into journal rows.
 
+Because the account password is also sent to the authentication provider, this setup is not independent, zero-knowledge protection against that provider. A compromised sign-in service or browser-delivered application could capture the password or unlocked key. Separate journal passphrases remain supported, but are not required in this release. Supabase session tokens are distinct from the journal key and may be stored by its authentication client in browser storage.
+
 If an authenticated account still has older local-only plaintext entries waiting to be imported, setup stops and asks the user to import them first. A successful import removes that old browser copy before encryption can be enabled. Local-only encrypted data stores the wrapped-key configuration and ciphertext rows in one versioned localStorage record to avoid a partial two-write state.
 
 Older plaintext activity notes and game reflections are migrated into encrypted, account-scoped browser storage when encryption is enabled. These game/activity records remain device-local and do not sync through Supabase. The recovery key can decrypt them only when their ciphertext is still present on that device or in a device backup.
@@ -49,7 +51,9 @@ The optional app PIN and journal lock are screen-hiding conveniences, not crypto
 
 ## Database access
 
-Supabase Row Level Security remains enabled and restricts normal browser access to rows owned by `auth.uid()`. Encryption is a separate defense because privileged database roles can bypass RLS. Database administrators should see ciphertext and neutral placeholders, not readable journal content.
+Supabase Row Level Security remains enabled for owner-only reads. Direct browser writes are revoked; narrowly granted RPCs enforce ownership and a per-account revision before atomic writes. Support admins receive no additional journal access. Encryption is a separate defense because privileged database roles can bypass RLS. Correctly saved journal rows contain ciphertext and neutral placeholders, not readable journal content. SQL envelope-prefix checks are not proof that a client performed encryption correctly.
+
+Password changes in Supabase Auth and journal-key rewrapping cannot be one transaction. If the password changes but the revision-checked key update fails, the UI reports the partial result and requires a retry with the recovery key. Never discard that key because a password-reset email succeeded.
 
 ## Verification
 
