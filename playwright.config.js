@@ -11,7 +11,7 @@ const baseURL = 'http://127.0.0.1:5181';
 
 export default defineConfig({
   testDir: './e2e',
-  outputDir: '.visual-check/test-results',
+  outputDir: '.cache/visual-check/test-results',
   reporter: 'list',
   use: { baseURL, browserName: 'chromium' },
   webServer: {

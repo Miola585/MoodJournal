@@ -1516,8 +1516,13 @@
 }
 
 .entries-screen {
+  grid-template-columns: minmax(0, 1fr);
   max-width: 1120px;
   margin: 0 auto;
+}
+
+.entries-screen > .page-header {
+  flex-wrap: wrap;
 }
 
 .archive-heading {
@@ -1568,6 +1573,7 @@
 }
 
 .archive-toolbar label {
+  min-width: 0;
   color: var(--muted-text);
   font-size: 0.86rem;
   text-align: left;
@@ -1575,6 +1581,8 @@
 
 .archive-toolbar input,
 .archive-toolbar select {
+  min-width: 0;
+  max-width: 100%;
   min-height: 42px;
   background: color-mix(in srgb, var(--input-bg) 88%, transparent);
 }
@@ -1600,6 +1608,7 @@
 .archive-filter-status {
   grid-column: 1 / -1;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;

@@ -148,7 +148,7 @@
 }
 
 .archive-toolbar {
-  grid-template-columns: minmax(230px, 1.4fr) repeat(3, minmax(145px, 0.75fr)) auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(12rem * var(--font-scale, 1))), 1fr));
 }
 
 .bookmark-filter {
@@ -3453,7 +3453,7 @@ button.topnav-menu-button {
 
 /* Keep milestone layout overrides after the legacy responsive layer. */
 .archive-toolbar {
-  grid-template-columns: minmax(230px, 1.4fr) repeat(3, minmax(145px, 0.75fr)) auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(12rem * var(--font-scale, 1))), 1fr));
 }
 
 .freewrite-page-heading {

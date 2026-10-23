@@ -42,6 +42,10 @@ The goal of the app is to create a warm, personal space where users can reflect 
 * Font settings
 * Responsive design
 
+## Local Output
+
+Local generated files live under the ignored `.cache/` folder: npm data in `npm/`, temporary browser profiles in `browser-profiles/`, and screenshots and Playwright output in `visual-check/`. Keep future manual browser captures there as well. Existing private illustrated guides are also retained in `visual-check/`; do not delete that folder wholesale. Standard tool folders such as `node_modules/` and `dist/` remain at the root.
+
 ## Tech Stack
 
 * React
@@ -100,7 +104,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 Then run the SQL schema inside Supabase SQL Editor.
-Full setup in docs\supabase-schema.sql
+Database files and verification instructions are in [backend/README.md](backend/README.md).
+The fresh-install schema is [backend/supabase/supabase-schema.sql](backend/supabase/supabase-schema.sql).
 
 The feedback inbox uses the `support_requests` and `support_messages` tables in that schema. After applying it, assign your own account the `admin` role in the Supabase SQL Editor or dashboard; the browser cannot grant admin access. Requests and replies are delivered through Supabase only when accounts are configured. No screenshots, journal entries, or device details are sent automatically.
 

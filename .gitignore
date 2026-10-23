@@ -1,4 +1,7 @@
 node_modules/
+.cache/
+.capture-*/
+.npm-cache/
 dist/
 .env
 .env.local
@@ -9,4 +12,5 @@ npm-debug.log*
 AGENTS.md
 ROADMAP.md
 UPDATES.md
+PRODUCTIONREADY.md
 KnowIt.md
