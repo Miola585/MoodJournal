@@ -15,6 +15,11 @@
   box-shadow: var(--surface-shadow);
 }
 
+.mobile-form-help,
+.checkin-screen .page-header-actions {
+  display: none;
+}
+
 .support-help-bubble:hover {
   background: var(--interactive-strong, var(--button-bg-hover));
   color: var(--text-on-accent, var(--btn-text));
@@ -432,4 +437,49 @@
   .support-category span { grid-column: 2; }
   .support-detail-heading { flex-wrap: wrap; }
   .support-help-bubble { width: 44px; height: 44px; }
+}
+
+@media (max-width: 560px) {
+  .support-help-bubble {
+    right: env(safe-area-inset-right);
+    bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .app:has(.checkin-screen) .support-help-bubble,
+  .app:has(.freewrite-screen) .support-help-bubble {
+    display: none;
+  }
+
+  .mobile-form-help {
+    display: inline-grid;
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: 7px;
+    background: var(--surface-interactive);
+    color: var(--text-primary);
+  }
+
+  .mobile-form-help:focus-visible {
+    outline: 3px solid var(--focus-ring, var(--interactive-accent));
+    outline-offset: 2px;
+  }
+
+  .checkin-screen .page-header {
+    position: relative;
+  }
+
+  .checkin-screen .page-header-actions {
+    display: flex;
+    width: auto;
+    align-self: flex-end;
+    margin-top: -4px;
+  }
+
+  .journal-paper-controls {
+    justify-content: space-between;
+  }
 }

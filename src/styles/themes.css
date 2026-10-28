@@ -1047,6 +1047,33 @@
   opacity: 0.58;
 }
 
+@media (max-width: 560px) {
+  .app:is(.theme-warm, .theme-ocean, .theme-garden, .theme-sunrise, .theme-night) .theme-atmosphere .theme-art-image,
+  .app.theme-night .theme-atmosphere .theme-art-night {
+    display: none;
+  }
+
+  .app.theme-warm .theme-atmosphere .theme-art-cafe-pumpkin,
+  .app.theme-ocean:not(.dark) .theme-atmosphere .theme-art-ocean-shell,
+  .app.theme-ocean.dark .theme-atmosphere .theme-art-ocean-marine-shell,
+  .app.theme-garden .theme-atmosphere .theme-art-garden-flowers,
+  .app.theme-sunrise:not(.dark) .theme-atmosphere .theme-art-sunrise-sun,
+  .app.theme-sunrise.dark .theme-atmosphere .theme-art-sunrise-cloud,
+  .app.theme-night:not(.dark) .theme-atmosphere .theme-art-night-moon-light,
+  .app.theme-night.dark .theme-atmosphere .theme-art-night-crescent {
+    display: block;
+    width: 44px;
+    height: 44px;
+    inset: 64px 8px auto auto;
+    opacity: 0.24;
+    transform: none;
+  }
+
+  .app:has(.checkin-screen) .theme-atmosphere .theme-art-image {
+    display: none;
+  }
+}
+
 .app.theme-ocean .layer-three,
 .app.theme-ocean.dark .layer-three {
   background:

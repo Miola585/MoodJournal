@@ -20,9 +20,10 @@ for (const width of [1440, 390]) {
     const appearance = await dialog.evaluate((node) => ({
       background: getComputedStyle(node).backgroundColor,
       backdrop: getComputedStyle(node, '::backdrop').backdropFilter,
+      webkitBackdrop: getComputedStyle(node, '::backdrop').webkitBackdropFilter,
     }));
     expect(appearance.background).toMatch(/^rgb\(/);
-    expect(appearance.backdrop).toBe('blur(12px)');
+    expect([appearance.backdrop, appearance.webkitBackdrop]).toContain('blur(12px)');
     await dialog.getByLabel('Journal lock', { exact: true }).fill('my private cover');
     await page.screenshot({ path: testInfo.outputPath(`privacy-setup-${width}.png`) });
     expect(await dialog.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);

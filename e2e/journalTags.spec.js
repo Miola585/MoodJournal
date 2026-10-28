@@ -30,6 +30,7 @@ for (const [width, scale] of [[1280, 1], [390, 1.5]]) {
     await page.getByRole('button', { name: 'Save page', exact: true }).click();
     await expect(page.locator('.entry-card')).toHaveCount(1);
     expect((await savedEntries(page))[0].tags).toEqual(['free-write', 'school', 'family']);
+    if (width <= 560) await page.getByRole('button', { name: 'Filters', exact: true }).click();
     const filter = page.getByRole('textbox', { name: 'Tag search' });
     await filter.fill('#walk'); await expect(page.locator('.entry-card')).toHaveCount(1);
     await filter.fill('not-a-tag'); await expect(page.locator('.entry-card')).toHaveCount(0);

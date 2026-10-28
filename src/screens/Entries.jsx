@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bookmark, BookOpen, FileText, List, PenLine, RotateCcw, Save, Search, Trash2, Undo2, X } from 'lucide-react';
+import { Bookmark, BookOpen, FileText, List, MessageCircleQuestionMark, PenLine, RotateCcw, Save, Search, SlidersHorizontal, Trash2, Undo2, X } from 'lucide-react';
 import { checkInTitleAfterMoodChange, createFreeWriteEntry, moods } from '../data/journalData';
 import { isCheckIn, isJournalDateAllowed, isVisibleJournalEntry, journalDayNumber, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
@@ -15,12 +15,13 @@ import { StickyNote } from '../components/journal/StickyNote';
 import { clampStickerPosition, createStickerPlacement } from '../utils/stickerUtils';
 import { createJournalNote, getJournalNotes, MAX_JOURNAL_NOTES } from '../utils/journalNotes';
 
-export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark, privateStorage }) {
+export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark, onHelp, privateStorage }) {
   const [query, setQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('');
   const [tagFilter, setTagFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   const [bookmarkFilter, setBookmarkFilter] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [creatingFreeWrite, setCreatingFreeWrite] = useState(false);
   const [pendingDeletes, setPendingDeletes] = useState(() => new Set());
@@ -41,6 +42,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
     return matchesKeyword && matchesMood && matchesTag && matchesDate && matchesBookmark;
   });
   const hasFilters = Boolean(query || moodFilter || tagFilter || dateFilter || bookmarkFilter);
+  const advancedFilterCount = [moodFilter, tagFilter, dateFilter, bookmarkFilter].filter(Boolean).length;
   const clearFilters = () => {
     setQuery('');
     setMoodFilter('');
@@ -77,8 +79,8 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
     }, 10000);
     deleteTimers.current.set(entry.id, timer);
   };
-  if (editing) return <EditEntry entry={editing} onCancel={() => setEditing(null)} onSave={onSave} privateStorage={privateStorage} />;
-  if (creatingFreeWrite) return <FreeWriteEntry nav={nav} onCancel={() => setCreatingFreeWrite(false)} onSave={onSave} privateStorage={privateStorage} />;
+  if (editing) return <EditEntry entry={editing} onCancel={() => setEditing(null)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
+  if (creatingFreeWrite) return <FreeWriteEntry nav={nav} onCancel={() => setCreatingFreeWrite(false)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
   return (
     <section className="screen app-screen entries-screen">
       <PageHeader title="Journal Entries" subtitle="Search, revisit, or write freely." actions={(
@@ -95,6 +97,8 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search your notes" />
           </span>
         </label>
+        <button aria-controls="archive-advanced-filters" aria-expanded={filtersOpen} className="archive-filter-toggle" onClick={() => setFiltersOpen((open) => !open)} type="button"><SlidersHorizontal aria-hidden="true" size={17} />Filters{advancedFilterCount > 0 && <span className="archive-filter-count">{advancedFilterCount}</span>}</button>
+        <div className={filtersOpen ? 'archive-advanced-filters open' : 'archive-advanced-filters'} id="archive-advanced-filters">
         <label>Mood filter
           <select value={moodFilter} onChange={(event) => setMoodFilter(event.target.value)}>
             <option value="">All moods</option>
@@ -111,6 +115,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
           <Bookmark aria-hidden="true" fill={bookmarkFilter ? 'currentColor' : 'none'} size={17} />
           Bookmarked
         </button>
+        </div>
         <div className="archive-filter-status" aria-live="polite">
           <span>Showing <strong>{filtered.length}</strong> of {journalEntries.length}</span>
           {hasFilters && (
@@ -168,7 +173,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
   );
 }
 
-function FreeWriteEntry({ nav, onSave, onCancel, privateStorage }) {
+function FreeWriteEntry({ nav, onSave, onCancel, onHelp, privateStorage }) {
   const [draft, setDraft] = useState(createFreeWriteEntry());
   const [saveState, setSaveState] = useState('');
   const [bookOpen, setBookOpen] = useState(false);
@@ -199,7 +204,7 @@ function FreeWriteEntry({ nav, onSave, onCancel, privateStorage }) {
         <JournalNotebook actionButtons={<>
           <button aria-label="Save page" className="primary" disabled={saveState === 'saving'} title="Save page" type="submit"><Save aria-hidden="true" size={17} />Save</button>
           <button onClick={() => draftState.confirmDiscard() && onCancel()} type="button"><X aria-hidden="true" size={17} />Cancel</button>
-        </>} bookOpen={bookOpen} onBookClose={() => setBookOpen(false)} onBookToggle={() => setBookOpen((open) => !open)} draft={draft} onFieldChange={setField} onNotesChange={setNotes} onWritingChange={setWriting} privateStorage={privateStorage} required />
+        </>} bookOpen={bookOpen} onBookClose={() => setBookOpen(false)} onBookToggle={() => setBookOpen((open) => !open)} draft={draft} onFieldChange={setField} onHelp={onHelp} onNotesChange={setNotes} onWritingChange={setWriting} privateStorage={privateStorage} required />
         <div className="journal-writing-feedback">
           <SaveState state={saveState} onRetry={saveDraft} draftStatus={draftState.dirty ? draftState.draftStatus : ''} />
           {saveState === 'empty' && <span className="journal-save-state error" role="alert">Write something on the page before saving.</span>}
@@ -210,7 +215,7 @@ function FreeWriteEntry({ nav, onSave, onCancel, privateStorage }) {
   );
 }
 
-function EditEntry({ entry, onSave, onCancel, privateStorage }) {
+function EditEntry({ entry, onSave, onCancel, onHelp, privateStorage }) {
   const [draft, setDraft] = useState(entry);
   const [saveState, setSaveState] = useState('');
   const [bookOpen, setBookOpen] = useState(false);
@@ -249,7 +254,7 @@ function EditEntry({ entry, onSave, onCancel, privateStorage }) {
         <JournalNotebook actionButtons={<>
           <button aria-label="Save changes" className="primary" disabled={saveState === 'saving'} title="Save changes" type="submit"><Save aria-hidden="true" size={17} />Save</button>
           <button onClick={() => draftState.confirmDiscard() && onCancel()} type="button"><X aria-hidden="true" size={17} />Cancel</button>
-        </>} bookOpen={bookOpen} onBookClose={() => setBookOpen(false)} onBookToggle={() => setBookOpen((open) => !open)} checkIn={checkIn} draft={draft} mood={mood} onFieldChange={setField} onNotesChange={setNotes} onWritingChange={setWriting} privateStorage={privateStorage} />
+        </>} bookOpen={bookOpen} onBookClose={() => setBookOpen(false)} onBookToggle={() => setBookOpen((open) => !open)} checkIn={checkIn} draft={draft} mood={mood} onFieldChange={setField} onHelp={onHelp} onNotesChange={setNotes} onWritingChange={setWriting} privateStorage={privateStorage} />
         <div className="journal-writing-feedback">
           <SaveState state={saveState} onRetry={saveDraft} draftStatus={draftState.dirty ? draftState.draftStatus : ''} />
           {saveState === 'invalid-date' && <span className="journal-save-state error" role="alert">Choose today or an earlier journal date.</span>}
@@ -263,7 +268,7 @@ function StickerBookTrigger({ open, onToggle }) {
   return <button aria-controls="sticker-book-panel" aria-expanded={open} className="secondary-button sticker-book-trigger" onClick={onToggle} type="button"><BookOpen aria-hidden="true" size={17} />Sticker Book</button>;
 }
 
-function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onNotesChange, onWritingChange, privateStorage, bookOpen, onBookClose, onBookToggle, checkIn = false, required = false }) {
+function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, onNotesChange, onWritingChange, privateStorage, bookOpen, onBookClose, onBookToggle, checkIn = false, required = false }) {
   const [bookPage, setBookPage] = useState(0);
   const [selectedStickerId, setSelectedStickerId] = useState(null);
   const [placementRegion, setPlacementRegion] = useState('writing');
@@ -350,6 +355,7 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onNotesCha
   return (
     <>
     <div className="journal-paper-controls">
+      {onHelp && <button aria-label="Help & feedback" className="mobile-form-help" onClick={onHelp} title="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={20} /></button>}
       <div className="journal-paper-controls-actions">
         <div aria-label="Paper style" className="journal-paper-switch" role="group">
           <button aria-pressed={draft.paperStyle === 'plain'} onClick={() => onFieldChange('paperStyle', 'plain')} type="button"><FileText aria-hidden="true" size={16} />Plain</button>
@@ -364,7 +370,7 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onNotesCha
           <div className="journal-title-row">
             {!checkIn ? (
               <label className="freewrite-title-field"><span className="visually-hidden">Title</span>
-                <input maxLength={100} required value={draft.specificFeeling || ''} onChange={(event) => onFieldChange('specificFeeling', event.target.value)} placeholder="Give this page a title" />
+                <input maxLength={100} required value={draft.specificFeeling || ''} onChange={(event) => onFieldChange('specificFeeling', event.target.value)} placeholder="Page title" />
               </label>
             ) : (
               <label className="freewrite-title-field"><span className="visually-hidden">Check-in title</span>

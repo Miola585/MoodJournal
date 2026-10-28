@@ -26,6 +26,7 @@ for (const [width, fontScale] of [[1280, 1], [1280, 1.5], [900, 1], [850, 1], [7
     };
     await assertContained();
     await page.getByRole('textbox', { name: 'Keyword search' }).fill('test');
+    if (width <= 560) await page.getByRole('button', { name: 'Filters', exact: true }).click();
     await page.getByRole('button', { name: 'Bookmarked', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Bookmarked', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await assertContained();

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { JournalTags } from '../components/journal/JournalTags';
-import { CalendarDays, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronDown, MessageCircleQuestionMark, Sparkles } from 'lucide-react';
 import { createEntry, factors, guidedPrompts, moods } from '../data/journalData';
 import { PageHeader } from '../components/layout/PageHeader';
 import { isJournalDateAllowed, todayKey } from '../utils/journalUtils';
@@ -49,7 +49,7 @@ const bodyCheckGroups = [
   }
 ];
 
-export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
+export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStorage }) {
   const [entry, setEntry] = useState(createEntry);
   const [promptType, setPromptType] = useState('Reflect');
   const [step, setStep] = useState(0);
@@ -112,7 +112,7 @@ export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
 
   return (
     <section className="screen app-screen checkin-screen">
-      <PageHeader align="center" eyebrow="A quiet minute" title="Daily Mood Check-In" subtitle="Name what you feel, notice what shaped it, and choose one small next step." />
+      <PageHeader align="center" eyebrow="A quiet minute" title="Daily Mood Check-In" subtitle="Name what you feel, notice what shaped it, and choose one small next step." actions={onHelp && <button aria-label="Help & feedback" className="mobile-form-help" onClick={onHelp} title="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={20} /></button>} />
       {nav}
       <DraftRecoveryNotice record={draftState.storedDraft} onRestore={draftState.restoreDraft} onDiscard={draftState.discardDraft} />
       <form className="flow checkin-flow" onSubmit={submit}>
@@ -266,12 +266,12 @@ export function CheckIn({ nav, entries = [], onSave, onDone, privateStorage }) {
         <div className={`${step === 2 && canSave ? 'checkin-action-bar has-save' : 'checkin-action-bar'}${isAdditionalCheckIn ? ' compact-checkin-actions' : ''}`}>
           {isAdditionalCheckIn ? <span className="compact-checkin-primary-note"><Sparkles aria-hidden="true" size={16} />Your earlier check-in stays the main one.</span> : null}
           {!isAdditionalCheckIn && <>
-          <button className="secondary" disabled={step === 0} onClick={goBack} type="button">Back</button>
+          <button aria-label="Back" className="secondary checkin-back-button" disabled={step === 0} onClick={goBack} type="button"><ArrowLeft aria-hidden="true" size={17} /><span>Back</span></button>
           {step < stepLabels.length - 1 && (
-            <button className="primary" disabled={step === 0 && !entry.mood} onClick={goNext} type="button">{step === 2 ? 'Continue to context' : 'Next'}</button>
+            <button aria-label={step === 2 ? 'Continue to context' : 'Next'} className="primary" disabled={step === 0 && !entry.mood} onClick={goNext} type="button"><span className="checkin-long-label">{step === 2 ? 'Continue to context' : 'Next'}</span><span className="checkin-short-label">Next</span></button>
           )}
           {(step === stepLabels.length - 1 || (step === 2 && canSave)) && (
-            <button className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Save Check-In</button>
+            <button aria-label="Save Check-In" className="primary" disabled={!canSave || saveState === 'saving'} type="submit"><span className="checkin-long-label">Save Check-In</span><span className="checkin-short-label">Save</span></button>
           )}
           </>}
           {isAdditionalCheckIn && <button className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Save mood moment</button>}
