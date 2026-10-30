@@ -88,6 +88,47 @@ test('memory archive keeps older memories beyond the visible jar capacity', asyn
   await expect(page.locator('.memory-marble')).toHaveCount(24);
 });
 
+test('the same memory can be saved again on another local day without changing its archive record', async ({ page }) => {
+  await page.goto('/games/memory', { waitUntil: 'domcontentloaded' });
+  const yesterday = await page.evaluate(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString();
+  });
+  await page.evaluate(({ storageKey, createdAt }) => {
+    localStorage.setItem(storageKey, JSON.stringify([
+      { id: 'older-walk', text: 'Grateful for a walk', createdAt }
+    ]));
+  }, { storageKey: key('gameMemoryJar'), createdAt: yesterday });
+  await page.reload();
+  await page.getByPlaceholder('A tiny good thing from today...').fill('Grateful for a walk');
+  await expect(page.getByRole('button', { name: 'Add to jar' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Add to jar' }).click();
+  await expect(page.getByText('Saved to jar.', { exact: true })).toBeVisible();
+  const saved = await page.evaluate((storageKey) => JSON.parse(localStorage.getItem(storageKey)), key('gameMemoryJar'));
+  expect(saved).toHaveLength(2);
+  expect(saved.find((entry) => entry.id === 'older-walk')).toMatchObject({ text: 'Grateful for a walk', createdAt: yesterday });
+  await page.goto('/game-archive?game=memory', { waitUntil: 'domcontentloaded' });
+  const archive = page.getByRole('region', { name: 'Memory Jar archive' });
+  await expect(archive.getByRole('status')).toContainText('2 saved moments');
+  await expect(archive.locator('.game-archive-item')).toHaveCount(2);
+});
+
+test('the same-day memory check remains case-insensitive', async ({ page }) => {
+  await page.goto('/games/memory', { waitUntil: 'domcontentloaded' });
+  await page.evaluate((storageKey) => {
+    localStorage.setItem(storageKey, JSON.stringify([
+      { id: 'todays-walk', text: 'Grateful for a walk', createdAt: new Date().toISOString() }
+    ]));
+  }, key('gameMemoryJar'));
+  await page.reload();
+  await page.getByPlaceholder('A tiny good thing from today...').fill('gRaTeFuL fOr A wAlK');
+  await expect(page.getByRole('button', { name: 'Add to jar' })).toBeDisabled();
+  await expect(page.getByText('You already saved this memory today.')).toBeVisible();
+  const saved = await page.evaluate((storageKey) => JSON.parse(localStorage.getItem(storageKey)), key('gameMemoryJar'));
+  expect(saved).toHaveLength(1);
+});
+
 test('failed memory saves retain the text and never claim success', async ({ page }) => {
   await page.goto('/games/memory');
   await page.evaluate(() => {

@@ -1,3 +1,5 @@
+import { dateKeyFromTimestamp } from '../../utils/journalUtils.js';
+
 export const scavengerSets = [
   ['Find something soft', 'Notice one calming color', 'Name a sound nearby', 'Find something that makes you smile'],
   ['Find something round', 'Notice one shadow', 'Name one steady object', 'Find something that feels cool'],
@@ -116,6 +118,11 @@ export const parseGamePayload = (entry) => {
 export const getMoodColor = (moods, moodKey) => moods.find((mood) => mood.key === moodKey)?.color || '#fff7c7';
 
 const getMemoryText = (entry) => parseGamePayload(entry)?.text || stripGameData(entry.note).replace('Memory Jar: ', '').trim();
+
+export const hasDuplicateMemoryOnDay = (memories, text, dayKey) => memories.some((entry) =>
+  dateKeyFromTimestamp(entry.createdAt) === dayKey
+  && entry.text.toLowerCase() === text.toLowerCase()
+);
 
 export const detectMemoryCategory = (text) => {
   const lower = text.toLowerCase();

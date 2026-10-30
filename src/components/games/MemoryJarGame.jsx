@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import {
   buildMemoryView,
   detectMemoryCategory,
-  groupMemoriesByMonth
+  groupMemoriesByMonth,
+  hasDuplicateMemoryOnDay
 } from './gameUtils';
 import { MemoryJarSvg } from './MemoryJarSvg';
 import { useGameStorageState } from '../../hooks/useGameStorageState';
+import { todayKey } from '../../utils/journalUtils';
 
 const memoryStorageKey = 'gameMemoryJar';
 const marbleColors = ['#e6ad35', '#d95f6d', '#329a9f', '#7868d4', '#df7841', '#6f9f4f', '#c9589c', '#397dbd'];
@@ -74,7 +76,7 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
     normalizeStoredMemories
   );
   const memoryText = memory.trim();
-  const duplicateToday = memoryText && memories.some((entry) => entry.text.toLowerCase() === memoryText.toLowerCase());
+  const duplicateToday = memoryText && hasDuplicateMemoryOnDay(memories, memoryText, todayKey());
 
   useEffect(() => {
     if (!selectedMemory) return undefined;
@@ -159,7 +161,7 @@ export function MemoryJarGame({ mood, mainToday, privateStorage }) {
         <textarea value={memory} onChange={(event) => { setMemory(event.target.value); setMessage(''); }} placeholder="A tiny good thing from today..." />
         <div className="memory-input-actions">
           <button className="primary" disabled={!memoryText || duplicateToday || !canSave} onClick={addMemory} type="button">Add to jar</button>
-          {duplicateToday && <p className="form-error">That memory is already in your jar.</p>}
+          {duplicateToday && <p className="form-error">You already saved this memory today.</p>}
           <div className="memory-feedback-slot" aria-live="polite">
             {message && <p className="success-message">{message}</p>}
           </div>

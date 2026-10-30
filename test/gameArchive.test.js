@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { appendOrbitSnapshot, loadGameArchive, normalizeConstellations } from '../src/components/games/gameArchiveData.js';
-import { planetSeeds } from '../src/components/games/gameUtils.js';
+import { hasDuplicateMemoryOnDay, planetSeeds } from '../src/components/games/gameUtils.js';
 import { createPrivateStorage } from '../src/utils/privateStorage.js';
 import { createJournalEncryption } from '../src/utils/journalEncryption.js';
 
@@ -17,6 +17,24 @@ const makeLocks = () => {
   let queue = Promise.resolve();
   return { request: (_name, fn) => { const pending = queue.then(fn); queue = pending.catch(() => {}); return pending; } };
 };
+
+test('memory duplicates are case-insensitive within one local day, but recur on later days', () => {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = 'America/New_York';
+  try {
+    const memories = [
+      { text: 'Grateful for a walk', createdAt: '2026-10-23T03:30:00Z' },
+      { text: 'A quiet morning', createdAt: '2026-10-23T14:00:00Z' }
+    ];
+    assert.equal(hasDuplicateMemoryOnDay(memories, 'gRaTeFuL fOr A wAlK', '2026-10-22'), true);
+    assert.equal(hasDuplicateMemoryOnDay(memories, 'Grateful for a walk', '2026-10-23'), false);
+    assert.equal(hasDuplicateMemoryOnDay(memories, 'A QUIET MORNING', '2026-10-23'), true);
+    assert.equal(hasDuplicateMemoryOnDay(memories, 'Grateful for a walk', '2026-10-29'), false);
+  } finally {
+    if (previousTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTimezone;
+  }
+});
 
 test('orbit history retains a legacy save and every new same-day snapshot', () => {
   const original = { planets: planetSeeds, reflection: 'Before' };
