@@ -81,3 +81,39 @@ test('permission revoked before a timer fires prevents notification', () => {
   assert.equal(c.notices.length, 0);
   assert.equal(c.next(), undefined);
 });
+
+function inNewYork(run) {
+  const previousTimezone = process.env.TZ;
+  process.env.TZ = 'America/New_York';
+  try { run(); }
+  finally {
+    if (previousTimezone === undefined) delete process.env.TZ;
+    else process.env.TZ = previousTimezone;
+  }
+}
+
+test('fall-back schedules the second 1:30 AM but never delivers one daily slot twice', () => inNewYork(() => {
+  const preferences = { enabled: true, times: ['01:30'] };
+  const first = new Date('2026-11-01T05:30:00Z');
+  const second = new Date('2026-11-01T06:30:00Z');
+  const tomorrow = new Date('2026-11-02T06:30:00Z');
+  assert.deepEqual(nextReminder(preferences, new Date('2026-11-01T05:10:00Z')).at, first);
+  assert.deepEqual(nextReminder(preferences, new Date('2026-11-01T06:10:00Z')).at, second);
+
+  const c = clock(new Date('2026-11-01T05:10:00Z'), { preferences });
+  c.move(first); c.fire();
+  assert.deepEqual(c.next(), tomorrow);
+  c.move(new Date('2026-11-01T06:10:00Z')); c.scheduler.refresh();
+  assert.deepEqual(c.next(), tomorrow);
+  assert.equal(c.notices.length, 1);
+  assert.deepEqual(nextReminder(preferences, new Date('2026-11-01T06:10:00Z'), c.delivered).at, tomorrow);
+}));
+
+test('spring-forward keeps the local reminder at the first available 3:30 AM', () => inNewYork(() => {
+  const preferences = { enabled: true, times: ['02:30'] };
+  const shifted = new Date('2026-03-08T07:30:00Z');
+  const tomorrow = new Date('2026-03-09T06:30:00Z');
+  assert.deepEqual(nextReminder(preferences, new Date('2026-03-08T06:50:00Z')).at, shifted);
+  assert.deepEqual(nextReminder(preferences, new Date('2026-03-08T07:10:00Z')).at, shifted);
+  assert.deepEqual(nextReminder(preferences, new Date('2026-03-08T07:40:00Z')).at, tomorrow);
+}));

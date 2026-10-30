@@ -7,19 +7,33 @@ export function normalizeReminder(value) {
 
 const slotKey = (date, time) => `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}:${time}`;
 
+function localOccurrences(day, hours, minutes) {
+  const first = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hours, minutes);
+  const nextDay = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1, 12);
+  const offsetChange = nextDay.getTimezoneOffset() - first.getTimezoneOffset();
+  if (offsetChange <= 0) return [first];
+
+  const second = new Date(first.getTime() + offsetChange * 60000);
+  const repeats = second.getFullYear() === day.getFullYear()
+    && second.getMonth() === day.getMonth()
+    && second.getDate() === day.getDate()
+    && second.getHours() === hours
+    && second.getMinutes() === minutes;
+  return repeats ? [first, second] : [first];
+}
+
 export function nextReminder(value, now, delivered = new Set()) {
   const preferences = normalizeReminder(value);
   if (!preferences.enabled) return null;
   const candidates = preferences.times.map((time) => {
     const [hours, minutes] = time.split(':').map(Number);
-    const at = new Date(now);
-    at.setHours(hours, minutes, 0, 0);
-    // Construct each next day in local time, including daylight-saving transitions.
-    while (at <= now || delivered.has(slotKey(at, time))) {
-      at.setDate(at.getDate() + 1);
-      at.setHours(hours, minutes, 0, 0);
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    while (true) {
+      const key = slotKey(day, time);
+      const at = !delivered.has(key) && localOccurrences(day, hours, minutes).find((occurrence) => occurrence > now);
+      if (at) return { at, key };
+      day.setDate(day.getDate() + 1);
     }
-    return { at, key: slotKey(at, time) };
   });
   return candidates.sort((a, b) => a.at - b.at)[0];
 }
