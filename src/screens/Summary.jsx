@@ -14,7 +14,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
-import { countBy, countMany, formatDateKey, getPatternNotes, selectDailyPrimaryCheckIns, topLabel } from '../utils/journalUtils';
+import { calendarWeekDays, countBy, countMany, formatDateKey, getPatternNotes, selectDailyPrimaryCheckIns, topLabel } from '../utils/journalUtils';
 import { PageHeader } from '../components/layout/PageHeader';
 
 const moodPalette = ['#c9825a', '#d9a441', '#8fae73', '#7eaeb4', '#9c8bc2', '#d88b9b', '#b98b66', '#7f9f83'];
@@ -216,19 +216,12 @@ function SummaryTooltip({ active, payload, label, labelSuffix = '', emptyLabel =
 }
 
 function buildWeekDays(weekOffset = 0) {
-  const today = new Date();
-  today.setDate(today.getDate() + weekOffset * 7);
-  today.setHours(0, 0, 0, 0);
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (6 - index));
-    return {
+  return calendarWeekDays(new Date(), weekOffset).map((date) => ({
       date,
       dateKey: formatDateKey(date),
       label: date.toLocaleDateString(undefined, { weekday: 'short' }),
       monthDay: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-    };
-  });
+  }));
 }
 
 function buildIntensityData(weekDays, entries) {

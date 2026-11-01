@@ -5,6 +5,25 @@ export const viewFromPath = (pathname, viewPaths) => {
 export const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 export const todayKey = () => formatDateKey(new Date());
 export const dateKeyFromTimestamp = (value) => formatDateKey(new Date(value));
+export const calendarWeekDays = (now = new Date(), offset = 0) => {
+  const sunday = new Date(now);
+  sunday.setHours(0, 0, 0, 0);
+  sunday.setDate(sunday.getDate() - sunday.getDay() + offset * 7);
+  return Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(sunday);
+    day.setDate(sunday.getDate() + index);
+    return day;
+  });
+};
+export const journalDateFromEntry = (entry) => {
+  if (/^\d{4}-\d{2}-\d{2}$/u.test(entry?.dateKey || '')) {
+    const [year, month, day] = entry.dateKey.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day, 12);
+    if (formatDateKey(localDate) === entry.dateKey) return localDate;
+  }
+  const created = typeof entry?.created === 'string' ? new Date(entry.created) : new Date(NaN);
+  return Number.isNaN(created.getTime()) ? null : created;
+};
 export const journalDayNumber = (dateKey) => {
   const [year, month, day] = String(dateKey).split('-').map(Number);
   return Math.floor((Date.UTC(year, month - 1, day) - Date.UTC(year, 0, 1)) / 86400000) + 1;

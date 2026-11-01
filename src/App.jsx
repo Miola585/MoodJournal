@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset } from 'lucide-react';
+import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset, Undo2 } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
 import { getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, normalizeDailyPrimaries, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
 import { useJournalReminders } from './hooks/useJournalReminders';
@@ -123,6 +123,12 @@ function App() {
   const user = session?.user || null;
   const storageRef = useRef(null);
   const ownerId = isSupabaseConfigured ? user?.id || 'signed-out' : 'local-browser';
+  const ownerRef = useRef(ownerId);
+  ownerRef.current = ownerId;
+  const [pendingDeletes, setPendingDeletes] = useState([]);
+  const [deleteError, setDeleteError] = useState('');
+  const deleteTimers = useRef(new Map());
+  const deleteHandler = useRef(null);
   if (storageRef.current?.ownerId !== ownerId || !storageRef.current?.store.isActive()) {
     storageRef.current?.store.deactivate();
     storageRef.current = { ownerId, store: createJournalStorage({ client: isSupabaseConfigured ? supabase : null, ownerId, plainKey: localEntriesKey }) };
@@ -478,6 +484,42 @@ function App() {
     const nextEntries = removeJournalEntry(entries, id);
     return saveEntries(nextEntries, { deletedId: id });
   };
+  deleteHandler.current = deleteEntry;
+  const queueDelete = (entry) => {
+    if (deleteTimers.current.has(entry.id)) return;
+    if (deleteTimers.current.size > 0 || pendingDeletes.length > 0) {
+      setDeleteError('Finish or undo the current deletion before deleting another page.');
+      return;
+    }
+    const queuedOwner = ownerId;
+    setDeleteError('');
+    setPendingDeletes((current) => [...current, { id: entry.id, label: entry.specificFeeling || entry.mood || 'Journal entry' }]);
+    const timer = window.setTimeout(async () => {
+      deleteTimers.current.delete(entry.id);
+      if (ownerRef.current !== queuedOwner) return;
+      setPendingDeletes((current) => current.map((item) => item.id === entry.id ? { ...item, saving: true } : item));
+      const deleted = await deleteHandler.current(entry.id);
+      if (ownerRef.current !== queuedOwner) return;
+      setPendingDeletes((current) => current.filter((item) => item.id !== entry.id));
+      if (!deleted) setDeleteError('The entry could not be deleted and was restored.');
+    }, 10000);
+    deleteTimers.current.set(entry.id, timer);
+  };
+  const undoDelete = (id) => {
+    const timer = deleteTimers.current.get(id);
+    if (!timer) return;
+    window.clearTimeout(timer);
+    deleteTimers.current.delete(id);
+    setPendingDeletes((current) => current.filter((item) => item.id !== id));
+  };
+  useEffect(() => {
+    setPendingDeletes([]);
+    setDeleteError('');
+    return () => {
+      deleteTimers.current.forEach((timer) => window.clearTimeout(timer));
+      deleteTimers.current.clear();
+    };
+  }, [journalStore]);
   const setPrimaryEntry = async (id) => {
     const target = entries.find((entry) => entry.id === id);
     if (!target || !isCheckIn(target)) return false;
@@ -499,9 +541,10 @@ function App() {
       return true;
     } catch (error) { recordSaveError(error); return false; }
   };
-  const openApp = (nextView = 'checkin') => {
+  const openApp = (nextView = 'checkin', entryId = null) => {
     if (!confirmJournalNavigation()) return false;
-    navigate(viewPaths[nextView] || viewPaths.checkin);
+    const path = viewPaths[nextView] || viewPaths.checkin;
+    navigate(nextView === 'entries' && entryId ? `${path}?entry=${encodeURIComponent(entryId)}` : path);
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     return true;
   };
@@ -726,6 +769,8 @@ function App() {
 
 
   const canUseApp = !authLoading && (!isSupabaseConfigured || user);
+  const pendingDeleteIds = new Set(pendingDeletes.map((pending) => pending.id));
+  const visibleEntries = entries.filter((entry) => !pendingDeleteIds.has(entry.id));
   const visibleViews = profile?.role === 'admin' ? [...appViews, 'admin'] : appViews;
   const journalIsHidden = Boolean(journalLockCode && !journalUnlocked);
   const accountDataReady = !isSupabaseConfigured || !user || accountDataLoadedFor === user.id;
@@ -797,14 +842,14 @@ function App() {
         ) : (
         <Suspense fallback={<section className="screen app-screen"><div className="panel auth-panel"><p>Loading page...</p></div></section>}>
         <Routes>
-          <Route path="/" element={<Home entries={entries} onOpen={openApp} onOpenGame={(game) => navigate(`/games/${game}`)} profile={profile} />} />
+          <Route path="/" element={<Home entries={visibleEntries} onOpen={openApp} onOpenGame={(game) => navigate(`/games/${game}`)} profile={profile} />} />
           <Route path="/checkin" element={<CheckIn nav={null} entries={entries} onSave={saveEntry} onDone={() => openApp('activities')} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} />} />
           <Route path="/activities" element={<Activities nav={null} entries={entries} privateStorage={privateStorage} />} />
-          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={entries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
-          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={entries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
-          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Entries nav={null} entries={entries} onCreate={() => openApp('checkin')} onSave={saveEntry} onDelete={deleteEntry} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} /></JournalPrivacyGate>} />
-          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Calendar nav={null} entries={entries} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} /></JournalPrivacyGate>} />
-          <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Summary nav={null} entries={entries} /></JournalPrivacyGate>} />
+          <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={visibleEntries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={visibleEntries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Entries nav={null} entries={visibleEntries} onCreate={() => openApp('checkin')} onSave={saveEntry} onQueueDelete={queueDelete} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Calendar nav={null} entries={visibleEntries} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} /></JournalPrivacyGate>} />
+          <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Summary nav={null} entries={visibleEntries} /></JournalPrivacyGate>} />
           <Route path="/game-archive" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><GameArchive privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/about" element={<About nav={null} />} />
           <Route path="/newsletter" element={<Navigate to="/about" replace />} />
@@ -816,6 +861,10 @@ function App() {
         </>)}
       </main>
       {conflict && !externalLock && !encryptedJournalLocked && <JournalConflictDialog conflict={conflict} onReview={reviewConflict} onCopy={saveConflictCopy} onAccept={acceptLatest} onClose={closeConflict} />}
+      {canUseApp && !locked && !journalIsHidden && !encryptedJournalLocked && !passwordRecovery && (pendingDeletes.length > 0 || deleteError) && <div className="delete-undo-stack">
+        {pendingDeletes.map((pending) => <div className="delete-undo-toast" key={pending.id} role="status"><span>{pending.saving ? 'Deleting entry...' : `${pending.label} will be deleted in 10 seconds.`}</span>{!pending.saving && <button onClick={() => undoDelete(pending.id)} type="button"><Undo2 aria-hidden="true" size={16} />Undo</button>}</div>)}
+        {deleteError && <div className="delete-undo-toast error" role="alert"><span>{deleteError}</span><button onClick={() => setDeleteError('')} type="button">Dismiss</button></div>}
+      </div>}
       {canUseApp && !locked && !passwordRecovery && view !== 'support' && !immersiveGameActive && <button className={`support-help-bubble${view === 'checkin' ? ' checkin-help-bubble' : ''}`} onClick={() => { setSupportOriginPage(location.pathname); openApp('support'); }} title="Help & feedback" aria-label="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={23} /></button>}
       {!immersiveGameActive && <footer className="footer">
         <div className="footer-brand">

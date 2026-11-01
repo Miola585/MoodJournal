@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { ArrowRight, BookOpen, CalendarDays, Flower2, Gamepad2, Heart, Play, Sparkles } from 'lucide-react';
 import { moods } from '../data/journalData';
-import { getPrimaryEntry, isCheckIn, todayKey } from '../utils/journalUtils';
+import { formatDateKey, getPrimaryEntry, isCheckIn, journalDateFromEntry, todayKey } from '../utils/journalUtils';
 import { MemoryJarSvg } from '../components/games/MemoryJarSvg';
 import { getJournalRhythm, getRecentJournalEntries } from '../utils/dashboardUtils';
 
 const gardenSproutUrl = new URL('../../img/1111x_PixelPlants/MoodGarden_Selected/00_Shared_Growth_Stages/growth-04-buds.png', import.meta.url).href;
 const gardenFlowerUrl = new URL('../../img/1111x_PixelPlants/MoodGarden_Selected/03_High_Intensity/high-04-daisy-cluster.png', import.meta.url).href;
 
-const formatEntryDate = (entry) => new Date(entry.created).toLocaleDateString(undefined, {
+const formatEntryDate = (date) => date?.toLocaleDateString(undefined, {
   month: 'short',
   day: 'numeric'
-});
+}) || 'Date unavailable';
 
 const greetingFor = (date) => {
   const hour = date.getHours();
@@ -124,14 +124,15 @@ export function Home({ entries, onOpen, onOpenGame, profile }) {
             )}
             {recentEntries.map((entry) => {
               const mood = moods.find((item) => item.key === entry.mood);
+              const journalDate = journalDateFromEntry(entry);
               return (
-                <button className="home-recent-entry" key={entry.id} onClick={() => onOpen('entries')} style={{ '--entry-mood': mood?.color || 'var(--interactive-accent)' }} type="button">
+                <button className="home-recent-entry" key={entry.id} onClick={() => onOpen('entries', entry.id)} style={{ '--entry-mood': mood?.color || 'var(--interactive-accent)' }} type="button">
                   <span className="home-recent-emoji" aria-hidden="true">{mood?.emoji || <BookOpen size={18} />}</span>
                   <span className="home-recent-copy">
                     <strong>{entry.specificFeeling || entry.mood || 'Journal page'}</strong>
                     <small>{entry.note?.trim() || 'No writing on this page.'}</small>
                   </span>
-                  <time dateTime={entry.created}>{formatEntryDate(entry)}</time>
+                  <time dateTime={journalDate ? formatDateKey(journalDate) : ''}>{formatEntryDate(journalDate)}</time>
                 </button>
               );
             })}

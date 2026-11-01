@@ -237,6 +237,23 @@
   box-shadow: 0 16px 40px color-mix(in srgb, #000 24%, transparent);
 }
 
+.delete-undo-stack {
+  position: fixed;
+  right: 24px;
+  bottom: 88px;
+  z-index: 30;
+  display: grid;
+  gap: 8px;
+  max-width: min(460px, calc(100vw - 32px));
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.delete-undo-stack .delete-undo-toast {
+  position: static;
+  max-width: 100%;
+}
+
 .delete-undo-toast.error {
   border-left-color: var(--danger-text, #a53e45);
 }
@@ -356,6 +373,10 @@
 }
 
 @media (max-width: 560px) {
+  .delete-undo-stack {
+    right: 16px;
+    bottom: 88px;
+  }
   .journal-date-row,
   .draft-recovery-notice,
   .import-preview-heading,

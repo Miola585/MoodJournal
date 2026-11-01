@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bookmark, BookOpen, FileText, List, MessageCircleQuestionMark, PenLine, RotateCcw, Save, Search, SlidersHorizontal, Trash2, Undo2, X } from 'lucide-react';
+import { Bookmark, BookOpen, FileText, List, MessageCircleQuestionMark, PenLine, RotateCcw, Save, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { checkInTitleAfterMoodChange, createFreeWriteEntry, moods } from '../data/journalData';
 import { isCheckIn, isJournalDateAllowed, isVisibleJournalEntry, journalDayNumber, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
@@ -15,7 +16,10 @@ import { StickyNote } from '../components/journal/StickyNote';
 import { clampStickerPosition, createStickerPlacement } from '../utils/stickerUtils';
 import { createJournalNote, getJournalNotes, MAX_JOURNAL_NOTES } from '../utils/journalNotes';
 
-export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark, onHelp, privateStorage }) {
+export function Entries({ nav, entries, onSave, onQueueDelete, onPrimary, onBookmark, onHelp, privateStorage }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const selectedEntryId = new URLSearchParams(location.search).get('entry');
   const [query, setQuery] = useState('');
   const [moodFilter, setMoodFilter] = useState('');
   const [tagFilter, setTagFilter] = useState('');
@@ -24,14 +28,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [creatingFreeWrite, setCreatingFreeWrite] = useState(false);
-  const [pendingDeletes, setPendingDeletes] = useState(() => new Set());
-  const [deleteNotice, setDeleteNotice] = useState(null);
-  const deleteTimers = useRef(new Map());
-  useEffect(() => () => {
-    deleteTimers.current.forEach((timer) => window.clearTimeout(timer));
-    deleteTimers.current.clear();
-  }, []);
-  const journalEntries = entries.filter(isVisibleJournalEntry).filter((entry) => !pendingDeletes.has(entry.id));
+  const journalEntries = entries.filter(isVisibleJournalEntry);
   const filtered = journalEntries.filter((entry) => {
     const text = `${entry.note} ${entry.mood} ${entry.specificFeeling} ${effectiveEntryTags(entry).join(' ')} ${(entry.factors || []).join(' ')}`.toLowerCase();
     const matchesKeyword = text.includes(query.toLowerCase());
@@ -42,6 +39,12 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
     return matchesKeyword && matchesMood && matchesTag && matchesDate && matchesBookmark;
   });
   const hasFilters = Boolean(query || moodFilter || tagFilter || dateFilter || bookmarkFilter);
+  const selectedEntry = selectedEntryId ? journalEntries.find((entry) => entry.id === selectedEntryId) : null;
+  const selectedInResults = Boolean(selectedEntry && filtered.some((entry) => entry.id === selectedEntryId));
+  useEffect(() => {
+    if (!selectedInResults) return;
+    document.getElementById(`journal-entry-${selectedEntryId}`)?.scrollIntoView({ block: 'start' });
+  }, [selectedEntryId, selectedInResults]);
   const advancedFilterCount = [moodFilter, tagFilter, dateFilter, bookmarkFilter].filter(Boolean).length;
   const clearFilters = () => {
     setQuery('');
@@ -49,35 +52,6 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
     setTagFilter('');
     setDateFilter('');
     setBookmarkFilter(false);
-  };
-  const undoDelete = (id) => {
-    const timer = deleteTimers.current.get(id);
-    if (timer) window.clearTimeout(timer);
-    deleteTimers.current.delete(id);
-    setPendingDeletes((current) => {
-      const next = new Set(current);
-      next.delete(id);
-      return next;
-    });
-    setDeleteNotice(null);
-  };
-  const queueDelete = (entry) => {
-    if (deleteTimers.current.has(entry.id)) return;
-    setPendingDeletes((current) => new Set(current).add(entry.id));
-    setDeleteNotice({ id: entry.id, label: entry.specificFeeling || entry.mood || 'Journal entry', state: 'pending' });
-    const timer = window.setTimeout(async () => {
-      deleteTimers.current.delete(entry.id);
-      const deleted = await onDelete(entry.id);
-      setPendingDeletes((current) => {
-        const next = new Set(current);
-        next.delete(entry.id);
-        return next;
-      });
-      setDeleteNotice(deleted
-        ? null
-        : { id: entry.id, label: entry.specificFeeling || entry.mood || 'Journal entry', state: 'error' });
-    }, 10000);
-    deleteTimers.current.set(entry.id, timer);
   };
   if (editing) return <EditEntry entry={editing} onCancel={() => setEditing(null)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
   if (creatingFreeWrite) return <FreeWriteEntry nav={nav} onCancel={() => setCreatingFreeWrite(false)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
@@ -127,6 +101,8 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
         </div>
       </div>
       <div className="entry-list">
+        {selectedEntryId && !selectedEntry && <div className="panel archive-empty-state" role="status"><h2>Page not found.</h2><p>It may have been deleted or belong to another journal.</p><button className="secondary" onClick={() => navigate('/entries', { replace: true })} type="button">Show journal</button></div>}
+        {selectedEntry && !selectedInResults && <div className="panel archive-empty-state" role="status"><h2>Page hidden by filters.</h2><p>Your current filters are still active.</p><button className="secondary" onClick={clearFilters} type="button">Clear filters</button></div>}
         {filtered.length > 0 && (
           <div className="archive-results-heading">
             <div>
@@ -136,7 +112,7 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
             <span>{filtered.length} {filtered.length === 1 ? 'page' : 'pages'}</span>
           </div>
         )}
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !selectedEntryId && (
           <div className="panel archive-empty-state">
             {journalEntries.length === 0 ? (
               <>
@@ -161,14 +137,8 @@ export function Entries({ nav, entries, onSave, onDelete, onPrimary, onBookmark,
             )}
           </div>
         )}
-        {filtered.map((entry) => <EntryCard entry={entry} key={entry.id} onEdit={() => setEditing(entry)} onDelete={() => queueDelete(entry)} onPrimary={() => onPrimary(entry.id)} onBookmark={(bookmarked) => onBookmark(entry.id, bookmarked)} />)}
+        {filtered.map((entry) => <div id={entry.id === selectedEntryId ? `journal-entry-${entry.id}` : undefined} key={entry.id}><EntryCard entry={entry} openByLink={entry.id === selectedEntryId} onEdit={() => setEditing(entry)} onDelete={() => onQueueDelete(entry)} onPrimary={() => onPrimary(entry.id)} onBookmark={(bookmarked) => onBookmark(entry.id, bookmarked)} /></div>)}
       </div>
-      {deleteNotice && (
-        <div className={deleteNotice.state === 'error' ? 'delete-undo-toast error' : 'delete-undo-toast'} role={deleteNotice.state === 'error' ? 'alert' : 'status'}>
-          <span>{deleteNotice.state === 'error' ? `${deleteNotice.label} could not be deleted and was restored.` : `${deleteNotice.label} will be deleted in 10 seconds.`}</span>
-          {deleteNotice.state === 'pending' ? <button onClick={() => undoDelete(deleteNotice.id)} type="button"><Undo2 aria-hidden="true" size={16} />Undo</button> : <button onClick={() => setDeleteNotice(null)} type="button">Dismiss</button>}
-        </div>
-      )}
     </section>
   );
 }

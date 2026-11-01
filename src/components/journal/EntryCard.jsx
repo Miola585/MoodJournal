@@ -1,7 +1,7 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { ArrowRight, Bookmark, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { moods } from '../../data/journalData';
-import { isCheckIn, journalDayNumber } from '../../utils/journalUtils';
+import { isCheckIn, journalDateFromEntry, journalDayNumber } from '../../utils/journalUtils';
 import { stripGameData } from '../games/gameUtils';
 import { StickerLayer } from './StickerLayer';
 import { RichNoteContent } from './RichNoteContent';
@@ -9,8 +9,9 @@ import { StickyNote } from './StickyNote';
 import { getJournalNotes } from '../../utils/journalNotes';
 import { effectiveEntryTags } from '../../utils/journalTags';
 
-export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, compact = false }) {
-  const [expanded, setExpanded] = useState(false);
+export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, compact = false, openByLink = false }) {
+  const [expanded, setExpanded] = useState(openByLink);
+  useEffect(() => { if (openByLink) setExpanded(true); }, [openByLink]);
   const pageId = useId();
   const mood = moods.find((item) => item.key === entry.mood);
   const entryLabel = isCheckIn(entry) ? 'Check-In' : 'Free Write';
@@ -18,7 +19,7 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
   const canToggle = compact || Boolean(onEdit || onDelete);
   const showFullEntry = expanded || !canToggle;
   const createdAt = new Date(entry.created);
-  const journalDate = entry.dateKey ? new Date(`${entry.dateKey}T12:00:00`) : createdAt;
+  const journalDate = journalDateFromEntry(entry) || createdAt;
   const showPrimaryAction = Boolean(onPrimary && isCheckIn(entry) && !entry.primary);
   const stickers = Array.isArray(entry.stickers) ? entry.stickers : [];
   const detailsStickers = stickers.filter((placement) => placement.region === 'details');

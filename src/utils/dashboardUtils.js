@@ -1,4 +1,4 @@
-import { isCheckIn, isVisibleJournalEntry } from './journalUtils.js';
+import { calendarWeekDays, isCheckIn, isVisibleJournalEntry } from './journalUtils.js';
 
 const startOfDay = (value) => {
   const date = new Date(value);
@@ -8,9 +8,7 @@ const startOfDay = (value) => {
 
 export function getJournalRhythm(entries, now = new Date()) {
   const today = startOfDay(now);
-  const day = today.getDay();
-  const start = new Date(today);
-  start.setDate(today.getDate() - day);
+  const start = calendarWeekDays(today)[0];
   const uniqueDays = new Set(
     entries
       .filter(isCheckIn)
