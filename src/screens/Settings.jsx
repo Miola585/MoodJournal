@@ -7,7 +7,7 @@ import { buildImportedJournal, compareJournalImports, MAX_IMPORT_FILE_BYTES, par
 import { themeChoices } from '../data/themeChoices';
 
 export function Settings({
-  nav, user, profile, entries, saveEntries, replaceJournalEntries, checkJournalReplaceAvailable, fontScale, setFontScale, fontStyle, setFontStyle,
+  mode = 'all', nav, user, profile, entries, saveEntries, replaceJournalEntries, checkJournalReplaceAvailable, fontScale, setFontScale, fontStyle, setFontStyle,
   siteTheme, setSiteTheme, theme, setTheme, reduceMotion, setReduceMotion, pin, setPin, onOpen,
   recoverPin, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder,
   journalEncryption
@@ -197,15 +197,16 @@ export function Settings({
 
   return (
     <section className="screen app-screen settings-screen">
-      <PageHeader eyebrow="Your space" title="Settings" subtitle="Shape how your journal looks and feels on this device." />
+      <PageHeader eyebrow="Your space" title={mode === 'privacy' ? 'Privacy' : mode === 'preferences' ? 'Preferences' : 'Settings'} subtitle={mode === 'privacy' ? 'Protect your writing and keep a copy of your journal.' : 'Shape how your journal looks and feels on this device.'} />
       {nav}
 
-      <section className="settings-profile ui-card ui-card-secondary">
+      {mode === 'all' && <section className="settings-profile ui-card ui-card-secondary">
         <span className="settings-section-icon"><UserRound aria-hidden="true" size={20} /></span>
         <div><strong>{profile?.username || 'Your profile'}</strong><span>{user?.email || 'Local browser profile'}</span></div>
         {profile?.role === 'admin' && <span className="admin-badge">Admin</span>}
-      </section>
+      </section>}
 
+      {mode !== 'privacy' && <>
       <SettingsSection icon={Palette} title="Appearance" description="Choose a world for your journal. The layout stays familiar in every theme.">
         <div className="theme-preview-grid" role="radiogroup" aria-label="Journal theme">
           {themeChoices.map((choice) => (
@@ -257,7 +258,9 @@ export function Settings({
         </div>
         <ReminderStatus controls={reminder.controls} />
       </SettingsSection>
+      </>}
 
+      {mode !== 'preferences' && <>
       <SettingsSection icon={ShieldCheck} title="Privacy" description="Protect what you write in storage and add privacy screens on this device.">
         <PrivacyRow icon={LockKeyhole} title="Journal lock" description={journalLockCode ? 'On. Hide journal views on this device.' : 'Cover your journal with a separate code on this device.'} action={journalLockCode ? 'Manage' : 'Set up'} onClick={() => { setJournalCodeDraft(''); setPrivacyPanel('journal'); }} />
         <PrivacyRow icon={KeyRound} title="App PIN" description={pin ? 'On. Cover the app when it is locked.' : 'Add a four-digit privacy screen for this app.'} action={pin ? 'Manage' : 'Set up'} onClick={() => { setPinDraft(''); setPinRecoveryMessage(''); setPrivacyPanel('pin'); }} />
@@ -352,10 +355,11 @@ export function Settings({
         </section>}
         {journalEncryption.enabled && <p className="privacy-note"><Download aria-hidden="true" size={16} />Exports are readable JSON created on this device after unlocking. Store exported files as carefully as the journal itself.</p>}
       </SettingsSection>
+      </>}
 
-      <SettingsSection icon={BookOpen} title="About" description="Mood Journal is a quiet place to notice what is here without judgment.">
+      {mode === 'all' && <SettingsSection icon={BookOpen} title="About" description="Mood Journal is a quiet place to notice what is here without judgment.">
         <div className="settings-actions"><button className="ghost-button" onClick={() => onOpen('about')} type="button">About Mood Journal</button></div>
-      </SettingsSection>
+      </SettingsSection>}
     </section>
   );
 }

@@ -41,7 +41,7 @@ export function collectSupportDiagnostics({ pathname, theme, mode, width, height
   };
 }
 
-const diagnosticPages = ['/', '/checkin', '/entries', '/calendar', '/summary', '/activities', '/settings', '/games', '/games/garden', '/games/constellation', '/games/orbit', '/support', '/about', '/newsletter', '/admin'];
+const diagnosticPages = ['/', '/checkin', '/entries', '/calendar', '/summary', '/activities', '/settings', '/profile', '/privacy', '/preferences', '/games', '/games/garden', '/games/constellation', '/games/orbit', '/support', '/about', '/newsletter', '/admin'];
 const safeDimension = (value) => Number.isFinite(value) ? Math.max(1, Math.min(99999, Math.round(value))) : 1;
 
 export function supportErrorMessage(error) {

@@ -36,19 +36,12 @@ test('journal night sky shows shaped stars and a visible glow', async ({ page },
 for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
   test(`immersive games fill ${viewport.width}px viewport without app chrome`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
+    await page.goto('/games');
+    const gardenCard = page.getByRole('button', { name: /Coming soon Mood Garden/u });
+    await expect(gardenCard).toBeDisabled();
     await page.goto('/games/garden');
-    await expect(page.getByRole('heading', { name: 'Your pocket garden.' })).toBeVisible();
-    await expect(page.locator('.topbar, .footer, .support-help-bubble')).toHaveCount(0);
-    await expect(page.locator('.garden-plant')).not.toHaveCount(0);
-    await expect(page.locator('.game-route-shell')).toHaveJSProperty('offsetTop', 0);
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).not.toBe('rgb(243, 232, 223)');
-    await page.getByText('How to play').click();
-    await expect(page.getByText('Choose a plant to see what it reflects.')).toBeVisible();
-    await page.getByText('How to play').click();
-    await page.screenshot({ path: testInfo.outputPath(`garden-${viewport.width}.png`), fullPage: true });
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-
-    await page.getByRole('button', { name: 'Back to games' }).click();
+    await expect(page).toHaveURL(/\/games$/u);
+    await expect(page.getByRole('heading', { name: 'Your pocket garden.' })).toHaveCount(0);
     await expect(page.locator('.topbar')).toBeVisible();
     await page.goto('/games/constellation');
     await expect(page.locator('.topbar, .footer, .support-help-bubble')).toHaveCount(0);
@@ -170,7 +163,7 @@ test('constellation undo preserves shared endpoints and saves only remaining con
 
 test('garden care ignores the old shared flag and survives a reload', async ({ page }) => {
   await page.addInitScript((today) => localStorage.setItem(`gardenTendedToday:${today}`, 'true'), dateKey(0));
-  await page.goto('/games/garden');
+  await page.goto('/e2e/fixtures/mood-garden.html');
   await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
   await page.getByRole('button', { name: 'Tend garden' }).click();
   await expect(page.getByRole('button', { name: 'Tended today' })).toBeDisabled();
@@ -222,7 +215,7 @@ test('constellation undo has a clear enabled style distinct from its disabled st
 });
 
 test('garden care shows a save error without claiming it was tended', async ({ page }) => {
-  await page.goto('/games/garden');
+  await page.goto('/e2e/fixtures/mood-garden.html');
   await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
   await page.evaluate(() => {
     const setItem = Storage.prototype.setItem;

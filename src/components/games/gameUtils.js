@@ -25,6 +25,7 @@ export const matchThemes = matchPairs.map((pair) => ({
 }));
 
 export const rotatingGames = ['match', 'constellation', 'garden', 'memory', 'orbit'];
+export const availableGames = rotatingGames.filter((game) => game !== 'garden');
 
 export const gameLabels = {
   match: 'Emotional Match',

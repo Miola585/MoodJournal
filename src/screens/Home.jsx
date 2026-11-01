@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { ArrowRight, BookOpen, CalendarDays, Flower2, Gamepad2, Heart, Play, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, CalendarDays, Gamepad2, Heart, Play, Sparkles } from 'lucide-react';
 import { moods } from '../data/journalData';
 import { formatDateKey, getPrimaryEntry, isCheckIn, journalDateFromEntry, todayKey } from '../utils/journalUtils';
 import { MemoryJarSvg } from '../components/games/MemoryJarSvg';
 import { getJournalRhythm, getRecentJournalEntries } from '../utils/dashboardUtils';
-
-const gardenSproutUrl = new URL('../../img/1111x_PixelPlants/MoodGarden_Selected/00_Shared_Growth_Stages/growth-04-buds.png', import.meta.url).href;
-const gardenFlowerUrl = new URL('../../img/1111x_PixelPlants/MoodGarden_Selected/03_High_Intensity/high-04-daisy-cluster.png', import.meta.url).href;
 
 const formatEntryDate = (date) => date?.toLocaleDateString(undefined, {
   month: 'short',
@@ -61,23 +58,11 @@ export function Home({ entries, onOpen, onOpenGame, profile }) {
           <div className="home-section-heading">
             <div>
               <span className="page-header-eyebrow">Your space</span>
-              <h2 id="your-space-title">Return to something you are growing</h2>
+              <h2 id="your-space-title">Return to a small moment</h2>
             </div>
             <button className="ghost-button" onClick={() => onOpen('games')} type="button">All games <ArrowRight aria-hidden="true" size={16} /></button>
           </div>
-          <div className="home-space-grid">
-            <button className="home-space-card ui-card ui-card-interactive" onClick={() => onOpenGame('garden')} type="button">
-              <span className="home-space-card-copy">
-                <span className="home-space-icon"><Flower2 aria-hidden="true" size={24} /></span>
-                <span><strong>Mood Garden</strong><small>See how your check-ins shape a quiet place.</small></span>
-              </span>
-              <span className="home-space-preview home-garden-preview" aria-hidden="true">
-                <span className="garden-preview-sun" />
-                <img className="garden-preview-sprout" src={gardenSproutUrl} alt="" />
-                <img className="garden-preview-flower" src={gardenFlowerUrl} alt="" />
-              </span>
-              <span className="home-space-open">Visit garden <ArrowRight aria-hidden="true" size={16} /></span>
-            </button>
+          <div className="home-space-grid single-card">
             <button className="home-space-card ui-card ui-card-interactive" onClick={() => onOpenGame('memory')} type="button">
               <span className="home-space-card-copy">
                 <span className="home-space-icon"><Sparkles aria-hidden="true" size={24} /></span>

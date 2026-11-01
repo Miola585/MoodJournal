@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Settings as SettingsIcon, Sun, Sunset, Undo2 } from 'lucide-react';
+import { BookOpen, ExternalLink, MessageCircleQuestionMark, Moon, Sun, Sunset, Undo2, UserRound } from 'lucide-react';
 import { appViews, createEntry, localEntriesKey, logoUrl, moods, viewPaths } from './data/journalData';
 import { getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, normalizeDailyPrimaries, readStorage, removeJournalEntry, rowToEntry, todayKey, upsertJournalEntry, viewFromPath } from './utils/journalUtils';
 import { useJournalReminders } from './hooks/useJournalReminders';
@@ -27,7 +27,6 @@ import { JournalPrivacyGate, LockScreen } from './components/layout/JournalLocks
 import { JournalEncryptionGate, RecoveryKeyNotice } from './components/layout/JournalEncryptionGate';
 import { AccountStatus } from './components/layout/AccountStatus';
 import { ReminderBell } from './components/layout/ReminderBell';
-import { ProfileMenu } from './components/layout/ProfileMenu';
 import { AuthScreen } from './components/auth/AuthScreen';
 import { PasswordUpdateScreen } from './components/auth/PasswordUpdateScreen';
 import { AdminPanel } from './components/auth/AdminPanel';
@@ -40,6 +39,7 @@ import { CheckIn } from './screens/CheckIn';
 import { Calendar } from './screens/Calendar';
 import { Activities } from './screens/Activities';
 import { Settings } from './screens/Settings';
+import { Profile } from './screens/Profile';
 import { createPrivateStorage } from './utils/privateStorage';
 import { confirmJournalNavigation } from './hooks/useJournalDraft';
 import { flushJournalDrafts } from './hooks/useJournalDraft';
@@ -771,14 +771,14 @@ function App() {
   const canUseApp = !authLoading && (!isSupabaseConfigured || user);
   const pendingDeleteIds = new Set(pendingDeletes.map((pending) => pending.id));
   const visibleEntries = entries.filter((entry) => !pendingDeleteIds.has(entry.id));
-  const visibleViews = profile?.role === 'admin' ? [...appViews, 'admin'] : appViews;
+  const visibleViews = profile?.role === 'admin' ? [...appViews, 'gameArchive', 'admin'] : appViews;
   const journalIsHidden = Boolean(journalLockCode && !journalUnlocked);
   const accountDataReady = !isSupabaseConfigured || !user || accountDataLoadedFor === user.id;
   const encryptedJournalLocked = Boolean(encryptionConfig && !encryptionKey)
     || Boolean(isSupabaseConfigured && user && accountDataReady && !encryptionConfig);
   const immersiveGameActive = canUseApp && !locked && !passwordRecovery && accountDataReady
     && !encryptedJournalLocked && !journalIsHidden
-    && /^\/games\/(?:garden|constellation|orbit)\/?$/u.test(location.pathname);
+    && /^\/games\/(?:constellation|orbit)\/?$/u.test(location.pathname);
   const isSunsetMode = siteTheme === 'sunrise' && theme === 'dark';
   const ThemeToggleIcon = isSunsetMode ? Sunset : theme === 'dark' ? Moon : Sun;
   const colorModeLabel = siteTheme === 'sunrise' ? (theme === 'dark' ? 'Sunset mode' : 'Sunrise mode') : (theme === 'dark' ? 'Dark mode' : 'Light mode');
@@ -794,6 +794,16 @@ function App() {
       moreActions={<ReminderBell reminder={reminder} setReminder={updateReminder} variant="menu" />}
     />
   ) : null;
+  const settingsProps = {
+    nav: null, user, profile, entries, saveEntries, replaceJournalEntries, checkJournalReplaceAvailable,
+    fontScale, setFontScale: updateFontScale, fontStyle, setFontStyle: updateFontStyle,
+    siteTheme, setSiteTheme: updateSiteTheme, theme, setTheme: updateTheme,
+    reduceMotion, setReduceMotion: updateMotion, pin, setPin: updatePin,
+    recoverPin: (password) => recoverLocalLock('pin', password),
+    journalLockCode, setJournalLockCode: updateJournalLock, journalUnlocked, setJournalUnlocked,
+    reminder, setReminder: updateReminder, onOpen: openApp,
+    journalEncryption: { enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }
+  };
 
   return (
     <div className={`app theme-${siteTheme} ${theme === 'dark' ? 'dark' : ''} ${reduceMotion ? 'reduced-motion' : ''} ${showingAuth ? 'auth-active' : ''} ${immersiveGameActive ? 'immersive-game-active' : ''} font-${fontStyle}`} style={{ '--font-scale': fontScale }}>
@@ -810,10 +820,9 @@ function App() {
               <button className={authMode === 'signin' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signin')} type="button">Log In</button>
               <button className={authMode === 'signup' ? 'header-link active' : 'header-link'} onClick={() => setAuthMode('signup')} type="button">Sign Up</button>
             </> : (
-              <button className={view === 'settings' ? 'header-link icon-link active' : 'header-link icon-link'} aria-label="Settings" onClick={() => openApp('settings')} title="Settings" type="button"><SettingsIcon aria-hidden="true" size={18} strokeWidth={2.4} /></button>
+              <button className={['profile', 'privacy', 'preferences', 'settings'].includes(view) ? 'header-link icon-link active' : 'header-link icon-link'} aria-label="Profile" onClick={() => openApp('profile')} title="Profile" type="button"><UserRound aria-hidden="true" size={18} strokeWidth={2.4} /></button>
             )}
             <button className={theme === 'dark' ? 'toggle icon-toggle active' : 'toggle icon-toggle'} aria-label={`Toggle color mode. Current: ${colorModeLabel}`} onClick={updateTheme} title={colorModeLabel} type="button"><span /><ThemeToggleIcon aria-hidden="true" className="toggle-icon" size={15} strokeWidth={2.4} /></button>
-            {user && <ProfileMenu user={user} profile={profile} openApp={openApp} />}
           </div>
         </div>
       </header>}
@@ -850,10 +859,13 @@ function App() {
           <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Entries nav={null} entries={visibleEntries} onCreate={() => openApp('checkin')} onSave={saveEntry} onQueueDelete={queueDelete} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/calendar" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Calendar nav={null} entries={visibleEntries} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} /></JournalPrivacyGate>} />
           <Route path="/summary" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Summary nav={null} entries={visibleEntries} /></JournalPrivacyGate>} />
-          <Route path="/game-archive" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><GameArchive privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/game-archive" element={!user || !isSupabaseConfigured ? <Navigate to="/games" replace /> : !profile ? <section className="screen app-screen"><p>Checking admin access...</p></section> : profile.role !== 'admin' ? <Navigate to="/games" replace /> : <JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><GameArchive privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/about" element={<About nav={null} />} />
           <Route path="/newsletter" element={<Navigate to="/about" replace />} />
-          <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} replaceJournalEntries={replaceJournalEntries} checkJournalReplaceAvailable={checkJournalReplaceAvailable} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
+          <Route path="/profile" element={<Profile user={user} profile={profile} />} />
+          <Route path="/privacy" element={<Settings {...settingsProps} mode="privacy" />} />
+          <Route path="/preferences" element={<Settings {...settingsProps} mode="preferences" />} />
+          <Route path="/settings" element={<Settings {...settingsProps} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>

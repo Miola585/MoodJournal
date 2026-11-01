@@ -406,7 +406,7 @@
   text-align: left;
 }
 
-.game-library-card:hover,
+.game-library-card:not(:disabled):hover,
 .game-library-card:focus-visible {
   border-color: color-mix(in srgb, var(--selected-bg) 74%, var(--glass-border));
   background:
@@ -422,6 +422,11 @@
   background:
     radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--selected-bg) 30%, transparent), transparent 28%),
     color-mix(in srgb, var(--hero-surface) 76%, var(--selected-bg) 10%);
+}
+
+.game-library-card.coming-soon:disabled {
+  cursor: default;
+  opacity: 0.84;
 }
 
 .game-card-icon {

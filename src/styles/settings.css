@@ -41,3 +41,31 @@
 .file-button input {
   display: none;
 }
+
+.profile-destinations {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-destination {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.profile-destination span {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-destination small {
+  color: var(--text-secondary);
+}
+
+.profile-sign-out {
+  justify-self: start;
+}
