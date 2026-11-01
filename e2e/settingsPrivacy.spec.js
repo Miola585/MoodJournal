@@ -37,6 +37,7 @@ for (const width of [1440, 390]) {
     await expect(dialog).toHaveCount(0);
     const manage = page.getByRole('button', { name: 'Manage: Journal lock' });
     await manage.click();
+    await dialog.getByLabel('Current journal code', { exact: true }).fill('my private cover');
     await dialog.getByRole('button', { name: 'Remove lock' }).click();
     await dialog.getByRole('button', { name: 'Done', exact: true }).click();
     await expect(setup).toBeVisible();

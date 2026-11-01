@@ -117,6 +117,8 @@ function App() {
   // while Supabase RLS remains the database rule that prevents users from reading other users' entries.
   const [journalLockCode, setJournalLockCode] = useState(() => localStorage.getItem('journalPrivacyCode') || '');
   const [journalUnlocked, setJournalUnlocked] = useState(() => !localStorage.getItem('journalPrivacyCode'));
+  const journalPrivacyRef = useRef(false);
+  journalPrivacyRef.current = Boolean(journalLockCode && !journalUnlocked);
   const { reminder: reminderPreferences, update: updateReminder, controls: reminderControls } = useJournalReminders();
   const reminder = { ...reminderPreferences, controls: reminderControls };
 
@@ -183,6 +185,7 @@ function App() {
   };
 
   const saveEntries = async (nextEntries, { deletedId } = {}) => {
+    if (journalPrivacyRef.current) { setDataError('Unlock your journal before changing its contents.'); return false; }
     if (saveBusy.current) { setDataError('A journal save is already in progress. Please wait before saving again.'); return false; }
     saveBusy.current = true;
     lastSaveError.current = null;
@@ -202,6 +205,7 @@ function App() {
   };
 
   const replaceJournalEntries = async (nextEntries, dryRun = false) => {
+    if (journalPrivacyRef.current) return { ok: false, error: 'Unlock your journal before reviewing or importing a backup.' };
     if (!nextEntries.length) return { ok: false, error: 'An empty backup cannot replace your journal.' };
     if (saveBusy.current) return { ok: false, error: 'Wait for the current save to finish.' };
     saveBusy.current = true;
@@ -277,6 +281,7 @@ function App() {
   };
 
   const enableJournalEncryption = async (passphrase) => {
+    if (journalPrivacyRef.current) throw new Error('Unlock your journal before changing its protection.');
     if (saveBusy.current) throw new Error('Wait for the current journal operation to finish.');
     saveBusy.current = true;
     const expectedSnapshot = renderSnapshot;
@@ -389,6 +394,7 @@ function App() {
   };
 
   const updateEncryptionPassphrase = async (newPassphrase) => {
+    if (journalPrivacyRef.current) throw new Error('Unlock your journal before changing its protection.');
     if (!encryptionConfig || !encryptionKey) throw new Error('Unlock your journal before changing its passphrase.');
     if (saveBusy.current) throw new Error('Wait for the current journal operation to finish.');
     saveBusy.current = true;
@@ -580,7 +586,7 @@ function App() {
       setLocked(false);
     }
   };
-  const updateJournalLock = (value) => {
+  const applyJournalLock = (value) => {
     const nextValue = value.trim();
     setJournalLockCode(nextValue);
     if (nextValue) {
@@ -591,6 +597,13 @@ function App() {
       setJournalUnlocked(true);
     }
   };
+  const updateJournalLock = (value, currentCode) => {
+    if (journalLockCode && currentCode !== journalLockCode) {
+      return { ok: false, error: 'The current journal code did not match.' };
+    }
+    applyJournalLock(value);
+    return { ok: true };
+  };
   const recoverLocalLock = async (lockType, accountPassword) => {
     if (!isSupabaseConfigured || !user?.email) {
       return { ok: false, error: 'Account verification is unavailable for this local-only journal.' };
@@ -598,7 +611,7 @@ function App() {
     const { error } = await supabase.auth.signInWithPassword({ email: user.email, password: accountPassword });
     if (error) return { ok: false, error: 'That account password did not match.' };
     if (lockType === 'pin') updatePin('');
-    if (lockType === 'journal') updateJournalLock('');
+    if (lockType === 'journal') applyJournalLock('');
     return { ok: true };
   };
 
@@ -824,7 +837,7 @@ function App() {
           ? <section className="screen app-screen"><div className="panel auth-panel"><p>{dataLoading ? 'Preparing secure password recovery...' : dataError || 'Your encrypted journal settings could not be loaded safely.'}</p></div></section>
           : <PasswordUpdateScreen requiresRecoveryKey={Boolean(encryptionConfig)} onUpdate={resetAccountPassword} onDone={() => setPasswordRecovery(false)} />)}
         {canUseApp && !passwordRecovery && (locked ? <LockScreen pin={pin} onUnlock={() => setLocked(false)} onRecover={(password) => recoverLocalLock('pin', password)} /> : view === 'support' ? <Support user={user} siteTheme={siteTheme} theme={theme} originPage={supportOriginPage} onRequestChanged={() => setSupportRefreshRevision((current) => current + 1)} /> : view === 'admin' ? (!user ? <Navigate to="/" replace /> : !profile ? <section className="screen app-screen"><p>Checking admin access...</p></section> : profile.role === 'admin' ? <AdminPanel user={user} onRequestChanged={() => setSupportRefreshRevision((current) => current + 1)} /> : <Navigate to="/" replace />) : <>
-        <AccountStatus localEntries={isSupabaseConfigured ? localEntries : []} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />
+        <AccountStatus localEntries={isSupabaseConfigured && !journalIsHidden ? localEntries : []} onImport={importLocalEntries} message={importMessage} error={dataError} loading={dataLoading} />
         {!accountDataReady ? (
           <section className="screen app-screen"><div className="panel auth-panel"><p>{dataLoading ? 'Preparing your private journal...' : dataError || 'Your journal could not be loaded safely.'}</p></div></section>
         ) : pendingRecoveryKey ? (
@@ -842,9 +855,9 @@ function App() {
         ) : (
         <Suspense fallback={<section className="screen app-screen"><div className="panel auth-panel"><p>Loading page...</p></div></section>}>
         <Routes>
-          <Route path="/" element={<Home entries={visibleEntries} onOpen={openApp} onOpenGame={(game) => navigate(`/games/${game}`)} profile={profile} />} />
-          <Route path="/checkin" element={<CheckIn nav={null} entries={entries} onSave={saveEntry} onDone={() => openApp('activities')} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} />} />
-          <Route path="/activities" element={<Activities nav={null} entries={entries} privateStorage={privateStorage} />} />
+          <Route path="/" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Home entries={visibleEntries} onOpen={openApp} onOpenGame={(game) => navigate(`/games/${game}`)} profile={profile} /></JournalPrivacyGate>} />
+          <Route path="/checkin" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><CheckIn nav={null} entries={entries} onSave={saveEntry} onDone={() => openApp('activities')} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} /></JournalPrivacyGate>} />
+          <Route path="/activities" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Activities nav={null} entries={entries} privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/games" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={visibleEntries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/games/:gameId" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Games nav={null} entries={visibleEntries} onSave={saveEntry} moods={moods} createEntry={createEntry} todayKey={todayKey} getPrimaryEntry={getPrimaryEntry} groupEntriesByDate={groupEntriesByDate} privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/entries" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Entries nav={null} entries={visibleEntries} onCreate={() => openApp('checkin')} onSave={saveEntry} onQueueDelete={queueDelete} onPrimary={setPrimaryEntry} onBookmark={setBookmarkedEntry} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} /></JournalPrivacyGate>} />
@@ -853,14 +866,14 @@ function App() {
           <Route path="/game-archive" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><GameArchive privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/about" element={<About nav={null} />} />
           <Route path="/newsletter" element={<Navigate to="/about" replace />} />
-          <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={entries} saveEntries={saveEntries} replaceJournalEntries={replaceJournalEntries} checkJournalReplaceAvailable={checkJournalReplaceAvailable} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
+          <Route path="/settings" element={<Settings nav={null} user={user} profile={profile} entries={journalIsHidden ? [] : entries} saveEntries={saveEntries} replaceJournalEntries={replaceJournalEntries} checkJournalReplaceAvailable={checkJournalReplaceAvailable} fontScale={fontScale} setFontScale={updateFontScale} fontStyle={fontStyle} setFontStyle={updateFontStyle} siteTheme={siteTheme} setSiteTheme={updateSiteTheme} theme={theme} setTheme={updateTheme} reduceMotion={reduceMotion} setReduceMotion={updateMotion} pin={pin} setPin={updatePin} recoverJournal={(password) => recoverLocalLock('journal', password)} recoverPin={(password) => recoverLocalLock('pin', password)} onOpen={openApp} journalLockCode={journalLockCode} setJournalLockCode={updateJournalLock} journalUnlocked={journalUnlocked} setJournalUnlocked={setJournalUnlocked} reminder={reminder} setReminder={updateReminder} journalEncryption={{ enabled: Boolean(encryptionConfig), unlocked: Boolean(encryptionKey), busy: encryptionBusy, error: encryptionError, enable: enableJournalEncryption, lock: lockEncryptedJournal, changePassphrase: updateEncryptionPassphrase }} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>
         )}
         </>)}
       </main>
-      {conflict && !externalLock && !encryptedJournalLocked && <JournalConflictDialog conflict={conflict} onReview={reviewConflict} onCopy={saveConflictCopy} onAccept={acceptLatest} onClose={closeConflict} />}
+      {conflict && !journalIsHidden && !externalLock && !encryptedJournalLocked && <JournalConflictDialog conflict={conflict} onReview={reviewConflict} onCopy={saveConflictCopy} onAccept={acceptLatest} onClose={closeConflict} />}
       {canUseApp && !locked && !journalIsHidden && !encryptedJournalLocked && !passwordRecovery && (pendingDeletes.length > 0 || deleteError) && <div className="delete-undo-stack">
         {pendingDeletes.map((pending) => <div className="delete-undo-toast" key={pending.id} role="status"><span>{pending.saving ? 'Deleting entry...' : `${pending.label} will be deleted in 10 seconds.`}</span>{!pending.saving && <button onClick={() => undoDelete(pending.id)} type="button"><Undo2 aria-hidden="true" size={16} />Undo</button>}</div>)}
         {deleteError && <div className="delete-undo-toast error" role="alert"><span>{deleteError}</span><button onClick={() => setDeleteError('')} type="button">Dismiss</button></div>}
