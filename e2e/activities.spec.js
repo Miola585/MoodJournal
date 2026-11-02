@@ -29,11 +29,13 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await expect(sheet).toBeFocused();
     await expect(sheet.getByRole('heading', { name: firstTitle })).toBeVisible();
     await expect(sheet.getByRole('checkbox')).toHaveCount(1);
+    await expect(page.getByRole('tabpanel')).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath(`activities-open-${viewport.width}.png`), fullPage: true });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     await sheet.getByRole('button', { name: 'Close activity' }).click();
     await expect(feature.getByRole('button', { name: 'Begin activity' })).toBeFocused();
     await expect(page.locator('.activity-journal-sheet:visible')).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Grounding activities' })).toBeVisible();
   });
 }
 
@@ -64,4 +66,17 @@ test('browsing pauses an activity and preserves its timer, note and completion',
   await expect(feature).toContainText('Completed today');
   await feature.getByRole('button', { name: 'Open activity' }).click();
   await expect(sheet.getByRole('textbox')).toHaveValue('A small pause helped.');
+});
+
+test('grounding destinations open separate pages with working browser history', async ({ page }) => {
+  await page.goto('/activities');
+  await page.getByRole('navigation', { name: 'Grounding activities' }).getByRole('button', { name: 'Breathe', exact: true }).click();
+  await page.getByRole('button', { name: 'Start breathing', exact: true }).click();
+  await expect(page.locator('.activity-feature')).toHaveCount(0);
+  await page.goBack();
+  await expect(page.locator('.breathing-bubble')).toHaveCount(0);
+  await expect(page.locator('.activity-feature')).toBeVisible();
+  await page.getByRole('button', { name: 'Small wonders: scavenger hunt' }).click();
+  await expect(page).toHaveURL(/tool=scavenger/);
+  await expect(page.getByRole('button', { name: 'Begin noticing' })).toBeVisible();
 });

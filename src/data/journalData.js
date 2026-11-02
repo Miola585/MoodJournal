@@ -216,6 +216,12 @@ export const resourceLinks = [
 ];
 export const appViews = ['checkin', 'activities', 'games', 'entries', 'calendar', 'summary', 'about'];
 export const viewPaths = {
+  write: '/journal/write',
+  stickers: '/explore/stickers',
+  moodColors: '/explore/mood-colors',
+  explore: '/explore',
+  staffPreview: '/support/preview/staff',
+  supportPreview: '/support/preview',
   home: '/',
   checkin: '/checkin',
   activities: '/activities',

@@ -21,18 +21,24 @@ const storedIds = (page) => page.evaluate(() => {
   return (Array.isArray(stored) ? stored : stored.entries).map((entry) => entry.id);
 });
 
-test('recent cards open the correct saved page and links survive refresh', async ({ page }) => {
+test('latest page opens the correct entry and saved-page links survive refresh', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.home-recent-entry').filter({ hasText: 'First thought' }).locator('time')).toHaveText('Oct 25');
-  await expect(page.locator('.home-recent-entry').filter({ hasText: 'Second thought' }).locator('time')).toHaveText('Oct 31');
-  await page.locator('.home-recent-entry').filter({ hasText: 'First thought' }).click();
+  const latest = page.getByRole('button', { name: /Your journal Second thought Return to your page/ });
+  await expect(latest).toBeVisible();
+  await latest.click();
+  await expect(page).toHaveURL(/\/entries\?entry=second-entry$/u);
+  await expect(page.locator('#journal-entry-second-entry .entry-card')).toHaveClass(/entry-card-open/u);
+  await expect(page.locator('#journal-entry-second-entry time')).toContainText('Oct 31, 2026');
+  await page.reload();
+  await expect(page.locator('#journal-entry-second-entry .entry-card')).toHaveClass(/entry-card-open/u);
+  await page.goto('/entries?entry=first-entry');
   await expect(page).toHaveURL(/\/entries\?entry=first-entry$/u);
   await expect(page.locator('#journal-entry-first-entry .entry-card')).toHaveClass(/entry-card-open/u);
   await expect(page.locator('#journal-entry-first-entry time')).toContainText('Oct 25, 2026');
   await page.reload();
   await expect(page.locator('#journal-entry-first-entry .entry-card')).toHaveClass(/entry-card-open/u);
   await page.goto('/');
-  await page.locator('.home-recent-entry').filter({ hasText: 'Second thought' }).click();
+  await page.getByRole('button', { name: /Your journal Second thought Return to your page/ }).click();
   await expect(page).toHaveURL(/\/entries\?entry=second-entry$/u);
   await expect(page.locator('#journal-entry-second-entry .entry-card')).toHaveClass(/entry-card-open/u);
 });
@@ -55,7 +61,7 @@ test('pending deletion completes after leaving Entries', async ({ page }) => {
   await page.goto('/entries');
   await page.locator('.entry-card').filter({ hasText: 'First thought' }).getByRole('button', { name: 'Delete' }).click();
   await expect(page.getByRole('status').filter({ hasText: 'will be deleted' })).toBeVisible();
-  await page.getByRole('button', { name: 'Mood Journal' }).click();
+  await page.getByRole('navigation', { name: 'Main destinations', exact: true }).getByRole('button', { name: 'Today', exact: true }).click();
   await expect(page).toHaveURL(/\/$/u);
   await expect(page.getByRole('button', { name: 'Undo' })).toBeVisible();
   await page.clock.fastForward(10_100);
@@ -67,7 +73,7 @@ test('pending deletion completes after leaving Entries', async ({ page }) => {
 test('Undo remains available across navigation and cancels deletion', async ({ page }) => {
   await page.goto('/entries');
   await page.locator('.entry-card').filter({ hasText: 'First thought' }).getByRole('button', { name: 'Delete' }).click();
-  await page.getByRole('button', { name: 'Mood Journal' }).click();
+  await page.getByRole('navigation', { name: 'Main destinations', exact: true }).getByRole('button', { name: 'Today', exact: true }).click();
   await page.getByRole('button', { name: 'Undo' }).click();
   await page.clock.fastForward(10_100);
   await expect.poll(() => storedIds(page)).toEqual(['first-entry', 'second-entry']);
@@ -85,7 +91,7 @@ test('a failed delete restores the entry and reports the error', async ({ page }
     };
   });
   await page.locator('.entry-card').filter({ hasText: 'First thought' }).getByRole('button', { name: 'Delete' }).click();
-  await page.getByRole('button', { name: 'Mood Journal' }).click();
+  await page.getByRole('navigation', { name: 'Main destinations', exact: true }).getByRole('button', { name: 'Today', exact: true }).click();
   await page.clock.fastForward(10_100);
   await expect(page.getByRole('alert').filter({ hasText: 'could not be deleted and was restored' })).toBeVisible();
   await expect.poll(() => storedIds(page)).toEqual(['first-entry', 'second-entry']);

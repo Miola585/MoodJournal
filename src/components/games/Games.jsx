@@ -4,7 +4,9 @@ import { ConstellationGame } from './ConstellationGame';
 import { EmotionalMatchGame } from './EmotionalMatchGame';
 import { MemoryJarGame } from './MemoryJarGame';
 import { NightSkyGalaxy } from './NightSkyGame';
+import { PersonalNightSky } from './PersonalNightSky';
 import { OrbitGame } from './OrbitGame';
+import { MemoryJarSvg } from './MemoryJarSvg';
 import { PageHeader } from '../layout/PageHeader';
 import { GamePageShell } from './GamePageShell';
 import {
@@ -63,6 +65,7 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
   const featuredGame = availableGames[dayNumber % availableGames.length];
   const selectedGame = availableGames.includes(gameId) ? gameId : null;
 
+  if (gameId === 'night-sky') return <PersonalNightSky entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} />;
   if (gameId && !selectedGame) return <Navigate to="/games" replace />;
 
   if (selectedGame) {
@@ -114,10 +117,10 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
 
   return (
     <section className="screen app-screen games-screen games-hub-screen">
-      <PageHeader align="center" eyebrow="Play and reflect" title="Games" subtitle="Small reflection spaces for when you want to reset, notice, or make something gentle." />
+      <PageHeader align="center" title="Games" subtitle="Small ways to play and reflect." />
       {nav}
       <GameLauncher openGame={(game) => navigate(`/games/${game}`)} featuredGame={featuredGame} />
-      <NightSkyGalaxy entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} />
+      <NightSkyGalaxy entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} onStart={() => navigate('/entries')} />
     </section>
   );
 }
@@ -125,13 +128,9 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
 function GameLauncher({ openGame, featuredGame }) {
   return (
     <section className="game-launcher">
-      <div className="game-library-heading">
-        <span>Choose a small reset</span>
-        <h2>Game Library</h2>
-      </div>
       <div className="game-card-grid">
         {rotatingGames.map((game) => {
-          const { Icon, eyebrow, description } = gameLibraryDetails[game];
+          const { Icon, description } = gameLibraryDetails[game];
           const comingSoon = !availableGames.includes(game);
           return (
             <button
@@ -141,9 +140,9 @@ function GameLauncher({ openGame, featuredGame }) {
               onClick={() => openGame(game)}
               type="button"
             >
-              <span className="game-card-icon"><Icon aria-hidden="true" size={22} strokeWidth={2.4} /></span>
+              <span className={`game-card-scene game-card-scene-${game}`} aria-hidden="true">{game === 'memory' ? <MemoryJarSvg /> : <Icon size={48} strokeWidth={1.6} />}</span>
               <span className="game-card-copy">
-                <span>{comingSoon ? 'Coming soon' : game === featuredGame ? 'Featured today' : eyebrow}</span>
+                {(comingSoon || game === featuredGame) && <span>{comingSoon ? 'Coming soon' : 'Today'}</span>}
                 <strong>{gameLabels[game]}</strong>
                 <small>{description}</small>
               </span>

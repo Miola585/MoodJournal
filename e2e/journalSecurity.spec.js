@@ -45,7 +45,7 @@ test('empty backup is parsed but cannot replace a local journal', async ({ page 
 test('local browser without Web Locks explains blocked saves and keeps writing', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'locks', { value: undefined, configurable: true }));
   await page.goto('/entries');
-  await page.getByRole('button', { name: 'New free write', exact: true }).click();
+  await page.getByRole('button', { name: 'Start writing', exact: true }).click();
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Unsaved page');
   await page.locator('[contenteditable="true"]').fill('Keep this unsaved writing');
   await page.getByRole('button', { name: 'Save page', exact: true }).click();

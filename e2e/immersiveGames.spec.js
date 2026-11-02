@@ -20,27 +20,61 @@ test.beforeEach(async ({ page }) => {
 
 test('journal night sky shows shaped stars and a visible glow', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/games');
-  const stars = page.locator('.galaxy-map .galaxy-star');
+  await page.goto('/games/night-sky');
+  const stars = page.locator('.personal-sky-star .galaxy-star');
   await expect(stars).toHaveCount(3);
   const pointCounts = await stars.locator('.galaxy-star-core').evaluateAll((polygons) => (
     polygons.map((polygon) => polygon.points.numberOfItems)
   ));
   expect(pointCounts).toEqual([8, 10, 12]);
-  await expect(stars.nth(0)).toHaveAttribute('aria-label', /4-point star/u);
-  await expect(stars.nth(1)).toHaveAttribute('aria-label', /5-point star/u);
-  await expect(stars.nth(2)).toHaveAttribute('aria-label', /6-point star/u);
+  await expect(page.locator('.personal-sky-star').nth(0)).toHaveAttribute('aria-label', /4-point star/u);
+  await expect(page.locator('.personal-sky-star').nth(1)).toHaveAttribute('aria-label', /5-point star/u);
+  await expect(page.locator('.personal-sky-star').nth(2)).toHaveAttribute('aria-label', /6-point star/u);
   await page.screenshot({ path: testInfo.outputPath('night-sky-desktop.png'), fullPage: true });
 });
+
+for (const width of [320, 820, 1440]) {
+  test(`Personal Night Sky is immersive, keyboard accessible and follows history at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/explore');
+    await expect(page.locator('.galaxy-star')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Personal Night Sky', exact: true }).click();
+    await expect(page).toHaveURL(/\/games\/night-sky$/u);
+    await expect(page.locator('.topbar')).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Mobile destinations' })).toHaveCount(0);
+    const star = page.locator('.personal-sky-star').first();
+    await star.focus();
+    await page.keyboard.press('Enter');
+    await expect(star).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.personal-sky-recap')).toContainText('Calm');
+    await page.screenshot({ path: info.outputPath(`personal-sky-${width}.png`), fullPage: true });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    await page.getByRole('button', { name: 'Open journal', exact: true }).click();
+    await expect(page).toHaveURL(/\/entries\?entry=sky-low$/u);
+    await page.goBack();
+    await expect(page.getByRole('heading', { name: 'Personal Night Sky', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Little breaks', exact: true }).click();
+    await expect(page).toHaveURL(/\/explore$/u);
+    if (width === 320) {
+      await page.getByRole('button', { name: 'Personal Night Sky', exact: true }).click();
+      await page.setViewportSize({ width: 844, height: 390 });
+      await page.locator('.personal-sky-star').first().click();
+      await expect(page.getByRole('button', { name: 'Open journal', exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1)).toBe(true);
+      await page.screenshot({ path: info.outputPath('personal-sky-landscape.png'), fullPage: true });
+    }
+  });
+}
 
 for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
   test(`immersive games fill ${viewport.width}px viewport without app chrome`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
     await page.goto('/games');
-    const gardenCard = page.getByRole('button', { name: /Coming soon Mood Garden/u });
+    const gardenCard = page.getByRole('button', { name: /Mood Garden/u });
     await expect(gardenCard).toBeDisabled();
     await page.goto('/games/garden');
-    await expect(page).toHaveURL(/\/games$/u);
+    await expect(page).toHaveURL(/\/explore$/u);
     await expect(page.getByRole('heading', { name: 'Your pocket garden.' })).toHaveCount(0);
     await expect(page.locator('.topbar')).toBeVisible();
     await page.goto('/games/constellation');

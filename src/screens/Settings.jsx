@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Accessibility, Bell, BookOpen, Check, ChevronRight, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, ShieldCheck, Sun, Sunset, Type, UserRound, X } from 'lucide-react';
+import { Accessibility, Bell, BookOpen, Check, ChevronRight, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, Plus, ShieldCheck, Sun, Sunset, Trash2, Type, Upload, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
+import { JournalPrivacyGate } from '../components/layout/JournalLocks';
 import { ReminderStatus } from '../components/layout/ReminderStatus';
 import { todayKey } from '../utils/journalUtils';
 import { buildImportedJournal, compareJournalImports, MAX_IMPORT_FILE_BYTES, parseJournalBackup } from '../utils/journalImport';
@@ -9,7 +10,7 @@ import { themeChoices } from '../data/themeChoices';
 export function Settings({
   mode = 'all', nav, user, profile, entries, saveEntries, replaceJournalEntries, checkJournalReplaceAvailable, fontScale, setFontScale, fontStyle, setFontStyle,
   siteTheme, setSiteTheme, theme, setTheme, reduceMotion, setReduceMotion, pin, setPin, onOpen,
-  recoverPin, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder,
+  recoverPin, recoverJournal, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder,
   journalEncryption
 }) {
   const usesSunriseWorld = siteTheme === 'sunrise';
@@ -20,7 +21,15 @@ export function Settings({
   const [pinRecoveryPassword, setPinRecoveryPassword] = useState('');
   const [pinRecoveryMessage, setPinRecoveryMessage] = useState('');
   const [pinRecoveryBusy, setPinRecoveryBusy] = useState(false);
-  const [journalCodeDraft, setJournalCodeDraft] = useState(journalLockCode);
+  const [journalCodeDraft, setJournalCodeDraft] = useState('');
+  const [currentJournalCode, setCurrentJournalCode] = useState('');
+  const [journalCodeError, setJournalCodeError] = useState('');
+  const journalHidden = Boolean(journalLockCode && !journalUnlocked);
+  const accessRef = useRef(!journalHidden);
+  accessRef.current = !journalHidden;
+  const importReader = useRef(null);
+  const importVersion = useRef(0);
+  const journalGate = { compact: true, locked: journalHidden, code: journalLockCode, onUnlock: setJournalUnlocked, onRecover: user ? recoverJournal : undefined };
   const [encryptionPassphrase, setEncryptionPassphrase] = useState('');
   const [encryptionConfirmation, setEncryptionConfirmation] = useState('');
   const [newEncryptionPassphrase, setNewEncryptionPassphrase] = useState('');
@@ -30,6 +39,39 @@ export function Settings({
   const [importPreview, setImportPreview] = useState(null);
   const [importBusy, setImportBusy] = useState(false);
   const [replaceAvailable, setReplaceAvailable] = useState(false);
+  useEffect(() => {
+    accessRef.current = !journalHidden;
+    if (journalHidden) {
+      setImportPreview(null);
+      setReplaceAvailable(false);
+      setDataMessage('');
+    }
+    return () => {
+      accessRef.current = false;
+      importVersion.current += 1;
+      importReader.current?.abort();
+    };
+  }, [journalHidden]);
+  const changeJournalLock = (value) => {
+    const result = setJournalLockCode(value, currentJournalCode);
+    if (!result?.ok) {
+      setJournalCodeError(result?.error || 'The journal lock could not be changed.');
+      return;
+    }
+    setCurrentJournalCode('');
+    setJournalCodeDraft('');
+    setJournalCodeError('');
+    if (value) closePrivacy();
+  };
+  const toggleJournalVisibility = () => {
+    if (!journalUnlocked && currentJournalCode !== journalLockCode) {
+      setJournalCodeError('The current journal code did not match.');
+      return;
+    }
+    setJournalUnlocked(!journalUnlocked);
+    setCurrentJournalCode('');
+    setJournalCodeError('');
+  };
   useEffect(() => {
     if (!importPreview) return;
     setImportPreview((current) => current ? { ...current, comparison: compareJournalImports(entries, current.entries) } : null);
@@ -53,6 +95,7 @@ export function Settings({
     setReminder({ ...reminder, time: safeTimes[0], times: safeTimes });
   };
   const exportData = (suffix = '') => {
+    if (!accessRef.current) { setDataMessage('Unlock your journal before exporting.'); return false; }
     const blob = new Blob([JSON.stringify({ journalEntriesV2: entries }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -60,8 +103,10 @@ export function Settings({
     link.download = `mood-journal-${todayKey()}${suffix ? `-${suffix}` : ''}.json`;
     link.click();
     URL.revokeObjectURL(url);
+    return true;
   };
   const importData = (event) => {
+    if (!accessRef.current) { event.target.value = ''; setDataMessage('Unlock your journal before importing.'); return; }
     const file = event.target.files?.[0];
     if (!file) return;
     setDataMessage('');
@@ -71,26 +116,35 @@ export function Settings({
       return;
     }
     const reader = new FileReader();
+    importReader.current?.abort();
+    importReader.current = reader;
+    const version = ++importVersion.current;
+    const isCurrent = () => accessRef.current && version === importVersion.current;
     reader.onload = async () => {
+      if (!isCurrent()) return;
       try {
         const importedEntries = parseJournalBackup(reader.result);
         const comparison = compareJournalImports(entries, importedEntries);
         setImportPreview({ entries: importedEntries, comparison, fileName: file.name });
         const validation = await checkJournalReplaceAvailable(importedEntries);
+        if (!isCurrent()) return;
         setReplaceAvailable(validation.ok);
         setDataMessage(validation.ok ? 'Backup parsed and replacement validated. Review the comparison before importing.' : `Backup parsed. Replacement was not validated: ${validation.error}`);
       } catch (error) {
+        if (!isCurrent()) return;
         setDataMessage(error.message || 'Could not import that file.');
       }
       event.target.value = '';
     };
     reader.onerror = () => {
+      if (!isCurrent()) return;
       setDataMessage('The browser could not read that backup file.');
       event.target.value = '';
     };
     reader.readAsText(file);
   };
   const applyImport = async (mode) => {
+    if (!accessRef.current) { setDataMessage('Unlock your journal before importing.'); return; }
     if (!importPreview || importBusy) return;
     setImportBusy(true);
     setDataMessage(mode === 'replace' ? 'Preparing a safety copy...' : 'Saving imported entries...');
@@ -105,7 +159,7 @@ export function Settings({
           setDataMessage('Journal replacement was cancelled. The preview is still available.');
           return;
         }
-        exportData('before-import');
+        if (!exportData('before-import')) return;
         const result = await replaceJournalEntries(buildImportedJournal(entries, importPreview.entries, 'replace'));
         if (!result?.ok) {
           setReplaceAvailable(!result?.unavailable);
@@ -127,6 +181,7 @@ export function Settings({
     }
   };
   const enableEncryption = async () => {
+    if (!accessRef.current) { setEncryptionMessage('Unlock your journal before changing its protection.'); return; }
     setEncryptionMessage('');
     if (encryptionPassphrase !== encryptionConfirmation) {
       setEncryptionMessage('The two passphrases do not match.');
@@ -143,6 +198,7 @@ export function Settings({
     }
   };
   const changeEncryptionPassphrase = async () => {
+    if (!accessRef.current) { setEncryptionMessage('Unlock your journal before changing its protection.'); return; }
     setEncryptionMessage('');
     try {
       await journalEncryption.changePassphrase(newEncryptionPassphrase);
@@ -188,6 +244,8 @@ export function Settings({
     setPrivacyPanel('');
     setPinDraft('');
     setJournalCodeDraft('');
+    setCurrentJournalCode('');
+    setJournalCodeError('');
     setEncryptionPassphrase('');
     setEncryptionConfirmation('');
     setNewEncryptionPassphrase('');
@@ -197,17 +255,18 @@ export function Settings({
 
   return (
     <section className="screen app-screen settings-screen">
-      <PageHeader eyebrow="Your space" title={mode === 'privacy' ? 'Privacy' : mode === 'preferences' ? 'Preferences' : 'Settings'} subtitle={mode === 'privacy' ? 'Protect your writing and keep a copy of your journal.' : 'Shape how your journal looks and feels on this device.'} />
       {nav}
+      <PageHeader title={mode === 'privacy' ? 'Privacy' : mode === 'preferences' ? 'Preferences' : 'Settings'} />
+      {mode !== 'preferences' && <div className="privacy-storage-status"><ShieldCheck aria-hidden="true" size={20} /><span><strong>{user ? 'Synced with your account' : 'Saved in this browser'}</strong><small>{journalEncryption.enabled ? 'Saved entries are encrypted.' : 'Entry encryption is off.'}</small></span></div>}
 
-      {mode === 'all' && <section className="settings-profile ui-card ui-card-secondary">
+      {mode === 'all' && <section className="settings-profile">
         <span className="settings-section-icon"><UserRound aria-hidden="true" size={20} /></span>
         <div><strong>{profile?.username || 'Your profile'}</strong><span>{user?.email || 'Local browser profile'}</span></div>
         {profile?.role === 'admin' && <span className="admin-badge">Admin</span>}
       </section>}
 
       {mode !== 'privacy' && <>
-      <SettingsSection icon={Palette} title="Appearance" description="Choose a world for your journal. The layout stays familiar in every theme.">
+      <SettingsSection icon={Palette} title="Appearance">
         <div className="theme-preview-grid" role="radiogroup" aria-label="Journal theme">
           {themeChoices.map((choice) => (
             <button
@@ -219,15 +278,15 @@ export function Settings({
               type="button"
             >
               <span className="theme-preview-art" aria-hidden="true">
-                {choice.colors.map((color) => <i key={color} style={{ background: color }} />)}
+                <span className="theme-preview-scene" style={{ background: choice.colors[1] }}><img alt="" src={choice.previewImage} /><i style={{ background: choice.colors[0] }} /><b style={{ background: choice.colors[2] }} /></span>
               </span>
-              <span>{choice.label}</span>
+              <span className="theme-preview-label">{choice.label}</span>
               <i className="theme-selected-mark" aria-hidden="true"><Check size={13} strokeWidth={3} /></i>
             </button>
           ))}
         </div>
         <div className="settings-row settings-mode-row">
-          <div><strong>Color mode</strong><span>Switch between the light and dark version of this theme.</span></div>
+          <div><strong>Color mode</strong></div>
           <div className="segmented-control" aria-label="Color mode">
             <button aria-pressed={theme === 'light'} className={theme === 'light' ? 'active' : ''} onClick={() => theme !== 'light' && setTheme()} type="button"><Sun aria-hidden="true" size={16} />{usesSunriseWorld ? 'Sunrise' : 'Light'}</button>
             <button aria-pressed={theme === 'dark'} className={theme === 'dark' ? 'active' : ''} onClick={() => theme !== 'dark' && setTheme()} type="button"><DarkModeIcon aria-hidden="true" size={16} />{usesSunriseWorld ? 'Sunset' : 'Dark'}</button>
@@ -235,25 +294,25 @@ export function Settings({
         </div>
       </SettingsSection>
 
-      <SettingsSection icon={Accessibility} title="Experience" description="Keep movement and reading comfortable.">
+      <SettingsSection icon={Accessibility} title="Reading and motion">
         <div className="settings-row">
           <div><strong>Reduced motion</strong><span>Limit decorative movement and animated transitions.</span></div>
-          <button aria-pressed={reduceMotion} className={reduceMotion ? 'settings-switch active' : 'settings-switch'} onClick={setReduceMotion} type="button"><span />{reduceMotion ? 'On' : 'Off'}</button>
+          <button aria-label="Reduced motion" aria-pressed={reduceMotion} className={reduceMotion ? 'settings-switch active' : 'settings-switch'} onClick={setReduceMotion} type="button"><span aria-hidden="true" />{reduceMotion ? 'On' : 'Off'}</button>
         </div>
         <div className="settings-control-grid">
-          <label><span><Type aria-hidden="true" size={17} />Text size</span><input aria-valuetext={`${Math.round(fontScale * 100)} percent`} max="1.3" min="0.9" onChange={(event) => setFontScale(Number(event.target.value))} step="0.05" type="range" value={fontScale} /></label>
-          <label><span>Font style</span><select onChange={(event) => setFontStyle(event.target.value)} value={fontStyle}><option value="friendly">Friendly</option><option value="classic">Classic</option><option value="clean">Clean</option></select></label>
+          <label><span><Type aria-hidden="true" size={17} />Text size: {Math.round(fontScale * 100)}%</span><input aria-valuetext={`${Math.round(fontScale * 100)} percent`} max="1.3" min="0.9" onChange={(event) => setFontScale(Number(event.target.value))} step="0.05" type="range" value={fontScale} /></label>
+          <label><span>Font style</span><select onChange={(event) => setFontStyle(event.target.value)} value={fontStyle}><option value="friendly">Friendly</option><option value="classic">Classic</option><option value="clean">Clean</option></select><span className={`font-style-sample font-${fontStyle}`}>A quiet moment</span></label>
         </div>
       </SettingsSection>
 
-      <SettingsSection icon={Bell} title="Journal" description="Set a gentle reminder for the times that work for you.">
+      <SettingsSection icon={Bell} title="Reminders">
         <div className="reminder-time-list">
           {reminderTimes.map((time, index) => (
-            <label key={`${time}-${index}`}>Reminder {index + 1}<span className="reminder-time-row"><input onChange={(event) => updateReminderTime(index, event.target.value)} type="time" value={time} />{reminderTimes.length > 1 && <button className="ghost-button" onClick={() => removeReminderTime(index)} type="button">Remove</button>}</span></label>
+            <label key={`${time}-${index}`}>Reminder {index + 1}<span className="reminder-time-row"><input onChange={(event) => updateReminderTime(index, event.target.value)} type="time" value={time} />{reminderTimes.length > 1 && <button aria-label={`Remove reminder ${index + 1}`} className="ghost-button" onClick={() => removeReminderTime(index)} title={`Remove reminder ${index + 1}`} type="button"><Trash2 aria-hidden="true" size={18} /></button>}</span></label>
           ))}
         </div>
         <div className="settings-actions">
-          <button className="secondary-button" onClick={addReminderTime} type="button">Add reminder</button>
+          <button className="secondary-button" onClick={addReminderTime} type="button"><Plus aria-hidden="true" size={17} />Add reminder</button>
           <button className="primary-button" disabled={reminder.controls.busy} onClick={reminder.controls.toggle} type="button">{reminder.enabled ? 'Turn reminders off' : 'Turn reminders on'}</button>
         </div>
         <ReminderStatus controls={reminder.controls} />
@@ -261,13 +320,14 @@ export function Settings({
       </>}
 
       {mode !== 'preferences' && <>
-      <SettingsSection icon={ShieldCheck} title="Privacy" description="Protect what you write in storage and add privacy screens on this device.">
+      <SettingsSection icon={ShieldCheck} title="Protect your journal">
         <PrivacyRow icon={LockKeyhole} title="Journal lock" description={journalLockCode ? 'On. Hide journal views on this device.' : 'Cover your journal with a separate code on this device.'} action={journalLockCode ? 'Manage' : 'Set up'} onClick={() => { setJournalCodeDraft(''); setPrivacyPanel('journal'); }} />
         <PrivacyRow icon={KeyRound} title="App PIN" description={pin ? 'On. Cover the app when it is locked.' : 'Add a four-digit privacy screen for this app.'} action={pin ? 'Manage' : 'Set up'} onClick={() => { setPinDraft(''); setPinRecoveryMessage(''); setPrivacyPanel('pin'); }} />
         <PrivacyRow icon={ShieldCheck} title="Stored-entry encryption" description={journalEncryption.enabled ? 'On. Saved journal content is encrypted.' : 'Protect saved content with a separate passphrase.'} action={journalEncryption.enabled ? 'Manage' : 'Learn more'} onClick={() => { setEncryptionMessage(''); setPrivacyPanel('encryption'); }} />
-        <p className="privacy-note"><LockKeyhole aria-hidden="true" size={16} />PIN and journal locks only hide the interface. They do not encrypt browser storage. Stored-entry encryption protects saved content.</p>
+        <details className="privacy-how-it-works"><summary>How protection works</summary><p className="privacy-note"><LockKeyhole aria-hidden="true" size={16} />PIN and journal locks only hide the interface. They do not encrypt browser storage. Stored-entry encryption protects saved content.</p></details>
 
         {privacyPanel === 'encryption' && <PrivacyDialog title="Stored-entry encryption" icon={ShieldCheck} onClose={closePrivacy} busy={journalEncryption.busy || Boolean(recoveryKey)}>
+        <JournalPrivacyGate {...journalGate}>
         <div className={journalEncryption.enabled ? 'encryption-status enabled' : 'encryption-status'}>
           <span className="encryption-status-icon"><KeyRound aria-hidden="true" size={20} /></span>
           <div>
@@ -309,6 +369,7 @@ export function Settings({
         </div>}
         {encryptionMessage && <p className="settings-message" role="status">{encryptionMessage}</p>}
         {journalEncryption.error && <p className="form-error" role="alert">{journalEncryption.error}</p>}
+        </JournalPrivacyGate>
         </PrivacyDialog>}
 
         {privacyPanel === 'pin' && <PrivacyDialog title={pin ? 'Manage your app PIN' : 'A little privacy for your app'} icon={KeyRound} onClose={closePrivacy} busy={pinRecoveryBusy}>
@@ -327,14 +388,17 @@ export function Settings({
         {privacyPanel === 'journal' && <PrivacyDialog title={journalLockCode ? 'Manage your journal lock' : 'A little privacy for your journal'} icon={LockKeyhole} onClose={closePrivacy}>
         <p>Choose a separate code to hide journal views on this device. This code is stored in your browser; it is an interface lock, not encryption.</p>
         <div className="settings-control-grid">
+          {journalLockCode && <label>Current journal code<input autoComplete="current-password" onChange={(event) => setCurrentJournalCode(event.target.value)} type="password" value={currentJournalCode} /></label>}
           <label>Journal lock<input onChange={(event) => setJournalCodeDraft(event.target.value)} placeholder="Passphrase or PIN" type="password" value={journalCodeDraft} /></label>
-          <div className="settings-field-actions"><button className="primary-button" disabled={!journalCodeDraft.trim()} onClick={() => { setJournalLockCode(journalCodeDraft); closePrivacy(); }} type="button">{journalLockCode ? 'Update lock' : 'Enable lock'}</button>{journalLockCode && <button className="ghost-button" onClick={() => { setJournalCodeDraft(''); setJournalLockCode(''); }} type="button">Remove lock</button>}{journalLockCode && <button className="ghost-button" onClick={() => setJournalUnlocked(!journalUnlocked)} type="button">{journalUnlocked ? 'Hide now' : 'Keep revealed'}</button>}</div>
+          <div className="settings-field-actions"><button className="primary-button" disabled={!journalCodeDraft.trim()} onClick={() => changeJournalLock(journalCodeDraft)} type="button">{journalLockCode ? 'Update lock' : 'Enable lock'}</button>{journalLockCode && <button className="ghost-button" onClick={() => changeJournalLock('')} type="button">Remove lock</button>}{journalLockCode && <button className="ghost-button" onClick={toggleJournalVisibility} type="button">{journalUnlocked ? 'Hide now' : 'Reveal journal'}</button>}</div>
+          {journalCodeError && <p className="form-error" role="alert">{journalCodeError}</p>}
         </div>
         </PrivacyDialog>}
       </SettingsSection>
 
-      <SettingsSection icon={Database} title="Privacy & Data" description="Keep a copy of your journal or restore one you exported earlier.">
-        <div className="settings-actions"><button className="secondary-button" onClick={() => exportData()} type="button">Export data</button><label className="file-button secondary-button">Preview a backup<input accept="application/json" onChange={importData} type="file" /></label></div>
+      <SettingsSection icon={Database} title="Backup and restore">
+        <JournalPrivacyGate {...journalGate}>
+        <div className="settings-actions"><button className="secondary-button" onClick={() => exportData()} type="button"><Download aria-hidden="true" size={17} />Export journal</button><label className="file-button secondary-button"><Upload aria-hidden="true" size={17} />Review backup<input accept="application/json" onChange={importData} type="file" /></label></div>
         {dataMessage && <p className="settings-message" role="status">{dataMessage}</p>}
         {importPreview && <section className="import-preview" aria-labelledby="import-preview-title">
           <div className="import-preview-heading">
@@ -354,6 +418,7 @@ export function Settings({
           </div>
         </section>}
         {journalEncryption.enabled && <p className="privacy-note"><Download aria-hidden="true" size={16} />Exports are readable JSON created on this device after unlocking. Store exported files as carefully as the journal itself.</p>}
+        </JournalPrivacyGate>
       </SettingsSection>
       </>}
 
@@ -394,8 +459,8 @@ function PrivacyDialog({ title, icon: Icon, onClose, busy = false, children }) {
 
 function SettingsSection({ icon: Icon, title, description, children }) {
   return (
-    <section className="settings-section ui-card ui-card-primary">
-      <header><span className="settings-section-icon"><Icon aria-hidden="true" size={20} /></span><div><h2>{title}</h2><p>{description}</p></div></header>
+    <section className="settings-section">
+      <header><span className="settings-section-icon"><Icon aria-hidden="true" size={20} /></span><div><h2>{title}</h2>{description && <p>{description}</p>}</div></header>
       <div className="settings-section-body">{children}</div>
     </section>
   );

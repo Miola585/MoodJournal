@@ -17,11 +17,10 @@ for (const width of [1280, 390]) {
     await expect(page.locator('.game-success-card .mini-sky img')).toHaveCount(2);
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await page.getByRole('button', { name: 'Back to games' }).click();
-    if (width < 600) await page.getByRole('button', { name: 'Open navigation' }).click();
-    await page.getByRole('button', { name: 'More', exact: true }).click();
+    await page.getByRole('button', { name: 'Profile menu', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Game Archive', exact: true })).toHaveCount(0);
     await page.goto('/game-archive');
-    await expect(page).toHaveURL(/\/games$/);
+    await expect(page).toHaveURL(/\/explore$/);
     await page.goto('/e2e/fixtures/game-archive.html');
     const archive = page.getByRole('region', { name: 'Constellation archive', exact: true });
     await expect(archive.locator('.archive-sky img')).toHaveCount(2);
@@ -167,6 +166,6 @@ test('the public archive route is unavailable even with a journal privacy lock',
     ]));
   }, key('gameMemoryJar'));
   await page.goto('/game-archive?game=memory');
-  await expect(page).toHaveURL(/\/games$/);
+  await expect(page).toHaveURL(/\/explore$/);
   await expect(page.getByText('A private little moment')).toHaveCount(0);
 });

@@ -1,0 +1,17 @@
+.destination-art {
+  --scene-tint: #dfcbb5;
+  --scene-leaf: #96a78b;
+  --scene-sun: #edcd9c;
+  --scene-star: #fff9e5;
+  --scene-line: var(--text-secondary);
+  --scene-stem: #567461;
+  --scene-sky: color-mix(in srgb, var(--surface-major) 60%, var(--scene-tint));
+  --scene-haze: color-mix(in srgb, var(--surface-secondary) 70%, var(--scene-tint));
+  display: block;
+  pointer-events: none;
+}
+.theme-sunrise .destination-art { --scene-tint: #e8d4e2; --scene-leaf: #9cad97; }
+.theme-night .destination-art { --scene-tint: #ded8ef; --scene-leaf: #8faaa1; }
+.theme-garden .destination-art { --scene-tint: #d9e4cf; --scene-leaf: #8da47c; }
+.theme-ocean .destination-art { --scene-tint: #c7e1df; --scene-leaf: #7da5a0; }
+.dark .destination-art { --scene-stem: #b2c7a8; }

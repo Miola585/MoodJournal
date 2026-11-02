@@ -57,7 +57,7 @@
 
 .support-page {
   width: min(100%, 1100px);
-  margin: 28px auto 80px;
+  margin: 0 auto 56px;
   color: var(--text-primary, var(--text));
 }
 
@@ -67,7 +67,7 @@
   justify-content: space-between;
   gap: 20px;
   padding: 0 0 24px;
-  border-bottom: 1px solid var(--border-subtle, var(--soft-border));
+  border-bottom: 0;
 }
 
 .support-eyebrow {

@@ -3179,11 +3179,6 @@ button.topnav-menu-button {
   opacity: 0.2;
 }
 
-.app:has(.entries-screen) .theme-atmosphere .theme-art-image,
-.app:has(.freewrite-screen) .theme-atmosphere .theme-art-image {
-  display: none;
-}
-
 @media (max-width: 1024px) {
   .theme-preview-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

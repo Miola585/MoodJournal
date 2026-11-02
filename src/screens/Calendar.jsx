@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { moods } from '../data/journalData';
-import { buildCalendarDays, formatDateKey, getPrimaryEntry, groupEntriesByDate, isCheckIn, todayKey } from '../utils/journalUtils';
+import { buildCalendarDays, formatDateKey, getPrimaryEntry, groupEntriesByDate, isCheckIn, isJournalDateAllowed, todayKey } from '../utils/journalUtils';
 import { EntryCard } from '../components/journal/EntryCard';
 import { PageHeader } from '../components/layout/PageHeader';
 
@@ -16,7 +16,7 @@ const formatFriendlyDate = (dateKey) => {
   });
 };
 
-export function Calendar({ nav, entries, onPrimary, onBookmark }) {
+export function Calendar({ nav, entries, onPrimary, onBookmark, onCheckIn, onOpenEntry }) {
   const [monthDate, setMonthDate] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(todayKey());
   const year = monthDate.getFullYear();
@@ -48,28 +48,24 @@ export function Calendar({ nav, entries, onPrimary, onBookmark }) {
 
   return (
     <section className="screen app-screen calendar-screen">
-      <PageHeader title="Calendar" subtitle="Review your mood history by day." />
       {nav}
-      <div className="calendar-board">
-        <div className="calendar-toolbar">
-          <button aria-label="Previous month" className="calendar-nav-button" onClick={() => moveMonth(-1)} type="button">
+      <PageHeader eyebrow="Your month" title={monthLabel} subtitle={monthEntryCount > 0 ? `${monthEntryCount} saved ${monthEntryCount === 1 ? 'entry' : 'entries'}` : undefined} actions={(
+        <div className="calendar-toolbar-actions" role="group" aria-label="Choose calendar month">
+          <button aria-label="Previous month" title="Previous month" className="calendar-nav-button" onClick={() => moveMonth(-1)} type="button">
             <ChevronLeft aria-hidden="true" size={22} />
           </button>
-          <div className="calendar-month-heading">
-            <h2>{monthLabel}</h2>
-            <span>{monthEntryCount} saved {monthEntryCount === 1 ? 'entry' : 'entries'}</span>
-          </div>
-          <div className="calendar-toolbar-actions">
-            <button className="calendar-today-button" onClick={returnToToday} type="button">
-              <CalendarDays aria-hidden="true" size={17} />
-              Today
-            </button>
-            <button aria-label="Next month" className="calendar-nav-button" onClick={() => moveMonth(1)} type="button">
-              <ChevronRight aria-hidden="true" size={22} />
-            </button>
-          </div>
+          <button className="calendar-today-button" onClick={returnToToday} title="Return to today" type="button">
+            <CalendarDays aria-hidden="true" size={17} />
+            Today
+          </button>
+          <button aria-label="Next month" title="Next month" className="calendar-nav-button" onClick={() => moveMonth(1)} type="button">
+            <ChevronRight aria-hidden="true" size={22} />
+          </button>
         </div>
-        <div className="month-grid">
+      )} />
+      <div className="calendar-layout">
+      <div className="calendar-board">
+        <div className="month-grid" role="group" aria-label={monthLabel}>
           {weekDays.map((day) => <strong className="weekday" key={day}>{day}</strong>)}
           {days.map((day, index) => {
             const key = day ? formatDateKey(new Date(year, month, day)) : '';
@@ -90,12 +86,12 @@ export function Calendar({ nav, entries, onPrimary, onBookmark }) {
               ? `${formatFriendlyDate(key)}${isToday ? ', today' : ''}${hasEntries ? `, ${dayEntries.length} saved ${dayEntries.length === 1 ? 'entry' : 'entries'}` : ', no saved entries'}`
               : 'Empty calendar day';
             return (
-              <button aria-label={dayLabel} aria-pressed={isSelected} className={cellClass} disabled={!day} key={key || `blank-${index}`} onClick={() => setSelectedDate(key)} style={firstMood ? { '--day-mood': firstMood.color } : undefined} type="button">
+              <button aria-label={dayLabel} aria-pressed={isSelected} aria-current={isToday ? 'date' : undefined} className={cellClass} disabled={!day} key={key || `blank-${index}`} onClick={() => setSelectedDate(key)} style={firstMood ? { '--day-mood': firstMood.color } : undefined} type="button">
                 {day && <span className="calendar-day-number">{day}</span>}
                 {isToday && <span className="calendar-today-label">Today</span>}
-                {firstMood && (
+                {hasEntries && (
                   <span className="calendar-entry-markers" aria-hidden="true">
-                    <b>{firstMood.emoji}</b>
+                    {firstMood && <b>{firstMood.emoji}</b>}
                     <span>
                       {dayEntries.slice(0, 3).map((entry) => <small key={entry.id || entry.created} />)}
                     </span>
@@ -107,11 +103,11 @@ export function Calendar({ nav, entries, onPrimary, onBookmark }) {
           })}
         </div>
       </div>
-      <div className="calendar-detail">
+      <div className="calendar-detail" role="region" aria-labelledby="calendar-selected-date">
         <div className="calendar-detail-heading">
           <div>
             <span>Selected day</span>
-            <h2>{formatFriendlyDate(selectedDate)}</h2>
+            <h2 id="calendar-selected-date"><time dateTime={selectedDate}>{formatFriendlyDate(selectedDate)}</time></h2>
           </div>
           {selectedEntries.length > 0 && (
             <p className="calendar-detail-count">
@@ -124,11 +120,12 @@ export function Calendar({ nav, entries, onPrimary, onBookmark }) {
           <div className="calendar-detail-empty">
             <CalendarDays aria-hidden="true" size={34} />
             <div>
-              <p>No entry saved for this day.</p>
-              <span>Check-ins and free writes will appear here when saved.</span>
+              <p>Nothing here yet</p>
+              {isJournalDateAllowed(selectedDate) ? <button className="primary" onClick={() => onCheckIn(selectedDate)} type="button">Check in for this day <ArrowRight aria-hidden="true" size={16} /></button> : <span>This day has not arrived yet.</span>}
             </div>
           </div>
-        ) : selectedEntries.map((entry) => <EntryCard compact entry={entry} key={entry.id} onPrimary={() => onPrimary(entry.id)} onBookmark={(bookmarked) => onBookmark(entry.id, bookmarked)} />)}
+        ) : selectedEntries.map((entry) => <div className="calendar-page-preview" key={entry.id}><EntryCard compact entry={entry} onPrimary={() => onPrimary(entry.id)} onBookmark={(bookmarked) => onBookmark(entry.id, bookmarked)} /><button className="ghost-button" onClick={() => onOpenEntry(entry.id)} type="button">Open in journal <ArrowRight aria-hidden="true" size={16} /></button></div>)}
+      </div>
       </div>
     </section>
   );
