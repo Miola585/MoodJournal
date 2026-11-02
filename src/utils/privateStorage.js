@@ -68,7 +68,7 @@ export function createPrivateStorage({ ownerId, encryptionEnabled, dataKey, stor
     const ownerPlainPrefix = `${plainPrefix}:${encodeURIComponent(owner)}:`;
     const keys = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter(Boolean);
     keys.forEach((storedKey) => {
-      if (storedKey.startsWith('activityNotes:') || storedKey.startsWith('moodOrbit:')) privateNames.add(storedKey);
+      if (storedKey.startsWith('activityNotes:') || storedKey.startsWith('activityCompletions:') || storedKey.startsWith('moodOrbit:')) privateNames.add(storedKey);
       if (storedKey.startsWith(ownerPlainPrefix)) {
         privateNames.add(decodeURIComponent(storedKey.slice(ownerPlainPrefix.length)));
       }

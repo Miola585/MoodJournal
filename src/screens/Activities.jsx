@@ -5,16 +5,20 @@ import { quickActivityGroups } from '../data/journalData';
 import { todayKey } from '../utils/journalUtils';
 import { PageHeader } from '../components/layout/PageHeader';
 import { usePrivateStorageState } from '../hooks/usePrivateStorageState';
+import { useActivityCompletions, useLocalActivityDay } from '../hooks/useActivityCompletions';
 import { selectDailyActivities, selectFeaturedDailyActivity } from '../utils/activityUtils';
 
 export function Activities({ nav, privateStorage }) {
-  const today = todayKey();
+  const [today, refreshDay] = useLocalActivityDay();
+  return <ActivitiesForDay key={`${privateStorage.ownerId}:${today}`} nav={nav} privateStorage={privateStorage} today={today} refreshDay={refreshDay} />;
+}
+
+function ActivitiesForDay({ nav, privateStorage, today, refreshDay }) {
   const list = useMemo(() => selectDailyActivities(quickActivityGroups, today), [today]);
   const featured = useMemo(() => selectFeaturedDailyActivity(list, today), [list, today]);
   const choices = useMemo(() => featured ? [featured, ...list.filter((activity) => activity !== featured)] : [], [featured, list]);
-  const storageKey = `activityCompletions:${today}`;
   const notesStorageKey = `activityNotes:${today}`;
-  const [completed, setCompleted] = useState(() => readStoredObject(storageKey));
+  const { completed, setDone, ready, busy, error: completionError, retry } = useActivityCompletions(privateStorage, today, refreshDay);
   const [notes, setNotes, notesStorageError] = usePrivateStorageState(privateStorage, notesStorageKey, {});
   const [selectedTitle, setSelectedTitle] = useState(featured?.title || '');
   const [openedTitle, setOpenedTitle] = useState('');
@@ -38,17 +42,13 @@ export function Activities({ nav, privateStorage }) {
     setFocusTitle('');
   }, [focusTitle, openedTitle]);
 
-  useEffect(() => {
-    localStorage.setItem(storageKey, JSON.stringify(completed));
-  }, [completed, storageKey]);
-
   const completedActivities = useMemo(
     () => list.filter((activity) => completed[activity.title]),
     [completed, list]
   );
 
   const setActivityDone = (title, done) => {
-    setCompleted((current) => ({ ...current, [title]: done }));
+    setDone(title, done);
   };
 
   const setActivityNote = (title, note) => {
@@ -74,6 +74,7 @@ export function Activities({ nav, privateStorage }) {
       {nav}
 
       <section className="activities-focus" aria-labelledby="activity-picker-title">
+        {completionError && <p className="form-error" role="alert">{completionError} <button type="button" onClick={retry} disabled={busy}>Retry progress</button></p>}
         {notesStorageError && <p className="form-error" role="alert">{notesStorageError}</p>}
         <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
         {selectedActivity && (
@@ -114,6 +115,7 @@ export function Activities({ nav, privateStorage }) {
               activity={activity}
               dateLabel={formatActivityDate(today)}
               done={Boolean(completed[activity.title])}
+              completionDisabled={!ready || busy}
               key={activity.title}
               note={notes[activity.title] || ''}
               onDoneChange={(done) => setActivityDone(activity.title, done)}
@@ -154,10 +156,11 @@ const activityIcons = {
 
 const activityLabels = { body: 'A moment for your body', reflection: 'A moment to reflect', action: 'A small step' };
 
-function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, onNoteChange, onClose }) {
+function ActivitySheet({ active, activity, dateLabel, done, completionDisabled, note, onDoneChange, onNoteChange, onClose }) {
   const [secondsLeft, setSecondsLeft] = useState(activity.minutes * 60);
   const [running, setRunning] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const completionAttempted = useRef(false);
 
   useEffect(() => {
     if (!active) setRunning(false);
@@ -170,11 +173,12 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
   }, [running, secondsLeft]);
 
   useEffect(() => {
-    if (secondsLeft === 0 && !done) {
+    if (secondsLeft === 0 && !done && !completionDisabled && !completionAttempted.current) {
+      completionAttempted.current = true;
       setRunning(false);
       onDoneChange(true);
     }
-  }, [secondsLeft, done, onDoneChange]);
+  }, [secondsLeft, done, completionDisabled, onDoneChange]);
 
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
   const seconds = String(secondsLeft % 60).padStart(2, '0');
@@ -188,6 +192,7 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
   };
 
   const resetTimer = () => {
+    completionAttempted.current = false;
     setRunning(false);
     setHasStarted(false);
     setSecondsLeft(activity.minutes * 60);
@@ -256,22 +261,13 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
           )}
         </div>
         <label className="activity-complete-check">
-          <input className="journal-checkbox-input" checked={done} onChange={(event) => onDoneChange(event.target.checked)} type="checkbox" />
+          <input className="journal-checkbox-input" checked={done} disabled={completionDisabled} onChange={(event) => onDoneChange(event.target.checked)} type="checkbox" />
           <span className="journal-checkbox-mark" aria-hidden="true"><Sparkles size={14} strokeWidth={2.5} /></span>
           <span>Mark complete</span>
         </label>
       </footer>
     </article>
   );
-}
-
-function readStoredObject(key) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key));
-    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-  } catch {
-    return {};
-  }
 }
 
 function formatActivityDate(dateKey) {
