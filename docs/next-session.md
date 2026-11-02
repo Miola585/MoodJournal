@@ -69,6 +69,16 @@ Do not push, merge, or deploy without explicit permission.
 - Inspect and correct desktop, tablet, and mobile layouts, including narrow screens,
   reachable actions, menu focus, and bottom-navigation clearance.
 
+## Emotion details and check-in refinement
+
+- Revisit the part of check-in where users add more detail about their emotion.
+  Review the current flow together before deciding which fields or interactions
+  need changing; the user has flagged this area as needing more work.
+- Improve prompts, spacing, and optional-detail controls with concise wording.
+  Keep mood-only saving available and avoid making reflection feel like a long form.
+- Preserve existing mood values, exact saved intensity, notes, draft recovery, and
+  save/error behavior. Check the experience on desktop, tablet, and mobile.
+
 ## Other deferred ideas
 
 - Add an Anger emotion in a later pass. First check existing mood values and labels
