@@ -62,7 +62,13 @@ export const constellationStars = [
   { id: 23, x: 85, y: 76, size: 15, glow: 14, opacity: 0.72 },
   { id: 24, x: 14, y: 83, size: 19, glow: 18, opacity: 0.86 },
   { id: 25, x: 51, y: 84, size: 16, glow: 15, opacity: 0.76 },
-  { id: 26, x: 74, y: 83, size: 21, glow: 20, opacity: 0.92 }
+  { id: 26, x: 74, y: 83, size: 21, glow: 20, opacity: 0.92 },
+  { id: 27, x: 44, y: 30, size: 17, glow: 16, opacity: 0.8 },
+  { id: 28, x: 64, y: 32, size: 19, glow: 18, opacity: 0.86 },
+  { id: 29, x: 9, y: 45, size: 16, glow: 15, opacity: 0.78 },
+  { id: 30, x: 50, y: 48, size: 20, glow: 19, opacity: 0.9 },
+  { id: 31, x: 80, y: 57, size: 17, glow: 16, opacity: 0.82 },
+  { id: 32, x: 38, y: 81, size: 18, glow: 17, opacity: 0.84 }
 ];
 
 export const orbitRings = ['close', 'between', 'far'];

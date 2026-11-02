@@ -4,7 +4,8 @@ import '../../styles/destinationArt.css';
 // Adapted from the user's Figma StudioArt; kept separate from the sticker catalog.
 export function DestinationArt({ kind, compact = false }) {
   const id = useId().replace(/:/g, '');
-  return <svg className={`destination-art destination-art-${kind}`} viewBox={compact ? '100 38 200 200' : '0 0 400 300'} preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true" focusable="false">
+  const viewBox = compact ? (kind === 'wonders' ? '65 0 280 280' : '100 38 200 200') : '0 0 400 300';
+  return <svg className={`destination-art destination-art-${kind}`} viewBox={viewBox} preserveAspectRatio="xMidYMid slice" fill="none" aria-hidden="true" focusable="false">
     <defs>
       <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="400" y2="300" gradientUnits="userSpaceOnUse">
         <stop stopColor="var(--scene-sky)" /><stop offset="1" stopColor="var(--scene-haze)" />

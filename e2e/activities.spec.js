@@ -1,82 +1,62 @@
 import { expect, test } from '@playwright/test';
 
-for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
-  test(`activities use one illustrated picker at ${viewport.width}px`, async ({ page }, testInfo) => {
-    await page.setViewportSize(viewport);
-    await page.goto('/activities');
-    const feature = page.locator('.activity-feature');
-    const title = feature.getByRole('heading');
-    const firstTitle = await title.innerText();
-    await expect(feature).toHaveCount(1);
-    await expect(page.locator('.activity-selector')).toHaveCount(0);
-    await expect(page.locator('.activity-journal-sheet:visible')).toHaveCount(0);
-    await expect(feature).toContainText('Suggested for today');
-    expect(await feature.locator('.activity-feature-art').evaluate((art) => getComputedStyle(art).backgroundImage)).not.toBe('none');
-    const next = page.getByRole('button', { name: 'Next activity', exact: true });
-    await next.click();
-    await expect(title).not.toHaveText(firstTitle);
-    await expect(next).toBeFocused();
-    await expect(feature.getByRole('status')).toContainText('2 / 3');
-    await page.getByRole('button', { name: 'Previous activity', exact: true }).click();
-    await expect(title).toHaveText(firstTitle);
-    await page.getByRole('button', { name: 'Previous activity', exact: true }).click();
-    await expect(feature.getByRole('status')).toContainText('3 / 3');
-    await next.click();
-    await expect(title).toHaveText(firstTitle);
-    await page.screenshot({ path: testInfo.outputPath(`activities-picker-${viewport.width}.png`), fullPage: true });
-    await feature.getByRole('button', { name: 'Begin activity' }).click();
-    const sheet = page.locator('.activity-journal-sheet:visible');
-    await expect(sheet).toBeFocused();
-    await expect(sheet.getByRole('heading', { name: firstTitle })).toBeVisible();
-    await expect(sheet.getByRole('checkbox')).toHaveCount(1);
-    await expect(page.getByRole('tabpanel')).toHaveCount(0);
-    await page.screenshot({ path: testInfo.outputPath(`activities-open-${viewport.width}.png`), fullPage: true });
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-    await sheet.getByRole('button', { name: 'Close activity' }).click();
-    await expect(feature.getByRole('button', { name: 'Begin activity' })).toBeFocused();
-    await expect(page.locator('.activity-journal-sheet:visible')).toHaveCount(0);
-    await expect(page.getByRole('navigation', { name: 'Grounding activities' })).toBeVisible();
+for (const width of [320, 390, 820, 1440]) {
+  test(`the hub offers four unhurried pauses at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/explore');
+    const grid = page.locator('.explore-pauses');
+    await expect(grid.locator('button')).toHaveCount(4);
+    await expect(page.getByRole('button', { name: 'More little breaks' })).toHaveCount(0);
+    for (const name of ['Breathing', '5-4-3-2-1 Senses', 'Mood Colors', 'Scavenger hunt']) {
+      await expect(grid.getByRole('button', { name, exact: true })).toHaveCount(1);
+    }
+    await expect(grid).not.toContainText(/minute|timer|countdown/i);
+    const huntArt = grid.locator('.explore-pause-scavenger svg.destination-art-wonders');
+    await expect(huntArt).toBeVisible();
+    await expect(huntArt).toHaveAttribute('viewBox', '65 0 280 280');
+    await expect(page.locator('.activity-feature, .activity-timer')).toHaveCount(0);
+    const columns = await grid.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(' ').length);
+    expect(columns).toBe(width > 600 ? 2 : 1);
+    await grid.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: info.outputPath(`breaks-grid-${width}.png`), fullPage: true });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   });
 }
 
-test('browsing pauses an activity and preserves its timer, note and completion', async ({ page }) => {
+for (const route of ['/activities', '/activities?activity=Let%20your%20shoulders%20go', '/activities?tool=unknown']) {
+  test(`retired timed activity link returns to the hub: ${route}`, async ({ page }) => {
+    await page.goto(route);
+    await expect(page).toHaveURL(/\/explore$/);
+    await expect(page.locator('.explore-pauses')).toBeVisible();
+    await expect(page.locator('.activity-feature, .activity-timer, .activity-journal-sheet')).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator('.explore-pauses button')).toHaveCount(4);
+  });
+}
+
+test('earlier activity notes remain in the monthly book after retiring timers', async ({ page }) => {
+  await page.goto('/explore');
+  await page.evaluate(() => {
+    localStorage.setItem(`moodJournalPrivateV1:local-browser:${encodeURIComponent('activityNotes:2026-09-12')}`, JSON.stringify({ 'Let your shoulders go': 'An earlier note I still want to keep.' }));
+  });
   await page.goto('/activities');
-  const feature = page.locator('.activity-feature');
-  await feature.getByRole('button', { name: 'Begin activity' }).click();
-  const sheet = page.locator('.activity-journal-sheet:visible');
-  await sheet.getByRole('textbox').fill('A small pause helped.');
-  const startTime = await sheet.locator('.activity-timer strong').innerText();
-  await sheet.getByRole('button', { name: 'Start', exact: true }).click();
-  await expect(sheet.locator('.activity-timer strong')).not.toHaveText(startTime);
-  await page.getByRole('button', { name: 'Next activity', exact: true }).click();
-  await expect(page.locator('.activity-journal-sheet:visible')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Previous activity', exact: true }).click();
-  await feature.getByRole('button', { name: 'Begin activity' }).click();
-  await expect(sheet.getByRole('textbox')).toHaveValue('A small pause helped.');
-  await expect(sheet.getByRole('button', { name: 'Continue', exact: true })).toBeVisible();
-  const pausedTime = await sheet.locator('.activity-timer strong').innerText();
-  await page.waitForTimeout(1100);
-  await expect(sheet.locator('.activity-timer strong')).toHaveText(pausedTime);
-  await sheet.getByText('Mark complete', { exact: true }).click();
-  await expect(sheet.getByRole('checkbox', { name: 'Mark complete' })).toBeChecked();
-  await sheet.getByRole('button', { name: 'Close activity' }).click();
-  await expect(feature).toContainText('Completed today');
-  await expect(feature.getByRole('button', { name: 'Open activity' })).toBeVisible();
-  await page.reload();
-  await expect(feature).toContainText('Completed today');
-  await feature.getByRole('button', { name: 'Open activity' }).click();
-  await expect(sheet.getByRole('textbox')).toHaveValue('A small pause helped.');
+  await expect(page).toHaveURL(/\/explore$/);
+  await page.goto('/journal/library?month=2026-09&day=2026-09-12');
+  await expect(page.locator('.book-margin-note')).toContainText('An earlier note I still want to keep.');
+  await expect(page.locator('.book-margin-note')).toContainText('Let your shoulders go');
+  await expect(page.locator('.activity-timer')).toHaveCount(0);
 });
 
 test('grounding destinations open separate pages with working browser history', async ({ page }) => {
-  await page.goto('/activities');
-  await page.getByRole('navigation', { name: 'Grounding activities' }).getByRole('button', { name: 'Breathe', exact: true }).click();
+  await page.goto('/explore');
+  await page.getByRole('button', { name: 'Breathing', exact: true }).click();
   await page.getByRole('button', { name: 'Start breathing', exact: true }).click();
-  await expect(page.locator('.activity-feature')).toHaveCount(0);
+  await expect(page.locator('.activity-feature, .activity-timer')).toHaveCount(0);
   await page.goBack();
   await expect(page.locator('.breathing-bubble')).toHaveCount(0);
-  await expect(page.locator('.activity-feature')).toBeVisible();
-  await page.getByRole('button', { name: 'Small wonders: scavenger hunt' }).click();
+  await expect(page.locator('.explore-pauses')).toBeVisible();
+  await page.getByRole('button', { name: 'Scavenger hunt', exact: true }).click();
   await expect(page).toHaveURL(/tool=scavenger/);
   await expect(page.getByRole('button', { name: 'Begin noticing' })).toBeVisible();
+  await expect(page.locator('svg.destination-art-wonders')).toBeVisible();
 });

@@ -58,7 +58,7 @@ export function Entries({ nav, entries, onSave, onQueueDelete, onPrimary, onBook
     setBookmarkFilter(false);
   };
   if (editing) return <EditEntry entry={editing} onNew={() => { setEditing(null); setCreatingFreeWrite(true); }} onCancel={() => setEditing(null)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
-  if (writeMode || creatingFreeWrite) return <FreeWriteEntry key={newEntryKey} nav={nav} ignoredStickerRequest={ignoredStickerRequest.current} onNew={() => { ignoredStickerRequest.current = location.key; setNewEntryKey((key) => key + 1); }} onCancel={() => writeMode ? navigate('/entries') : setCreatingFreeWrite(false)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
+  if (writeMode || creatingFreeWrite) return <FreeWriteEntry key={newEntryKey} nav={nav} ignoredStickerRequest={ignoredStickerRequest.current} onNew={() => { ignoredStickerRequest.current = location.key; setNewEntryKey((key) => key + 1); }} onCancel={() => writeMode ? navigate(/^\/journal\/library(?:\?|$)/.test(location.state?.libraryReturn || '') ? location.state.libraryReturn : '/entries') : setCreatingFreeWrite(false)} onSave={onSave} onHelp={onHelp} privateStorage={privateStorage} />;
   return (
     <section className="screen app-screen entries-screen">
       <PageHeader title="Entries" actions={journalEntries.length > 0 ? (
@@ -150,7 +150,12 @@ export function Entries({ nav, entries, onSave, onQueueDelete, onPrimary, onBook
 function FreeWriteEntry({ nav, onSave, onCancel, onNew, onHelp, privateStorage, ignoredStickerRequest }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [draft, setDraft] = useState(createFreeWriteEntry);
+  const [draft, setDraft] = useState(() => {
+    const fresh = createFreeWriteEntry();
+    const requestedDate = new URLSearchParams(location.search).get('date');
+    // Recovery below replaces this initial value, never the other way around.
+    return isJournalDateAllowed(requestedDate) ? { ...fresh, dateKey: requestedDate } : fresh;
+  });
   const [saveState, setSaveState] = useState('');
   const [bookOpen, setBookOpen] = useState(false);
   const [actionError, setActionError] = useState('');

@@ -80,6 +80,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await page.goto('/games/constellation');
     await expect(page.locator('.topbar, .footer, .support-help-bubble')).toHaveCount(0);
     await expect(page.locator('.constellation-stage')).toBeVisible();
+    await expect(page.locator('.constellation-stage .star')).toHaveCount(32);
     await expect(page.locator('.game-route-shell')).toHaveJSProperty('offsetTop', 0);
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).not.toBe('rgb(243, 232, 223)');
     await page.getByText('How to play').click();
@@ -175,6 +176,19 @@ test('mood orbit selects without moving, supports distances and saves a reflecti
   await page.reload();
   await page.getByRole('button', { name: 'Reflect' }).click();
   await expect(page.getByRole('textbox', { name: 'Anything you would like to remember?' })).toHaveValue('A little closer today.');
+});
+
+test('new stars can be selected and saved without replacing earlier coordinates', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/games/constellation');
+  await page.getByRole('button', { name: 'Star 27', exact: true }).click();
+  await page.getByRole('button', { name: 'Star 28', exact: true }).click();
+  await expect(page.locator('.mini-insight')).toContainText('1 connection');
+  await page.getByRole('button', { name: 'Finish constellation' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('moodJournalPrivateV1:local-browser:gameConstellations'))[0]);
+  expect(saved.stars).toEqual([27, 28]);
+  expect(saved.starPositions.map(({ id, x, y }) => ({ id, x, y }))).toEqual([{ id: 27, x: 44, y: 30 }, { id: 28, x: 64, y: 32 }]);
 });
 
 test('constellation undo preserves shared endpoints and saves only remaining connected stars', async ({ page }) => {
@@ -296,13 +310,11 @@ test.describe('touch games', () => {
     await page.getByRole('button', { name: 'Undo', exact: true }).tap();
     await expect(page.getByRole('button', { name: 'Star 1', exact: true })).toHaveAttribute('aria-pressed', 'false');
     await page.setViewportSize({ width: 844, height: 390 });
-    const layout = await page.evaluate(() => ({
+    await expect.poll(() => page.evaluate(() => ({
       introBottom: document.querySelector('.immersive-game-intro').getBoundingClientRect().bottom,
       toolbarTop: document.querySelector('.constellation-toolbar').getBoundingClientRect().top,
       stars: [...document.querySelectorAll('.constellation-stage .star')].map((star) => ({ top: star.getBoundingClientRect().top, bottom: star.getBoundingClientRect().bottom }))
-    }));
-    expect(Math.min(...layout.stars.map((star) => star.top))).toBeGreaterThan(layout.introBottom);
-    expect(Math.max(...layout.stars.map((star) => star.bottom))).toBeLessThan(layout.toolbarTop);
+    })).then((layout) => Math.min(...layout.stars.map((star) => star.top)) > layout.introBottom && Math.max(...layout.stars.map((star) => star.bottom)) < layout.toolbarTop)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath('constellation-landscape.png'), fullPage: true });
   });
 });

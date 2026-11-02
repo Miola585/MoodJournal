@@ -15,7 +15,8 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await expect(moon).toHaveAttribute('src', /cresent_moon\.png/u);
     await expect.poll(() => moon.evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
     await expect(page.locator('img[src*="night-celestial-accent"]')).toHaveCount(0);
-    expect(await page.locator('.activity-feature-art').evaluate((art) => getComputedStyle(art).backgroundImage)).toContain('cresent_moon.png');
+    await expect(page.locator('.activity-feature')).toHaveCount(0);
+    await expect(page.locator('.explore-feature-art')).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath(`night-crescent-${viewport.width}.png`), fullPage: true });
     await page.getByRole('button', { name: 'Profile menu', exact: true }).click();
     await page.getByRole('button', { name: 'About', exact: true }).click();

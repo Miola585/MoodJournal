@@ -15,6 +15,7 @@ for (const width of [1280, 390]) {
     await page.getByRole('button', { name: 'Finish constellation' }).click();
     await expect(page.locator('.game-success-card')).toBeVisible();
     await expect(page.locator('.game-success-card .mini-sky img')).toHaveCount(2);
+    await page.getByRole('dialog').getByRole('button', { name: 'Back to the stars' }).click();
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await page.getByRole('button', { name: 'Back to games' }).click();
     await page.getByRole('button', { name: 'Profile menu', exact: true }).click();

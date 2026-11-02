@@ -1,5 +1,8 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Undo2 } from 'lucide-react';
+import { todayKey } from '../../utils/journalUtils';
+import { ConstellationDecal } from '../journal/ConstellationDecal';
 import { useGameStorageState } from '../../hooks/useGameStorageState';
 import { normalizeConstellations } from './gameArchiveData';
 import { constellationArtwork as starSprites } from './gameArtwork';
@@ -45,6 +48,47 @@ export function ConstellationGame({ mood, privateStorage }) {
   const [pulsingStars, setPulsingStars] = useState([]);
   const [name, setName] = useState('');
   const [savedConstellation, setSavedConstellation] = useState(null);
+  const completionRef = useRef(null);
+  const toolbarRef = useRef(null);
+  const [completionOpen, setCompletionOpen] = useState(false);
+  useEffect(() => {
+    const surface = starfieldRef.current.parentElement;
+    const heading = surface.closest('.standalone-game-screen')?.querySelector('.immersive-route-header');
+    const intro = heading?.querySelector('.immersive-game-intro');
+    const toolbar = toolbarRef.current;
+    let frame;
+    const update = () => {
+      const bounds = surface.getBoundingClientRect();
+      const headingBottom = heading ? Math.max(heading.getBoundingClientRect().bottom, intro?.getBoundingClientRect().bottom || 0) - bounds.top : 0;
+      surface.style.setProperty('--constellation-heading-bottom', `${headingBottom}px`);
+      surface.style.setProperty('--constellation-controls-height', `${toolbar.offsetHeight}px`);
+      // Keep the existing saved coordinate system while fitting its occupied region between controls.
+      const top = headingBottom + 32;
+      const bottom = toolbar.getBoundingClientRect().top - bounds.top - 32;
+      const minY = Math.min(...constellationStars.map((star) => star.y)) / 100;
+      const maxY = Math.max(...constellationStars.map((star) => star.y)) / 100;
+      const height = Math.max(1, (bottom - top) / (maxY - minY));
+      surface.style.setProperty('--constellation-stage-top', `${top - minY * height}px`);
+      surface.style.setProperty('--constellation-stage-height', `${height}px`);
+    };
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    });
+    observer.observe(surface);
+    observer.observe(toolbar);
+    if (heading) observer.observe(heading);
+    if (intro) observer.observe(intro);
+    update();
+    return () => { observer.disconnect(); cancelAnimationFrame(frame); };
+  }, []);
+  useEffect(() => {
+    if (!completionOpen) return;
+    const dialog = completionRef.current;
+    const trigger = document.activeElement;
+    dialog?.showModal();
+    return () => { dialog?.close(); if (trigger?.isConnected) trigger.focus(); };
+  }, [completionOpen]);
   const [, setStoredConstellations, storageError, canSave] = useGameStorageState(
     privateStorage,
     constellationStorageKey,
@@ -166,11 +210,16 @@ export function ConstellationGame({ mood, privateStorage }) {
       mood: mood.key,
       archetype,
       createdAt: new Date().toISOString(),
+      dateKey: todayKey(),
+      aspectRatio: starfieldRef.current?.clientHeight ? starfieldRef.current.clientWidth / starfieldRef.current.clientHeight : 1,
       stars: selectedStars,
       starPositions: selectedStarData,
       connections
     };
-    if (await setStoredConstellations((current) => [constellation, ...current])) setSavedConstellation(constellation);
+    if (await setStoredConstellations((current) => [constellation, ...current])) {
+      setSavedConstellation(constellation);
+      setCompletionOpen(true);
+    }
   };
 
   return (
@@ -240,7 +289,7 @@ export function ConstellationGame({ mood, privateStorage }) {
           );
         })}
       </div>
-      <div className="constellation-toolbar">
+      <div className="constellation-toolbar" ref={toolbarRef}>
         <span className="mini-insight">{connections.length} connection{connections.length === 1 ? '' : 's'} · {archetype}</span>
         <input value={name} onChange={(event) => { setName(event.target.value); setSavedConstellation(null); }} placeholder="Name your constellation" />
         <button className="secondary constellation-undo" disabled={connections.length === 0} onClick={removeLastConnection} type="button" title="Undo last connection"><Undo2 aria-hidden="true" size={17} /> Undo</button>
@@ -253,6 +302,13 @@ export function ConstellationGame({ mood, privateStorage }) {
         </article>
       )}
       {storageError && <p className="form-error" role="alert">{storageError}</p>}
+      {completionOpen && savedConstellation && <dialog ref={completionRef} className="constellation-complete-dialog" aria-labelledby="constellation-complete-title" onCancel={() => setCompletionOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) { const bounds = event.currentTarget.getBoundingClientRect(); if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) setCompletionOpen(false); } }}>
+        <span className="sky-decal"><ConstellationDecal constellation={savedConstellation} /></span>
+        <p className="app-eyebrow">A little sky, kept</p><h2 id="constellation-complete-title">{savedConstellation.name}</h2>
+        <p>Saved on this device, beside today's pages.</p>
+        <Link className="primary-button" to={`/journal/library?month=${savedConstellation.dateKey.slice(0, 7)}&day=${savedConstellation.dateKey}`}>Open monthly book</Link>
+        <button className="ghost-button" type="button" onClick={() => setCompletionOpen(false)}>Back to the stars</button>
+      </dialog>}
     </div>
   );
 }

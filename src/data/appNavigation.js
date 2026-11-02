@@ -7,6 +7,7 @@ export const mainDestinations = [
 export const sectionTabs = {
   journal: [
     { view: 'write', label: 'Write' }, { view: 'entries', label: 'Entries' },
+    { view: 'library', label: 'Library' },
     { view: 'calendar', label: 'Calendar' }, { view: 'summary', label: 'Weekly reflection' }
   ],
   explore: [
@@ -20,7 +21,7 @@ export const sectionTabs = {
 };
 
 export function sectionForView(view) {
-  if (['write', 'entries', 'calendar', 'summary'].includes(view)) return 'journal';
+  if (['write', 'entries', 'library', 'calendar', 'summary'].includes(view)) return 'journal';
   if (['explore', 'stickers', 'moodColors', 'games', 'activities', 'gameArchive'].includes(view)) return 'explore';
   if (['home', 'checkin'].includes(view)) return 'today';
   return null;

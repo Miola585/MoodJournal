@@ -116,8 +116,8 @@ test('direct activity links survive reload, follow history and reject unknown to
   await page.goForward();
   await expect(page.getByRole('button', { name: 'Continue breathing', exact: true })).toBeVisible();
   await page.goto('/activities?tool=unknown');
-  await expect(page.locator('.activity-feature')).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Grounding activities' })).toBeVisible();
+  await expect(page).toHaveURL(/\/explore$/);
+  await expect(page.locator('.explore-pauses')).toBeVisible();
   await expect(page.locator('.grounding-workspace')).toHaveCount(0);
 });
 
@@ -125,7 +125,7 @@ test('all Explore destinations honor the journal draft navigation guard', async 
   await mountExplore(page);
   await page.evaluate(() => window.markExploreDirty());
   await expect.poll(() => page.evaluate(() => window.hasDirtyExplore())).toBe(true);
-  for (const name of ['Make a constellation', 'Emotional Match', 'Mood Orbit', 'Memory Jar', 'Breathing', '5-4-3-2-1 Senses', 'Mood Colors', 'Personal Night Sky']) {
+  for (const name of ['Make a constellation', 'Emotional Match', 'Mood Orbit', 'Memory Jar', 'Breathing', '5-4-3-2-1 Senses', 'Mood Colors', 'Scavenger hunt', 'Personal Night Sky']) {
     const dialogSeen = page.waitForEvent('dialog');
     page.once('dialog', (dialog) => dialog.dismiss());
     await page.getByRole('button', { name, exact: true }).click();
@@ -166,7 +166,7 @@ for (const width of [320, 820, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await mountExplore(page);
     await expect(page.locator('.explore-screen img')).toHaveCount(0);
-    await expect(page.locator('.explore-screen .destination-art')).toHaveCount(6);
+    await expect(page.locator('.explore-screen .destination-art')).toHaveCount(7);
     for (const dark of [false, true]) {
       await page.evaluate((enabled) => {
         document.querySelector('.app').classList.toggle('dark', enabled);
@@ -207,7 +207,8 @@ for (const width of [320, 820, 1440]) {
       expect(jar.art.right).toBeLessThanOrEqual(jar.container.right + 1);
       for (const art of await page.locator('.explore-pause-art .destination-art').all()) {
         expect(await art.evaluate((element) => element.getBoundingClientRect().width <= element.parentElement.getBoundingClientRect().width)).toBe(true);
-        await expect(art).toHaveAttribute('viewBox', '100 38 200 200');
+        const wonders = await art.evaluate((element) => element.classList.contains('destination-art-wonders'));
+        await expect(art).toHaveAttribute('viewBox', wonders ? '65 0 280 280' : '100 38 200 200');
       }
       const stickers = page.getByRole('button', { name: 'Your sticker collection', exact: true });
       const textColor = await stickers.evaluate((element) => getComputedStyle(element).color);

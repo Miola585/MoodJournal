@@ -38,9 +38,10 @@ async function settings(page) {
 
 for (const width of [390, 1440]) {
   test(`hidden journal has no Home, entry, or draft previews at ${width}px`, async ({ page }) => {
+    test.setTimeout(60000);
     await page.setViewportSize({ width, height: 900 });
     await seed(page);
-    for (const route of ['/', '/checkin', '/activities', '/activities?tool=senses', '/activities?tool=scavenger', '/activities?tool=breathing', '/entries?entry=privacy-fixture', '/calendar', '/summary', '/games', '/games/night-sky']) {
+    for (const route of ['/', '/journal/library', '/journal/library?month=2026-11', '/journal/library?view=constellations', '/checkin', '/activities', '/activities?tool=senses', '/activities?tool=scavenger', '/activities?tool=breathing', '/entries?entry=privacy-fixture', '/calendar', '/summary', '/games', '/games/night-sky']) {
       await page.goto(route);
       await expect(page.getByRole('heading', { name: 'Journal Locked', exact: true })).toBeVisible();
       await expect(page.locator('body')).not.toContainText(secret);

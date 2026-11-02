@@ -98,10 +98,10 @@ test('desktop destinations and contextual tabs follow routes, history, and refre
   await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toBeVisible();
   await expectCurrent(nav, 'My journal');
   await openMenu(page, 'My journal');
-  await expect(journalTabs(page).locator('button[data-destination]')).toHaveText(['Write', 'Entries', 'Calendar', 'Weekly reflection']);
+  await expect(journalTabs(page).locator('button[data-destination]')).toHaveText(['Write', 'Entries', 'Library', 'Calendar', 'Weekly reflection']);
   await expectCurrent(journalTabs(page), 'Write');
   await expect(page.locator('.journal-editor-context').getByRole('button', { name: 'New entry', exact: true })).toBeVisible();
-  for (const [tab, route] of [['Entries', '/entries'], ['Calendar', '/calendar'], ['Weekly reflection', '/summary']]) {
+  for (const [tab, route] of [['Entries', '/entries'], ['Library', '/journal/library'], ['Calendar', '/calendar'], ['Weekly reflection', '/summary']]) {
     await openMenu(page, 'My journal');
     await journalTabs(page).getByRole('button', { name: tab, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`${route}$`));

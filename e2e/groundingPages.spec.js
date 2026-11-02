@@ -120,6 +120,7 @@ test('encrypted grounding notes never leave readable copies in storage', async (
 test('failed hunt writes keep the current prompt and allow retry', async ({ page }) => {
   await page.goto('/activities?tool=scavenger');
   await page.getByRole('button', { name: 'Begin noticing' }).click();
+  await expect(page.getByRole('button', { name: 'Found it' })).toBeVisible();
   await page.evaluate(() => {
     window.originalSetItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function (key, value) { if (key.includes('gameSmallWondersV1')) throw new Error('Storage is full'); return window.originalSetItem.call(this, key, value); };

@@ -54,6 +54,7 @@ import { compareJournalImports } from './utils/journalImport';
 const Games = lazy(() => import('./components/games/Games').then((module) => ({ default: module.Games })));
 const GameArchive = lazy(() => import('./components/games/GameArchive').then((module) => ({ default: module.GameArchive })));
 const Entries = lazy(() => import('./screens/Entries').then((module) => ({ default: module.Entries })));
+const JournalLibrary = lazy(() => import('./screens/JournalLibrary').then((module) => ({ default: module.JournalLibrary })));
 const Summary = lazy(() => import('./screens/Summary').then((module) => ({ default: module.Summary })));
 const encryptionRevisionKey = 'journalEncryptionRevision';
 const invalidEncryptionConfig = { version: 0, invalid: true };
@@ -873,6 +874,7 @@ function App() {
         ) : (
         <Suspense fallback={<section className="screen app-screen"><div className="panel auth-panel"><p>Loading page...</p></div></section>}>
         <Routes>
+          <Route path="/journal/library" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><JournalLibrary key={privateStorage.ownerId} entries={visibleEntries} privateStorage={privateStorage} reduceMotion={reduceMotion} /></JournalPrivacyGate>} />
           <Route path="/" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Home entries={visibleEntries} onOpen={openApp} onOpenGame={(game) => navigate(`/games/${game}`)} profile={profile} privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/checkin" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><CheckIn nav={null} entries={entries} onSave={saveEntry} onDone={() => openApp('home')} onPause={() => openApp('activities')} onHelp={() => { setSupportOriginPage(location.pathname); openApp('support'); }} privateStorage={privateStorage} /></JournalPrivacyGate>} />
           <Route path="/activities" element={<JournalPrivacyGate locked={journalIsHidden} onUnlock={setJournalUnlocked} onRecover={(password) => recoverLocalLock('journal', password)} code={journalLockCode}><Activities nav={null} entries={entries} privateStorage={privateStorage} /></JournalPrivacyGate>} />

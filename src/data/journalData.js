@@ -216,6 +216,7 @@ export const resourceLinks = [
 ];
 export const appViews = ['checkin', 'activities', 'games', 'entries', 'calendar', 'summary', 'about'];
 export const viewPaths = {
+  library: '/journal/library',
   write: '/journal/write',
   stickers: '/explore/stickers',
   moodColors: '/explore/mood-colors',

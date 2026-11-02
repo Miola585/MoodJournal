@@ -271,7 +271,7 @@ test('optional feeling, intensity, support, and details use existing entry field
   await expect(page.getByRole('heading', { name: "You made room for what's here" })).toBeVisible();
   expect((await entries(page))[0]).toMatchObject({ mood: 'Content', specificFeeling: 'Settled', intensity: 8, note: 'A calm afternoon.', copingStep: 'Reach out', factors: ['Sleep'], meals: 'Light' });
   await page.getByRole('button', { name: 'Take a pause' }).click();
-  await expect(page).toHaveURL(/\/activities$/);
+  await expect(page).toHaveURL(/\/explore$/);
 });
 
 test('failed save keeps the draft and does not show success', async ({ page }) => {

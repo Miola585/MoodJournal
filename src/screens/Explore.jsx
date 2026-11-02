@@ -14,7 +14,8 @@ const games = [
 const pauses = [
   { id: 'breathing', title: 'Breathe', label: 'Breathing', art: 'breathe', description: 'Follow one slow round.', path: '/activities?tool=breathing' },
   { id: 'senses', title: 'Five senses', label: '5-4-3-2-1 Senses', art: 'senses', description: "Notice what's around you.", path: '/activities?tool=senses' },
-  { id: 'colors', title: 'Mood Colors', label: 'Mood Colors', description: 'Let a color say it.', path: viewPaths.moodColors }
+  { id: 'colors', title: 'Mood Colors', label: 'Mood Colors', description: 'Let a color say it.', path: viewPaths.moodColors },
+  { id: 'scavenger', title: 'Scavenger hunt', label: 'Scavenger hunt', art: 'wonders', description: 'Find a few small wonders.', path: '/activities?tool=scavenger' }
 ];
 
 export function Explore() {
@@ -72,7 +73,6 @@ export function Explore() {
             <span className="explore-pause-copy"><strong>{title}</strong><small>{description}</small></span><ArrowRight size={18} aria-hidden="true" />
           </button>)}
         </div>
-        <button className="explore-activities-link" type="button" onClick={() => open('/activities')}>More little breaks<ArrowRight size={18} aria-hidden="true" /></button>
       </section>
 
       <button className="explore-stickers-link" type="button" aria-label="Your sticker collection" onClick={() => open(viewPaths.stickers)}><Sticker size={22} aria-hidden="true" /><span><strong>A little play belongs on the page.</strong><small>Explore your sticker collection.</small></span><ArrowRight size={18} aria-hidden="true" /></button>
