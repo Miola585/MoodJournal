@@ -22,6 +22,14 @@ Do not push, merge, or deploy without explicit permission.
 ## Sign-in, sign-up, and Profile
 
 - Review the existing Supabase authentication flows and improve sign-in/sign-up.
+- Complete sign-out and account-management flows, including clear loading, error,
+  recovery, and confirmation states across desktop, tablet, and mobile.
+- Add an explicit account-deletion flow, separate from signing out or unlinking.
+  Require appropriate identity verification and a clear explanation of what is
+  deleted, including the distinction between synced data and device-only keepsakes.
+  Offer export before deletion where available. Perform privileged deletion on the
+  server, never expose administrative credentials in the browser, and handle partial
+  failures without falsely reporting success. Do not delete any account during planning.
 - Add clear account connection controls in Profile. Clarify whether "disconnect"
   means signing out of this device or unlinking a Google/Apple identity before
   implementing it. It must not silently delete an account or journal data.
@@ -30,6 +38,36 @@ Do not push, merge, or deploy without explicit permission.
 - Refresh Profile's hierarchy and mobile/tablet layout while keeping real data and
   accurate storage wording. Do not imply sign-in alone backs up device-only keepsakes.
 - Google/Apple provider setup and cloud-backup coverage remain separate planned work.
+
+## Breathing and journaling time
+
+- Let users choose an optional breathing duration: 1, 3, or 5 minutes, plus a
+  scrollable time picker for another duration. Keep the picker usable with keyboard
+  and touch input, with clear units and a readable selected value.
+- Keep breathing timing consistent with the chosen duration. Preserve pause,
+  resume, and finish-early controls; no pressure to complete a session or lose progress.
+- Add a way to choose a time to journal. Before implementation, confirm whether this
+  means a scheduled time/reminder, an optional writing-session duration, or both.
+  Keep this separate from the inactivity lock timeout and avoid forced deadlines.
+
+## Admin dashboard
+
+- Review and improve the real admin dashboard and its supported workflows.
+  Agree on the specific dashboard tasks before implementation.
+- Preserve authorization checks and keep demo support previews separate from real
+  admin tools and data. Do not expose private journal content through dashboard work.
+
+## Navigation and Little breaks polish
+
+- Review navigation across the app for confusing destinations, duplicate paths,
+  missing Back controls, menu dismissal, and correct active states. Preserve browser
+  history, direct links, draft warnings, and privacy gates.
+- Revisit empty-looking areas in the Little breaks and individual pause screens.
+  Compare their hierarchy, spacing, artwork, and controls with the supplied Figma
+  references. Preserve intentional breathing room without oversized blank sections
+  or filler text, and retain the user's artwork.
+- Inspect and correct desktop, tablet, and mobile layouts, including narrow screens,
+  reachable actions, menu focus, and bottom-navigation clearance.
 
 ## Other deferred ideas
 
