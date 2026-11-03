@@ -77,6 +77,10 @@ Clarified November 3, 2026. Planned behavior, not implemented yet.
 
 ## Navigation and Little breaks polish
 
+- Simplify the Little breaks dropdown to two destinations: All activities and
+  Sticker collection. Keep individual games and pauses accessible from the activities
+  hub instead of duplicating them in the menu. Apply the same destination list to
+  the mobile sheet, while preserving existing direct URLs and active states.
 - Simplify the profile-icon menu to three destinations: Profile, Help & feedback,
   and Reminders. Place Preferences, Privacy, and account controls within Profile
   rather than repeating them in the dropdown. Keep About/credits reachable there
