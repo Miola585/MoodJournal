@@ -310,7 +310,6 @@ function EditorContextActions({ onNew, bookOpen, onBookToggle, saveState, draftS
 function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, onNotesChange, onWritingChange, privateStorage, bookOpen, onBookClose, checkIn = false, required = false }) {
   const [bookPage, setBookPage] = useState(0);
   const [selectedStickerId, setSelectedStickerId] = useState(null);
-  const [placementRegion, setPlacementRegion] = useState('writing');
   const [nextStepOpen, setNextStepOpen] = useState(false);
   const [nextStepPosition, setNextStepPosition] = useState({ x: 0.95, y: 0.05 });
   const [focusNoteId, setFocusNoteId] = useState(null);
@@ -318,6 +317,7 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, on
   const { discoveries, discoveryError } = useStickerDiscoveries(privateStorage);
   const introRef = useRef(null);
   const writingSurfaceRef = useRef(null);
+  const notebookRef = useRef(null);
   const addNoteButtonRef = useRef(null);
   const nextStepButtonRef = useRef(null);
   const toggleNextStep = () => setNextStepOpen((open) => !open);
@@ -342,30 +342,25 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, on
     onFieldChange('stickers', placements.filter((placement) => placement.id !== id));
     setSelectedStickerId(null);
   };
-  const chooseSticker = (stickerId, position, region = placementRegion) => {
+  const chooseSticker = (stickerId, position) => {
     if (placements.length >= 40) return;
     const placement = {
-      ...createStickerPlacement(stickerId, placements, region),
-      ...(region === 'details' ? { x: 78, y: 66, size: 24 } : {}),
+      ...createStickerPlacement(stickerId, placements, 'page'),
       ...position
     };
     onFieldChange('stickers', [...placements, placement]);
     setSelectedStickerId(placement.id);
     if (window.matchMedia('(max-width: 1100px)').matches) {
       onBookClose();
-      if (region === 'details') introRef.current?.scrollIntoView({ block: 'center' });
     }
   };
   const dropSticker = (stickerId, clientX, clientY) => {
-    for (const [region, ref] of [['details', introRef], ['writing', writingSurfaceRef]]) {
-      const bounds = ref.current?.querySelector('.journal-sticker-layer')?.getBoundingClientRect();
-      if (!bounds || clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) continue;
-      chooseSticker(stickerId, {
-        x: clampStickerPosition((clientX - bounds.left) / bounds.width * 100),
-        y: clampStickerPosition((clientY - bounds.top) / bounds.height * 100)
-      }, region);
-      return;
-    }
+    const bounds = notebookRef.current?.querySelector(':scope > .journal-sticker-layer')?.getBoundingClientRect();
+    if (!bounds || clientX < bounds.left || clientX > bounds.right || clientY < bounds.top || clientY > bounds.bottom) return;
+    chooseSticker(stickerId, {
+      x: clampStickerPosition((clientX - bounds.left) / bounds.width * 100),
+      y: clampStickerPosition((clientY - bounds.top) / bounds.height * 100)
+    });
   };
   const journalNotes = getJournalNotes(draft);
   const addNote = () => {
@@ -390,7 +385,7 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, on
         </div>
       </div>
     </div>
-    <div className={`freewrite-notebook journal-editor-notebook${checkIn ? ' edit-entry-notebook' : ''}${draft.paperStyle === 'plain' ? ' journal-paper-plain' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
+    <div ref={notebookRef} className={`freewrite-notebook journal-editor-notebook${checkIn ? ' edit-entry-notebook' : ''}${draft.paperStyle === 'plain' ? ' journal-paper-plain' : ''}`} style={mood ? { '--entry-accent': mood.color } : undefined}>
       <div className="journal-paper-intro" ref={introRef}>
         <div className="freewrite-page-heading">
           <div className="journal-title-row">
@@ -426,13 +421,13 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, on
             {checkIn && <button aria-expanded={nextStepOpen} className="journal-next-step-trigger" onClick={toggleNextStep} ref={nextStepButtonRef} title="Open your next step" type="button">Next step</button>}
           </div>
         </div>
-        <StickerLayer onMove={updatePlacement} onRemove={removePlacement} onSelect={setSelectedStickerId} placements={placements.filter((placement) => placement.region === 'details')} selectedId={selectedStickerId} />
+        <div className="journal-sticker-layer journal-sticker-origin" aria-hidden="true" />
       </div>
       <div className="freewrite-writing-surface" ref={writingSurfaceRef}>
         <div className="freewrite-writing-field">
           <RichNoteEditor addNoteButtonRef={addNoteButtonRef} canAddNote={journalNotes.length < MAX_JOURNAL_NOTES} note={draft.note || ''} noteDoc={draft.noteDoc} onAddNote={addNote} onChange={onWritingChange} required={required} toolbarTarget={toolbarTarget} />
         </div>
-        <StickerLayer onMove={updatePlacement} onRemove={removePlacement} onSelect={setSelectedStickerId} placements={placements.filter((placement) => placement.region !== 'details')} selectedId={selectedStickerId} />
+        <div className="journal-sticker-layer journal-sticker-origin" aria-hidden="true" />
         <div className="journal-sticky-layer">
           {journalNotes.map((note) => <StickyNote focusOnMount={focusNoteId === note.uid} key={note.uid} note={note} onChange={changeNote} onRemove={removeNote} paperStyle={draft.paperStyle} />)}
           {nextStepOpen && <StickyNote focusOnMount maxLength={1000} note={{ uid: -1, text: draft.copingStep || '', ...nextStepPosition }} onChange={(changed) => {
@@ -440,12 +435,13 @@ function JournalNotebook({ actionButtons, draft, mood, onFieldChange, onHelp, on
             if (changed.x !== nextStepPosition.x || changed.y !== nextStepPosition.y) setNextStepPosition({ x: changed.x, y: changed.y });
           }} onRemove={() => { setNextStepOpen(false); window.requestAnimationFrame(() => nextStepButtonRef.current?.focus()); }} paperStyle={draft.paperStyle} placeholder="One thing I can do next..." removeLabel="Close Next step" title="Next step" />}
         </div>
-        {bookOpen && <StickerBook discoveries={discoveries} discoveryError={discoveryError} onChoose={chooseSticker} onClose={onBookClose} onDropSticker={dropSticker} onPageChange={setBookPage} onPlacementRegionChange={setPlacementRegion} pageIndex={bookPage} placementRegion={placementRegion} />}
+        {bookOpen && <StickerBook discoveries={discoveries} discoveryError={discoveryError} onChoose={chooseSticker} onClose={onBookClose} onDropSticker={dropSticker} onPageChange={setBookPage} pageIndex={bookPage} />}
       </div>
       <div className="freewrite-page-footer">
         <JournalTags entry={draft} onChange={(tags) => onFieldChange('tags', tags)} />
       </div>
       <span className="notebook-page-corner" aria-hidden="true" />
+      <StickerLayer legacyRegions={{ details: introRef, writing: writingSurfaceRef }} onMove={updatePlacement} onRemove={removePlacement} onSelect={setSelectedStickerId} placements={placements} selectedId={selectedStickerId} />
     </div>
     <div className="journal-writing-bar">
       <div className="journal-writing-tools-slot" ref={setToolbarTarget} />

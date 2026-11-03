@@ -19,7 +19,7 @@ export function useStickerDiscoveries(privateStorage) {
   return result.owner === privateStorage ? result : { discoveries: {}, discoveryError: '', loading: true };
 }
 
-export function StickerBook({ pageIndex, onPageChange, discoveries, discoveryError, onChoose, onDropSticker, onClose, placementRegion, onPlacementRegionChange }) {
+export function StickerBook({ pageIndex, onPageChange, discoveries, discoveryError, onChoose, onDropSticker, onClose }) {
   const pointer = useRef(null);
   const clearDrag = useRef(null);
   const panelRef = useRef(null);
@@ -134,10 +134,6 @@ export function StickerBook({ pageIndex, onPageChange, discoveries, discoveryErr
         <button aria-label="Close Sticker Book" className="icon-button" onClick={onClose} title="Close Sticker Book" type="button"><X size={18} /></button>
       </div>
       {discoveryError && <p className="sticker-discovery-error" role="alert">{discoveryError}</p>}
-      <div aria-label="Place sticker on" className="sticker-book-location" role="group">
-        <button aria-pressed={placementRegion !== 'details'} onClick={() => onPlacementRegionChange('writing')} type="button">Writing</button>
-        <button aria-pressed={placementRegion === 'details'} onClick={() => onPlacementRegionChange('details')} type="button">Page details</button>
-      </div>
       <div className="sticker-book-page" key={page.id}>
         <header>
           <span>Collection {pageIndex + 1} of {stickerPages.length}</span>

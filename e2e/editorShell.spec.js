@@ -28,6 +28,7 @@ async function openEditor(page, options = {}) {
     const formId = options.editRecovery ? 'entry:recovered-page' : 'freewrite:new';
     if (options.recover || options.editRecovery) {
       const draft = { ...createFreeWriteEntry(), id: 'recovered-page', specificFeeling: 'Recovered title', note: 'Keep my recovered words', noteDoc: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Keep my recovered words', marks: [{ type: 'bold' }] }] }] }, stickers: [{ id: 'existing-coffee', stickerId: 'cafe-coffee', x: 60, y: 40, size: 20, rotation: 0, layer: 0 }], stickyNotes: [{ uid: 1, text: 'Keep my note', x: 0.4, y: 0.3 }] };
+      if (options.legacyDetails) draft.stickers.push({ ...draft.stickers[0], id: 'legacy-details', region: 'details', x: 78, y: 66, size: 18 });
       await storage.write('journalDraft:' + formId, { version: 1, formId, savedAt: new Date().toISOString(), draft });
     }
     const read = storage.read;
@@ -246,6 +247,85 @@ for (const width of [1440, 390, 320]) {
     await page.screenshot({ path: info.outputPath('collection.png'), fullPage: true });
   });
 }
+
+async function expectStickerInsidePage(sticker) {
+  await expect.poll(() => sticker.evaluate((node) => {
+    const art = node.getBoundingClientRect();
+    const page = node.closest('.journal-sticker-layer').getBoundingClientRect();
+    return art.left >= page.left + 16 && art.right <= page.right - 16 && art.top >= page.top + 16 && art.bottom <= page.bottom - 16;
+  })).toBe(true);
+}
+
+for (const width of [1440, 390, 320]) {
+  test(`direct sticker controls stay inside the notebook at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await openEditor(page, { encrypted: true, stickerId: 'cafe-coffee' });
+    await page.getByRole('textbox', { name: 'Title', exact: true }).fill('My decorated page');
+    await page.locator('.tiptap').fill('Words with room for stickers.');
+    const sticker = page.locator('.journal-placed-sticker');
+    await sticker.click();
+    await expectStickerInsidePage(sticker);
+    const original = await sticker.boundingBox();
+    const handle = sticker.locator('.journal-sticker-height-handle');
+    const handleBox = await handle.boundingBox();
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2 - original.height / 4, { steps: 8 });
+    await page.mouse.up();
+    const shrunk = await sticker.boundingBox();
+    expect(shrunk.width).toBeCloseTo(original.width, 0);
+    expect(shrunk.height).toBeLessThan(original.height * .8);
+    await sticker.focus();
+    await page.keyboard.press('Alt+ArrowUp');
+    expect((await sticker.boundingBox()).height).toBeLessThan(shrunk.height);
+    // All four edges, including after rotation and overall resizing.
+    for (const [dx, dy] of [[-2000, -2000], [2000, 2000]]) {
+      await sticker.scrollIntoViewIfNeeded();
+      const box = await sticker.boundingBox();
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(box.x + dx, box.y + dy, { steps: 4 });
+      await page.mouse.up();
+      await sticker.focus();
+      await page.keyboard.press(']');
+      await page.keyboard.press('+');
+      await expectStickerInsidePage(sticker);
+    }
+    await page.setViewportSize({ width: width < 400 ? 844 : 320, height: 700 });
+    await expectStickerInsidePage(sticker);
+    await page.setViewportSize({ width, height: 1000 });
+    await expectStickerInsidePage(sticker);
+    await page.screenshot({ path: info.outputPath('direct-sticker-controls.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Sticker Book', exact: true }).click();
+    await expect(page.getByRole('group', { name: 'Place sticker on' })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Save page', exact: true }).click();
+    const saved = await page.evaluate(() => window.savedEntries[0]);
+    expect(saved.stickers[0]).toMatchObject({ region: 'page', rotation: 30 });
+    expect(saved.stickers[0].heightScale).toBeLessThan(.8);
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await expectStickerInsidePage(page.locator('button.journal-placed-sticker'));
+    await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+    expect(await page.evaluate(() => window.savedEntries[1].stickers)).toEqual(saved.stickers);
+  });
+}
+
+test('legacy title and writing stickers retain their data until moved on the shared page', async ({ page }) => {
+  await openEditor(page, { recover: true, encrypted: true, legacyDetails: true });
+  await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toHaveValue('Recovered title');
+  const stickers = page.locator('button.journal-placed-sticker');
+  await expect(stickers).toHaveCount(2);
+  const writing = await stickers.nth(0).boundingBox();
+  const details = await stickers.nth(1).boundingBox();
+  expect(details.y).toBeLessThan(writing.y);
+  await stickers.nth(1).focus();
+  await page.keyboard.press('ArrowDown');
+  await page.getByRole('button', { name: 'Save page', exact: true }).click();
+  const saved = await page.evaluate(() => window.savedEntries[0].stickers);
+  expect(saved[0]).toEqual({ id: 'existing-coffee', stickerId: 'cafe-coffee', x: 60, y: 40, size: 20, rotation: 0, layer: 0 });
+  expect(saved[1].region).toBe('page');
+  expect(saved[1].y).toBeLessThan(40);
+});
 
 test.describe('phone sticker orientation', () => {
   test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });

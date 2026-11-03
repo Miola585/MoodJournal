@@ -94,10 +94,59 @@ for (const width of [320, 820, 1440]) {
     await expect(checkIn).toContainText('A quiet afternoon with a friend.');
     await expect(checkIn).toContainText('intensity 7');
     expect(await checkIn.evaluate((element) => getComputedStyle(element, '::before').content)).toBe('""');
-    await expect(page.locator('.book-keepsake-leaf .book-original-stickers')).toHaveCount(0);
+    await expect(page.locator('.book-keepsake-leaf .journal-placed-sticker')).toHaveCount(0);
     await expect(page.locator('.book-keepsake-leaf')).toContainText('My shoulders felt softer.');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.screenshot({ path: info.outputPath(`writing-and-checkin-${width}.png`), fullPage: true });
+  });
+}
+
+for (const width of [320, 820, 1440]) {
+  test(`library stickers keep their page positions and shapes at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto('/');
+    const entries = structuredClone(libraryEntries);
+    entries[0].stickers = [
+      { id: 'coffee-page', stickerId: 'cafe-coffee', region: 'page', x: 68, y: 24, size: 16, heightScale: .5, rotation: 30, layer: 1 },
+      { id: 'pumpkin-writing', stickerId: 'cafe-pumpkin', x: 30, y: 80, size: 16, rotation: -15, layer: 0 }
+    ];
+    await page.evaluate(seedLibrary, { entries, data: libraryData });
+    await page.goto('/journal/library?month=2026-10&day=2026-10-03');
+    const paper = page.locator('.bound-freewrite .book-entry-paper');
+    const coffee = paper.getByRole('img', { name: 'Coffee', exact: true });
+    const pumpkin = paper.getByRole('img', { name: 'Pumpkin', exact: true });
+    await expect(coffee).toBeVisible();
+    await expect(pumpkin).toBeVisible();
+    await expect(coffee).toHaveCSS('position', 'absolute');
+    await expect(coffee).toHaveAttribute('style', /rotate\(30deg\)/);
+    await expect(pumpkin).toHaveAttribute('style', /rotate\(-15deg\)/);
+    const shape = await coffee.locator('.sticker-artwork').boundingBox();
+    expect(shape.height).toBeLessThan(shape.width);
+    for (const sticker of [coffee, pumpkin]) {
+      const box = await sticker.boundingBox();
+      const frame = await paper.boundingBox();
+      expect(box.x).toBeGreaterThanOrEqual(frame.x);
+      expect(box.y).toBeGreaterThanOrEqual(frame.y);
+      expect(box.x + box.width).toBeLessThanOrEqual(frame.x + frame.width);
+      expect(box.y + box.height).toBeLessThanOrEqual(frame.y + frame.height);
+    }
+    const frame = await paper.boundingBox();
+    const top = await coffee.boundingBox();
+    const bottom = await pumpkin.boundingBox();
+    expect((top.y + top.height / 2 - frame.y) / frame.height).toBeCloseTo(.24, 2);
+    expect(bottom.y).toBeGreaterThan(top.y + top.height);
+    const before = await page.evaluate(() => localStorage.getItem('journalEntriesV2'));
+    await page.setViewportSize({ width: width === 320 ? 844 : 320, height: 700 });
+    await expect(coffee).toBeVisible();
+    await page.setViewportSize({ width, height: 1000 });
+    await expect.poll(() => coffee.evaluate((node) => {
+      const art = node.getBoundingClientRect();
+      const paper = node.closest('.book-entry-paper').getBoundingClientRect();
+      return Math.abs((art.x + art.width / 2 - paper.x) / paper.width - .68) < .01;
+    })).toBe(true);
+    expect(await page.evaluate(() => localStorage.getItem('journalEntriesV2'))).toBe(before);
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    await page.screenshot({ path: info.outputPath(`placed-stickers-${width}.png`), fullPage: true });
   });
 }
 

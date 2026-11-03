@@ -93,8 +93,9 @@
 .book-margin-note::before, .bound-checkin::before { content: ''; position: absolute; top: -7px; left: calc(50% - 30px); width: 60px; height: 15px; background: color-mix(in srgb,var(--scene-leaf) 45%,var(--journal-paper)); opacity: .8; transform: rotate(-4deg); }
 .book-margin-note > strong, .book-margin-note > figcaption { font-family: var(--app-body-font); font-size: .85em; color: var(--text-secondary); font-weight: 500; }
 .book-margin-note p { margin: 8px 0 0; }
-.book-original-stickers { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 18px 0 4px; padding: 8px; }
-.book-original-stickers > span { transform: rotate(-9deg); }
+.book-entry-paper, .book-entry-intro, .book-entry-writing { position: relative; }
+.book-entry-decorated .book-entry-writing { min-height: 430px; }
+.journal-library .book-entry-decorated .rich-note-content { min-height: 430px; }
 .book-sky-empty { grid-column: 1 / -1; display: grid; justify-items: center; align-content: center; min-height: 275px; gap: 18px; text-align: center; color: var(--text-secondary); }
 .book-sky-empty h2 { font-size: 1.4em; text-align: center; margin: 0; }
 .book-sky-empty a { display: inline-flex; align-items: center; gap: 5px; font-size: .8em; }

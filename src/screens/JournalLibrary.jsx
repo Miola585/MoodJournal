@@ -5,7 +5,7 @@ import { buildMonthlyLibrary, loadLibraryKeepsakes } from '../utils/journalLibra
 import { todayKey, isCheckIn } from '../utils/journalUtils';
 import { RichNoteContent } from '../components/journal/RichNoteContent';
 import { ConstellationDecal } from '../components/journal/ConstellationDecal';
-import { StickerArtwork } from '../components/journal/StickerArtwork';
+import { StickerLayer } from '../components/journal/StickerLayer';
 import { stickerById } from '../data/stickers';
 import { orbitArtwork, orbitCenterArtwork } from '../components/games/gameArtwork';
 import { moodColors } from '../utils/moodColors';
@@ -155,22 +155,29 @@ export function JournalLibrary({ entries, privateStorage, reduceMotion }) {
 }
 
 function BoundEntry({ entry }) {
+  const introRef = useRef(null);
+  const writingRef = useRef(null);
   const tags = (entry.tags || []).filter((tag) => tag !== 'free-write');
   const checkIn = isCheckIn(entry);
   const stickers = (entry.stickers || []).filter((placement) => stickerById.has(placement.stickerId));
   return <section className={`bound-entry ${checkIn ? 'bound-checkin' : 'bound-freewrite'}`}>
-    <p className="book-entry-kind">{checkIn ? 'Daily check-in' : 'Free write'}</p>
-    <h2>{entryTitle(entry)}</h2>
-    {checkIn && <p className="book-checkin-recap">{{ Happy: 'Bright', Sad: 'Low' }[entry.mood] || entry.mood}{entry.intensity != null ? ` / intensity ${entry.intensity}` : ''}</p>}
-    <RichNoteContent doc={entry.noteDoc} fallback={entry.note} />
-    {entry.copingStep && <p>Next: {entry.copingStep}</p>}
-    {entry.factors?.length > 0 && <p>{entry.factors.join(', ')}</p>}
-    {[['Meals', entry.meals], ['Water', entry.water], ['Sleep', entry.sleep]].filter(([, value]) => value).map(([label, value]) => <p key={label}>{label}: {value}</p>)}
-    {tags.length > 0 && <p className="book-entry-tags">{tags.join(' / ')}</p>}
-    {stickers.length > 0 && <div className="book-original-stickers" role="group" aria-label="Stickers on this entry">{stickers.map((placement, i) => {
-      const sticker = stickerById.get(placement.stickerId);
-      return <span key={placement.id || i} aria-label={sticker.name} role="img" style={{ transform: `rotate(${Number.isFinite(placement.rotation) ? placement.rotation : -9}deg)` }}><StickerArtwork sticker={sticker} longEdge={64} /></span>;
-    })}</div>}
+    <div className={`book-entry-paper${stickers.length ? ' book-entry-decorated' : ''}`}>
+      <div className="book-entry-intro" ref={introRef}>
+        <p className="book-entry-kind">{checkIn ? 'Daily check-in' : 'Free write'}</p>
+        <h2>{entryTitle(entry)}</h2>
+        {checkIn && <p className="book-checkin-recap">{{ Happy: 'Bright', Sad: 'Low' }[entry.mood] || entry.mood}{entry.intensity != null ? ` / intensity ${entry.intensity}` : ''}</p>}
+        <div className="journal-sticker-layer journal-sticker-origin" aria-hidden="true" />
+      </div>
+      <div className="book-entry-writing" ref={writingRef}>
+        <RichNoteContent doc={entry.noteDoc} fallback={entry.note} />
+        <div className="journal-sticker-layer journal-sticker-origin" aria-hidden="true" />
+      </div>
+      {entry.copingStep && <p>Next: {entry.copingStep}</p>}
+      {entry.factors?.length > 0 && <p>{entry.factors.join(', ')}</p>}
+      {[['Meals', entry.meals], ['Water', entry.water], ['Sleep', entry.sleep]].filter(([, value]) => value).map(([label, value]) => <p key={label}>{label}: {value}</p>)}
+      {tags.length > 0 && <p className="book-entry-tags">{tags.join(' / ')}</p>}
+      {stickers.length > 0 && <StickerLayer placements={stickers} legacyRegions={{ details: introRef, writing: writingRef }} />}
+    </div>
     <Link className="bound-entry-edit" to={`/entries?entry=${encodeURIComponent(entry.id)}`}>Open this entry <ArrowRight size={14} /></Link>
   </section>;
 }

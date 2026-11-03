@@ -59,8 +59,11 @@
   display: block;
   inset: 16px auto 16px 4px;
   width: 26px;
-  background: radial-gradient(ellipse 12px 6px at 13px 18px, var(--journal-paper) 0 54%, var(--text-secondary) 60% 75%, transparent 82%);
+  --binding-ring: radial-gradient(circle 14px at 13px 18px, var(--journal-paper) 0 54%, var(--text-secondary) 60% 75%, transparent 82%);
+  background-image: var(--binding-ring), var(--binding-ring), var(--binding-ring);
   background-size: 26px 36px;
+  background-position: center top, center center, center bottom;
+  background-repeat: no-repeat;
   opacity: 1;
 }
 
@@ -72,7 +75,7 @@
   flex-direction: column;
   align-items: stretch;
   gap: 12px;
-  padding: 34px 48px 22px;
+  padding: 34px 24px 22px;
 }
 
 .freewrite-screen .journal-paper-entry-meta { order: -1; flex-wrap: wrap; }
@@ -94,7 +97,7 @@
 .freewrite-screen .freewrite-writing-field { padding: 0; }
 .freewrite-screen .journal-editor-content .tiptap {
   min-height: 430px;
-  padding: 8px 48px 30px;
+  padding: 8px 24px 30px;
   font-size: calc(1.05rem * var(--font-scale, 1));
   line-height: calc(2rem * var(--font-scale, 1));
 }
@@ -104,7 +107,7 @@
   background-position-y: 8px;
 }
 .freewrite-screen .freewrite-notebook.journal-paper-plain .freewrite-writing-surface { background: transparent; }
-.freewrite-screen .freewrite-page-footer { padding: 16px 48px 22px; }
+.freewrite-screen .freewrite-page-footer { padding: 16px 24px 22px; }
 .freewrite-screen .journal-writing-bar {
   position: sticky;
   bottom: calc(var(--mobile-nav-space, 0px) + 12px);
@@ -123,6 +126,10 @@
 .freewrite-screen .journal-writing-actions { width: auto; min-width: 180px; margin-left: auto; }
 .freewrite-screen .journal-writing-actions button { min-height: 40px; padding: 8px 12px; }
 .freewrite-screen .journal-format-toolbar button { min-width: 36px; min-height: 40px; }
+.freewrite-screen .journal-editor-notebook > .journal-sticker-layer { left: var(--notebook-binding-width); }
+.freewrite-screen .journal-sticker-handle { display: block; }
+.freewrite-screen .journal-sticker-height-handle { display: block; left: 50%; bottom: 0; width: 32px; height: 24px; border-radius: 6px; transform: translate(-50%, 50%); cursor: ns-resize; }
+.freewrite-screen .journal-sticker-height-handle::after { content: ''; position: absolute; inset: 7px 8px; border-block: 2px solid var(--text-on-accent); }
 
 .freewrite-screen .editor-sticker-book {
   top: var(--editor-header-bottom, 112px);

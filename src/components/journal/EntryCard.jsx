@@ -23,7 +23,8 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
   const showPrimaryAction = Boolean(onPrimary && isCheckIn(entry) && !entry.primary);
   const stickers = Array.isArray(entry.stickers) ? entry.stickers : [];
   const detailsStickers = stickers.filter((placement) => placement.region === 'details');
-  const writingStickers = stickers.filter((placement) => placement.region !== 'details');
+  const writingStickers = stickers.filter((placement) => !placement.region);
+  const pageStickers = stickers.filter((placement) => placement.region === 'page');
   const stickyNotes = getJournalNotes(entry);
   return (
     <article className={`${isCheckIn(entry) ? 'entry-card entry-card-checkin' : 'entry-card entry-card-freewrite'}${compact ? ' entry-card-compact' : ''}${showFullEntry ? ' entry-card-open' : ''}`} style={isCheckIn(entry) && mood ? { '--entry-accent': mood.color } : undefined}>
@@ -75,6 +76,7 @@ export function EntryCard({ entry, onEdit, onDelete, onPrimary, onBookmark, comp
           {effectiveEntryTags(entry).map((tag) => <span key={tag}>#{tag}</span>)}
         </div>
       )}
+      {showFullEntry && pageStickers.length > 0 && <StickerLayer placements={pageStickers} />}
       {(canToggle || onEdit || onDelete || showPrimaryAction) && <div className="actions entry-card-actions">
         {canToggle && <button aria-controls={pageId} aria-expanded={expanded} onClick={() => setExpanded((current) => !current)} type="button">
           {expanded ? <ChevronUp aria-hidden="true" size={16} /> : <ChevronDown aria-hidden="true" size={16} />}

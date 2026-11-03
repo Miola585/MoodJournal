@@ -31,11 +31,22 @@ for (const width of [390, 1440]) {
           await page.getByRole('button', { name: paper, exact: true }).click();
           const binding = await notebook.evaluate((element) => {
             const style = getComputedStyle(element, '::before');
-            return { display: style.display, background: style.backgroundImage, width: parseFloat(style.width), gutter: parseFloat(getComputedStyle(element).paddingLeft) };
+            return { display: style.display, background: style.backgroundImage, repeat: style.backgroundRepeat, position: style.backgroundPosition, width: parseFloat(style.width), gutter: parseFloat(getComputedStyle(element).paddingLeft) };
           });
           expect(binding.display).toBe('block');
           expect(binding.background).not.toBe('none');
+          expect(binding.background.match(/radial-gradient/g)).toHaveLength(3);
+          // Chromium omits the redundant circle keyword for a single radius.
+          expect(binding.background.match(/radial-gradient\((?:circle )?14px at/g)).toHaveLength(3);
+          expect(binding.repeat.split(',').every((value) => value.trim() === 'no-repeat')).toBe(true);
+          expect(binding.position).toBe('50% 0%, 50% 50%, 50% 100%');
           expect(binding.gutter).toBeGreaterThan(binding.width);
+          const writing = await page.locator('.tiptap').evaluate((element) => {
+            const style = getComputedStyle(element);
+            return { left: parseFloat(style.paddingLeft), right: parseFloat(style.paddingRight) };
+          });
+          expect(writing.left).toBeLessThanOrEqual(24);
+          expect(writing.right).toBeLessThanOrEqual(24);
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
         await page.screenshot({ path: info.outputPath(`${theme}-${mode}-write.png`), animations: 'disabled' });
