@@ -19,6 +19,24 @@ Do not push, merge, or deploy without explicit permission.
   support. No new physics dependency without approval.
 - Reference: https://developer.mozilla.org/en-US/docs/Web/API/DeviceMotionEvent/requestPermission_static
 
+## Monthly Personal Night Sky
+
+Clarified November 3, 2026. Planned behavior, not implemented yet.
+
+- The active Personal Night Sky grows from saved days in the current local calendar
+  month, rather than gathering all months into one sky.
+- At the month boundary, automatically preserve the completed month's sky in that
+  month's library book and start a fresh active sky for the new month. No manual
+  Save action is required. Resetting the active view must never delete journal entries.
+- Handle rollover while the app is open and catch up on the next visit if it was
+  closed at month-end. Do not depend on a browser task running while the app is closed.
+- Preserve the archived sky's appearance and its links to saved days. Respect owner
+  isolation, journal locks, and encryption. If archival needs a storage write, retain
+  the source data on failure and offer retry; never clear first or claim a failed save
+  succeeded. Repeated rollover checks must not create duplicate archives.
+- Before implementation, settle how later edits/deletions of entries affect an
+  archived sky, consistent with the library's existing live-data behavior and privacy.
+
 ## Sign-in, sign-up, and Profile
 
 - Review the existing Supabase authentication flows and improve sign-in/sign-up.
