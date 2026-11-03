@@ -77,6 +77,10 @@ Clarified November 3, 2026. Planned behavior, not implemented yet.
 
 ## Navigation and Little breaks polish
 
+- Simplify the profile-icon menu to three destinations: Profile, Help & feedback,
+  and Reminders. Place Preferences, Privacy, and account controls within Profile
+  rather than repeating them in the dropdown. Keep About/credits reachable there
+  and preserve authorized-only access to real admin tools outside this public menu.
 - Review navigation across the app for confusing destinations, duplicate paths,
   missing Back controls, menu dismissal, and correct active states. Preserve browser
   history, direct links, draft warnings, and privacy gates.
