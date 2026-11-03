@@ -102,6 +102,21 @@ Clarified November 3, 2026. Planned behavior, not implemented yet.
   need changing; the user has flagged this area as needing more work.
 - Improve prompts, spacing, and optional-detail controls with concise wording.
   Keep mood-only saving available and avoid making reflection feel like a long form.
+- Make selected emotions and specific feelings clearly noticeable across all five
+  themes and both modes, without relying on color alone. Reserve dedicated space
+  for radio/check indicators so they never cover labels (the supplied screenshot
+  shows the checkmark overlapping "Detached"). Keep focus and selected states distinct.
+- Review repeated emotion icons, especially Bright, Content, Calm, Excited, Low,
+  Overwhelmed, Lonely, and Panic. Use distinct, recognizable expressions with visible
+  text labels while preserving the app's cartoon art style; avoid ambiguous symbols.
+- Add an "I don't know how I feel" choice so a check-in does not require a precise
+  emotion label. Allow optional personal wording without forcing a narrower choice.
+  Keep uncertainty distinct from Neutral or Numb, and review how it appears in
+  summaries, filters, library pages, and the night sky without assigning an invented
+  positive/negative score. Preserve compatibility with existing saved moods.
+- Add regression checks for selection visibility, indicator/label separation,
+  keyboard and screen-reader states, narrow screens, enlarged text, and saving and
+  reopening an uncertain-feeling check-in.
 - Preserve existing mood values, exact saved intensity, notes, draft recovery, and
   save/error behavior. Check the experience on desktop, tablet, and mobile.
 
