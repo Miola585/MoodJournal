@@ -37,12 +37,13 @@ function LockRecovery({ label, onRecover }) {
   );
 }
 
-export function JournalPrivacyGate({ locked, code, onUnlock, onRecover, children }) {
+export function JournalPrivacyGate({ locked, code, onUnlock, onRecover, children, compact = false }) {
   const [attempt, setAttempt] = useState('');
   const [error, setError] = useState('');
   const submit = (event) => {
     event.preventDefault();
     if (attempt === code) {
+      setAttempt('');
       setError('');
       onUnlock(true);
       return;
@@ -51,7 +52,7 @@ export function JournalPrivacyGate({ locked, code, onUnlock, onRecover, children
   };
   if (!locked) return children;
   return (
-    <section className="screen app-screen">
+    <section className={compact ? 'privacy-gate-compact' : 'screen app-screen'}>
       <div className="privacy-lock-panel">
         <div className="privacy-blur" aria-hidden="true">
           <article />

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Bell, BookOpen, Check, ChevronRight, Copy, Database, Download, KeyRound, LockKeyhole, Moon, Palette, ShieldCheck, Sun, Sunset, Type, UserRound, X } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
+import { JournalPrivacyGate } from '../components/layout/JournalLocks';
 import { ReminderStatus } from '../components/layout/ReminderStatus';
 import { todayKey } from '../utils/journalUtils';
 import { buildImportedJournal, compareJournalImports, MAX_IMPORT_FILE_BYTES, parseJournalBackup } from '../utils/journalImport';
@@ -9,7 +10,7 @@ import { themeChoices } from '../data/themeChoices';
 export function Settings({
   nav, user, profile, entries, saveEntries, replaceJournalEntries, checkJournalReplaceAvailable, fontScale, setFontScale, fontStyle, setFontStyle,
   siteTheme, setSiteTheme, theme, setTheme, reduceMotion, setReduceMotion, pin, setPin, onOpen,
-  recoverPin, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder,
+  recoverPin, recoverJournal, journalLockCode, setJournalLockCode, journalUnlocked, setJournalUnlocked, reminder, setReminder,
   journalEncryption
 }) {
   const usesSunriseWorld = siteTheme === 'sunrise';
@@ -20,7 +21,15 @@ export function Settings({
   const [pinRecoveryPassword, setPinRecoveryPassword] = useState('');
   const [pinRecoveryMessage, setPinRecoveryMessage] = useState('');
   const [pinRecoveryBusy, setPinRecoveryBusy] = useState(false);
-  const [journalCodeDraft, setJournalCodeDraft] = useState(journalLockCode);
+  const [journalCodeDraft, setJournalCodeDraft] = useState('');
+  const [currentJournalCode, setCurrentJournalCode] = useState('');
+  const [journalCodeError, setJournalCodeError] = useState('');
+  const journalHidden = Boolean(journalLockCode && !journalUnlocked);
+  const accessRef = useRef(!journalHidden);
+  accessRef.current = !journalHidden;
+  const importReader = useRef(null);
+  const importVersion = useRef(0);
+  const journalGate = { compact: true, locked: journalHidden, code: journalLockCode, onUnlock: setJournalUnlocked, onRecover: user ? recoverJournal : undefined };
   const [encryptionPassphrase, setEncryptionPassphrase] = useState('');
   const [encryptionConfirmation, setEncryptionConfirmation] = useState('');
   const [newEncryptionPassphrase, setNewEncryptionPassphrase] = useState('');
@@ -30,6 +39,39 @@ export function Settings({
   const [importPreview, setImportPreview] = useState(null);
   const [importBusy, setImportBusy] = useState(false);
   const [replaceAvailable, setReplaceAvailable] = useState(false);
+  useEffect(() => {
+    accessRef.current = !journalHidden;
+    if (journalHidden) {
+      setImportPreview(null);
+      setReplaceAvailable(false);
+      setDataMessage('');
+    }
+    return () => {
+      accessRef.current = false;
+      importVersion.current += 1;
+      importReader.current?.abort();
+    };
+  }, [journalHidden]);
+  const changeJournalLock = (value) => {
+    const result = setJournalLockCode(value, currentJournalCode);
+    if (!result?.ok) {
+      setJournalCodeError(result?.error || 'The journal lock could not be changed.');
+      return;
+    }
+    setCurrentJournalCode('');
+    setJournalCodeDraft('');
+    setJournalCodeError('');
+    if (value) closePrivacy();
+  };
+  const toggleJournalVisibility = () => {
+    if (!journalUnlocked && currentJournalCode !== journalLockCode) {
+      setJournalCodeError('The current journal code did not match.');
+      return;
+    }
+    setJournalUnlocked(!journalUnlocked);
+    setCurrentJournalCode('');
+    setJournalCodeError('');
+  };
   useEffect(() => {
     if (!importPreview) return;
     setImportPreview((current) => current ? { ...current, comparison: compareJournalImports(entries, current.entries) } : null);
@@ -53,6 +95,7 @@ export function Settings({
     setReminder({ ...reminder, time: safeTimes[0], times: safeTimes });
   };
   const exportData = (suffix = '') => {
+    if (!accessRef.current) { setDataMessage('Unlock your journal before exporting.'); return false; }
     const blob = new Blob([JSON.stringify({ journalEntriesV2: entries }, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -60,8 +103,10 @@ export function Settings({
     link.download = `mood-journal-${todayKey()}${suffix ? `-${suffix}` : ''}.json`;
     link.click();
     URL.revokeObjectURL(url);
+    return true;
   };
   const importData = (event) => {
+    if (!accessRef.current) { event.target.value = ''; setDataMessage('Unlock your journal before importing.'); return; }
     const file = event.target.files?.[0];
     if (!file) return;
     setDataMessage('');
@@ -71,26 +116,35 @@ export function Settings({
       return;
     }
     const reader = new FileReader();
+    importReader.current?.abort();
+    importReader.current = reader;
+    const version = ++importVersion.current;
+    const isCurrent = () => accessRef.current && version === importVersion.current;
     reader.onload = async () => {
+      if (!isCurrent()) return;
       try {
         const importedEntries = parseJournalBackup(reader.result);
         const comparison = compareJournalImports(entries, importedEntries);
         setImportPreview({ entries: importedEntries, comparison, fileName: file.name });
         const validation = await checkJournalReplaceAvailable(importedEntries);
+        if (!isCurrent()) return;
         setReplaceAvailable(validation.ok);
         setDataMessage(validation.ok ? 'Backup parsed and replacement validated. Review the comparison before importing.' : `Backup parsed. Replacement was not validated: ${validation.error}`);
       } catch (error) {
+        if (!isCurrent()) return;
         setDataMessage(error.message || 'Could not import that file.');
       }
       event.target.value = '';
     };
     reader.onerror = () => {
+      if (!isCurrent()) return;
       setDataMessage('The browser could not read that backup file.');
       event.target.value = '';
     };
     reader.readAsText(file);
   };
   const applyImport = async (mode) => {
+    if (!accessRef.current) { setDataMessage('Unlock your journal before importing.'); return; }
     if (!importPreview || importBusy) return;
     setImportBusy(true);
     setDataMessage(mode === 'replace' ? 'Preparing a safety copy...' : 'Saving imported entries...');
@@ -105,7 +159,7 @@ export function Settings({
           setDataMessage('Journal replacement was cancelled. The preview is still available.');
           return;
         }
-        exportData('before-import');
+        if (!exportData('before-import')) return;
         const result = await replaceJournalEntries(buildImportedJournal(entries, importPreview.entries, 'replace'));
         if (!result?.ok) {
           setReplaceAvailable(!result?.unavailable);
@@ -127,6 +181,7 @@ export function Settings({
     }
   };
   const enableEncryption = async () => {
+    if (!accessRef.current) { setEncryptionMessage('Unlock your journal before changing its protection.'); return; }
     setEncryptionMessage('');
     if (encryptionPassphrase !== encryptionConfirmation) {
       setEncryptionMessage('The two passphrases do not match.');
@@ -143,6 +198,7 @@ export function Settings({
     }
   };
   const changeEncryptionPassphrase = async () => {
+    if (!accessRef.current) { setEncryptionMessage('Unlock your journal before changing its protection.'); return; }
     setEncryptionMessage('');
     try {
       await journalEncryption.changePassphrase(newEncryptionPassphrase);
@@ -188,6 +244,8 @@ export function Settings({
     setPrivacyPanel('');
     setPinDraft('');
     setJournalCodeDraft('');
+    setCurrentJournalCode('');
+    setJournalCodeError('');
     setEncryptionPassphrase('');
     setEncryptionConfirmation('');
     setNewEncryptionPassphrase('');
@@ -265,6 +323,7 @@ export function Settings({
         <p className="privacy-note"><LockKeyhole aria-hidden="true" size={16} />PIN and journal locks only hide the interface. They do not encrypt browser storage. Stored-entry encryption protects saved content.</p>
 
         {privacyPanel === 'encryption' && <PrivacyDialog title="Stored-entry encryption" icon={ShieldCheck} onClose={closePrivacy} busy={journalEncryption.busy || Boolean(recoveryKey)}>
+        <JournalPrivacyGate {...journalGate}>
         <div className={journalEncryption.enabled ? 'encryption-status enabled' : 'encryption-status'}>
           <span className="encryption-status-icon"><KeyRound aria-hidden="true" size={20} /></span>
           <div>
@@ -306,6 +365,7 @@ export function Settings({
         </div>}
         {encryptionMessage && <p className="settings-message" role="status">{encryptionMessage}</p>}
         {journalEncryption.error && <p className="form-error" role="alert">{journalEncryption.error}</p>}
+        </JournalPrivacyGate>
         </PrivacyDialog>}
 
         {privacyPanel === 'pin' && <PrivacyDialog title={pin ? 'Manage your app PIN' : 'A little privacy for your app'} icon={KeyRound} onClose={closePrivacy} busy={pinRecoveryBusy}>
@@ -324,13 +384,16 @@ export function Settings({
         {privacyPanel === 'journal' && <PrivacyDialog title={journalLockCode ? 'Manage your journal lock' : 'A little privacy for your journal'} icon={LockKeyhole} onClose={closePrivacy}>
         <p>Choose a separate code to hide journal views on this device. This code is stored in your browser; it is an interface lock, not encryption.</p>
         <div className="settings-control-grid">
+          {journalLockCode && <label>Current journal code<input autoComplete="current-password" onChange={(event) => setCurrentJournalCode(event.target.value)} type="password" value={currentJournalCode} /></label>}
           <label>Journal lock<input onChange={(event) => setJournalCodeDraft(event.target.value)} placeholder="Passphrase or PIN" type="password" value={journalCodeDraft} /></label>
-          <div className="settings-field-actions"><button className="primary-button" disabled={!journalCodeDraft.trim()} onClick={() => { setJournalLockCode(journalCodeDraft); closePrivacy(); }} type="button">{journalLockCode ? 'Update lock' : 'Enable lock'}</button>{journalLockCode && <button className="ghost-button" onClick={() => { setJournalCodeDraft(''); setJournalLockCode(''); }} type="button">Remove lock</button>}{journalLockCode && <button className="ghost-button" onClick={() => setJournalUnlocked(!journalUnlocked)} type="button">{journalUnlocked ? 'Hide now' : 'Keep revealed'}</button>}</div>
+          <div className="settings-field-actions"><button className="primary-button" disabled={!journalCodeDraft.trim()} onClick={() => changeJournalLock(journalCodeDraft)} type="button">{journalLockCode ? 'Update lock' : 'Enable lock'}</button>{journalLockCode && <button className="ghost-button" onClick={() => changeJournalLock('')} type="button">Remove lock</button>}{journalLockCode && <button className="ghost-button" onClick={toggleJournalVisibility} type="button">{journalUnlocked ? 'Hide now' : 'Reveal journal'}</button>}</div>
+          {journalCodeError && <p className="form-error" role="alert">{journalCodeError}</p>}
         </div>
         </PrivacyDialog>}
       </SettingsSection>
 
       <SettingsSection icon={Database} title="Privacy & Data" description="Keep a copy of your journal or restore one you exported earlier.">
+        <JournalPrivacyGate {...journalGate}>
         <div className="settings-actions"><button className="secondary-button" onClick={() => exportData()} type="button">Export data</button><label className="file-button secondary-button">Preview a backup<input accept="application/json" onChange={importData} type="file" /></label></div>
         {dataMessage && <p className="settings-message" role="status">{dataMessage}</p>}
         {importPreview && <section className="import-preview" aria-labelledby="import-preview-title">
@@ -351,6 +414,7 @@ export function Settings({
           </div>
         </section>}
         {journalEncryption.enabled && <p className="privacy-note"><Download aria-hidden="true" size={16} />Exports are readable JSON created on this device after unlocking. Store exported files as carefully as the journal itself.</p>}
+        </JournalPrivacyGate>
       </SettingsSection>
 
       <SettingsSection icon={BookOpen} title="About" description="Mood Journal is a quiet place to notice what is here without judgment.">
