@@ -13,9 +13,10 @@ const entries = [
 ].map((entry) => ({ ...entry, type: 'checkin', created: `${entry.dateKey}T12:00:00`, primary: true, tags: [] }));
 
 test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-20T12:00:00'));
   await page.addInitScript((seed) => {
     localStorage.setItem('journalEntriesV2', JSON.stringify(seed));
-  }, entries);
+  }, entries.map((entry, i) => ({ ...entry, dateKey: `2026-10-${18 + i}`, created: `2026-10-${18 + i}T12:00:00` })));
 });
 
 test('journal night sky shows shaped stars and a visible glow', async ({ page }, testInfo) => {
@@ -61,7 +62,8 @@ for (const width of [320, 820, 1440]) {
       await page.locator('.personal-sky-star').first().click();
       await expect(page.getByRole('button', { name: 'Open journal', exact: true })).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
-      expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1)).toBe(true);
+      // A full monthly sky retains its touch targets in landscape and scrolls with the document.
+      expect(await page.locator('.personal-sky-field').evaluate((el) => getComputedStyle(el).overflowY)).toBe('visible');
       await page.screenshot({ path: info.outputPath('personal-sky-landscape.png'), fullPage: true });
     }
   });

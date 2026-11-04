@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, BookOpen, Leaf, List, Plus, RefreshCw, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { buildMonthlyLibrary, loadLibraryKeepsakes } from '../utils/journalLibrary';
-import { todayKey, isCheckIn } from '../utils/journalUtils';
+import { isCheckIn } from '../utils/journalUtils';
+import { useLocalToday } from '../hooks/useLocalToday';
+import { buildMonthlySkies, SKY_SPREAD, skyBookPath } from '../utils/monthlyNightSky';
+import { moods } from '../data/journalData';
+import { MonthlySkyField, SkyBackground } from '../components/games/MonthlySkyField';
+import { MonthlyReflection } from '../components/journal/MonthlyReflection';
+import { REFLECTION_SPREAD } from '../utils/monthlyReflection';
 import { RichNoteContent } from '../components/journal/RichNoteContent';
 import { ConstellationDecal } from '../components/journal/ConstellationDecal';
 import { StickerLayer } from '../components/journal/StickerLayer';
@@ -33,14 +39,22 @@ export function JournalLibrary({ entries, privateStorage, reduceMotion }) {
   const swipe = useRef(null);
   const bookRef = useRef(null);
   const contentsRef = useRef(null);
-  const today = todayKey();
+  const today = useLocalToday();
   const source = loaded?.storage === privateStorage ? loaded : null;
   const library = useMemo(() => buildMonthlyLibrary(entries, source?.items || [], today), [entries, source, today]);
   const book = library.months.find((item) => item.month === params.get('month'));
   const dates = book?.days.map((day) => day.dateKey) || [];
-  const requestedDay = dates.includes(params.get('day')) ? params.get('day') : dates[0];
-  const date = displayDay && dates.includes(displayDay) ? displayDay : requestedDay;
-  const index = dates.indexOf(date);
+  const spreads = [...dates, SKY_SPREAD, REFLECTION_SPREAD];
+  const requestedDay = [SKY_SPREAD, REFLECTION_SPREAD].includes(params.get('view')) ? params.get('view') : dates.includes(params.get('day')) ? params.get('day') : dates[0];
+  const date = displayDay && spreads.includes(displayDay) ? displayDay : requestedDay;
+  const index = spreads.indexOf(date);
+  const isSky = date === SKY_SPREAD;
+  const isReflection = date === REFLECTION_SPREAD;
+  const closingLabel = isSky ? 'Monthly night sky' : 'Monthly reflection';
+  const nextLabel = index === dates.length - 1 ? 'Monthly night sky' : isSky ? 'Monthly reflection' : isReflection ? 'Next page' : 'Next day';
+  const previousLabel = isReflection ? 'Monthly night sky' : 'Previous day';
+  const skies = useMemo(() => buildMonthlySkies(entries, moods, today), [entries, today]);
+  const stars = skies.months.find((value) => value.month === book?.month)?.stars || [];
   const day = book?.days.find((value) => value.dateKey === date);
   const gallery = params.get('view') === 'constellations';
   const returnState = { libraryReturn: `${location.pathname}${location.search}` };
@@ -60,14 +74,14 @@ export function JournalLibrary({ entries, privateStorage, reduceMotion }) {
   }, [privateStorage, revision]);
   useEffect(() => {
     cancelTurn(); setTurning(null); setDisplayDay(null); setContentsOpen(false); swipe.current = null;
-  }, [location.key, privateStorage]);
+  }, [location.key, privateStorage, entries, today]);
   useEffect(() => {
     mounted.current = true;
     return () => { mounted.current = false; cancelTurn(); audio.current?.close().catch(() => {}); };
   }, []);
 
   const openBook = (month, value) => {
-    setParams(value ? { month, day: value } : { month });
+    setParams([SKY_SPREAD, REFLECTION_SPREAD].includes(value) ? { month, view: value } : value ? { month, day: value } : { month });
     if (!book) window.scrollTo(0, 0);
   };
   const selectDay = (value) => {
@@ -98,7 +112,7 @@ export function JournalLibrary({ entries, privateStorage, reduceMotion }) {
     } catch { fail(); }
   };
   const turn = (direction) => {
-    const target = dates[index + direction];
+    const target = spreads[index + direction];
     if (!target || turnBusy.current || !source) return;
     playSwish();
     if (reduceMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { selectDay(target); return; }
@@ -123,9 +137,14 @@ export function JournalLibrary({ entries, privateStorage, reduceMotion }) {
     </> : <>
       <div className="book-reader-top"><button className="ghost-button" onClick={() => { setParams({}); window.scrollTo(0, 0); }} type="button"><ArrowLeft size={16} />Back to your library</button><button className="book-sound-toggle" aria-pressed={sound} onClick={() => { setSound(!sound); setSoundNotice(''); }} type="button">{sound ? <Volume2 size={16} /> : <VolumeX size={16} />}Page sound {sound ? 'on' : 'off'}</button></div>
       <header className="book-reader-heading"><div><p className="app-eyebrow">{book.month.slice(0, 4)} / {book.month === today.slice(0, 7) ? 'A month still unfolding' : 'A month to return to'}</p><h1>{monthLabel(book.month)},<span> a little at a time.</span></h1></div><button className="secondary-button" ref={contentsRef} aria-expanded={contentsOpen} aria-controls="monthly-book-contents" onClick={() => setContentsOpen(!contentsOpen)} type="button"><List size={17} />Contents</button></header>
-      {contentsOpen && <nav id="monthly-book-contents" className="book-contents" aria-label="Days in this book" onKeyDown={(event) => { if (event.key === 'Escape') { setContentsOpen(false); contentsRef.current?.focus(); } }}>{book.days.map((value) => <button key={value.dateKey} aria-current={value.dateKey === date ? 'page' : undefined} disabled={Boolean(turning)} onClick={() => selectDay(value.dateKey)} type="button"><span>{dayLabel(value.dateKey, { day: 'numeric', month: 'short' })}</span><b>{value.entries[0] ? entryTitle(value.entries[0]) : 'Little things worth keeping'}</b><ArrowRight size={15} /></button>)}{!dates.length && <p>No saved days available yet.</p>}</nav>}
-      {!day ? source && <div className="library-empty"><BookOpen size={40} /><h2>This chapter is still yours to write.</h2><Link className="primary-button" state={returnState} to={`/journal/write?date=${today}`}>Write for this day <Plus size={17} /></Link></div> : <>
-        <div ref={bookRef} className="month-book" role="region" aria-label={`${monthLabel(book.month)} journal book`} tabIndex={0} aria-busy={Boolean(turning)} onKeyDown={(event) => {
+      {contentsOpen && <nav id="monthly-book-contents" className="book-contents" aria-label="Days in this book" onKeyDown={(event) => { if (event.key === 'Escape') { setContentsOpen(false); contentsRef.current?.focus(); } }}>
+        {book.days.map((value) => <button key={value.dateKey} aria-current={value.dateKey === date ? 'page' : undefined} disabled={Boolean(turning)} onClick={() => selectDay(value.dateKey)} type="button"><span>{dayLabel(value.dateKey, { day: 'numeric', month: 'short' })}</span><b>{value.entries[0] ? entryTitle(value.entries[0]) : 'Little things worth keeping'}</b><ArrowRight size={15} /></button>)}
+        {!dates.length && <p>No saved days available yet.</p>}
+        <button type="button" aria-current={isSky ? 'page' : undefined} disabled={Boolean(turning)} onClick={() => selectDay(SKY_SPREAD)}><Sparkles size={18} /><b>Monthly night sky</b><ArrowRight size={15} /></button>
+        <button type="button" aria-current={isReflection ? 'page' : undefined} disabled={Boolean(turning)} onClick={() => selectDay(REFLECTION_SPREAD)}><BookOpen size={18} /><b>Monthly reflection</b><ArrowRight size={15} /></button>
+      </nav>}
+      {!day && !isSky && !isReflection ? source && <div className="library-empty"><BookOpen size={40} /><h2>This chapter is still yours to write.</h2><Link className="primary-button" state={returnState} to={`/journal/write?date=${today}`}>Write for this day <Plus size={17} /></Link><button className="ghost-button" type="button" onClick={() => selectDay(SKY_SPREAD)}>Monthly night sky <Sparkles size={16} /></button></div> : <>
+        <div ref={bookRef} className={`month-book${isSky ? ' month-book--sky' : ''}`} role="region" aria-label={`${monthLabel(book.month)} journal book`} tabIndex={0} aria-busy={Boolean(turning)} onKeyDown={(event) => {
           if (event.target !== event.currentTarget || !['ArrowRight', 'ArrowLeft'].includes(event.key)) return;
           event.preventDefault(); turn(event.key === 'ArrowRight' ? 1 : -1);
         }} onTouchStart={(event) => {
@@ -139,19 +158,36 @@ export function JournalLibrary({ entries, privateStorage, reduceMotion }) {
           const x = event.changedTouches[0].clientX - start.x, y = event.changedTouches[0].clientY - start.y;
           if (Math.abs(x) > 70 && Math.abs(x) > Math.abs(y) * 1.6) turn(x < 0 ? 1 : -1);
         }} onTouchCancel={() => { swipe.current = null; }}>
-          <article className="book-leaf book-writing-leaf"><div className="book-page-running-head"><span>{monthLabel(book.month)} / {book.month.slice(0, 4)}</span><Leaf size={15} /></div><div className="book-date"><strong>{dayLabel(date, { day: 'numeric' })}</strong><span>{dayLabel(date, { weekday: 'long' })}</span><small>{countLabel(day.entries.length, 'entry').replace('entrys', 'entries')}</small></div><div className="book-page-content">
+          {isSky ? <MonthlySkySpread key={`${privateStorage.ownerId}:${book.month}`} month={book.month} today={today} stars={stars} pageNumber={dates.length * 2 + 1} onDay={selectDay} /> : isReflection ? <MonthlyReflection book={book} today={today} pageNumber={dates.length * 2 + 3} partial={!source || problems.length > 0} /> : <><article className="book-leaf book-writing-leaf"><div className="book-page-running-head"><span>{monthLabel(book.month)} / {book.month.slice(0, 4)}</span><Leaf size={15} /></div><div className="book-date"><strong>{dayLabel(date, { day: 'numeric' })}</strong><span>{dayLabel(date, { weekday: 'long' })}</span><small>{countLabel(day.entries.length, 'entry').replace('entrys', 'entries')}</small></div><div className="book-page-content">
             {day.entries.map((entry) => <BoundEntry key={entry.id} entry={entry} />)}
             {!day.entries.length && <div className="book-unwritten"><h2>Some days live in the margins.</h2><p>Your keepsakes are here, even without a journal entry.</p></div>}
             <Link className="bound-entry-edit" state={returnState} to={`/journal/write?date=${date}`}>Write for this day <Plus size={16} /></Link>
           </div><footer className="book-page-number">{index * 2 + 1}<span>A day in your own words</span></footer></article>
-          <aside className="book-leaf book-keepsake-leaf" aria-label="Keepsakes for this day"><div className="book-page-running-head"><span>Little things worth keeping</span><Sparkles size={15} /></div><div className="book-keepsake-content">{day.keepsakes.map((item) => <Keepsake key={item.libraryId} item={item} />)}{!day.keepsakes.length && <div className="book-sky-empty"><Sparkles size={35} /><h2>A little room for the sky.</h2><Link to="/games/constellation">Make today's constellation <ArrowRight size={15} /></Link></div>}</div><footer className="book-page-number"><span>{dayLabel(date)}</span>{index * 2 + 2}</footer></aside>
-          {turning && <div aria-hidden="true" className={`book-turn-sheet turn-${turning}`}><span>{monthLabel(book.month)}</span><strong>{dayLabel(date, { day: 'numeric' })}</strong><i /><i /><i /><Leaf size={30} /></div>}
-        </div><div className="book-turn-controls"><button className="secondary-button" aria-label="Previous day" disabled={index <= 0 || Boolean(turning)} onClick={() => turn(-1)} type="button"><ArrowLeft size={16} />Previous day</button><span role="status">{dayLabel(date)} &middot; Day {index + 1} of {dates.length}</span><button className="secondary-button" aria-label="Next day" disabled={index >= dates.length - 1 || Boolean(turning)} onClick={() => turn(1)} type="button">Next day <ArrowRight size={16} /></button></div>
+          <aside className="book-leaf book-keepsake-leaf" aria-label="Keepsakes for this day"><div className="book-page-running-head"><span>Little things worth keeping</span><Sparkles size={15} /></div><div className="book-keepsake-content">{day.keepsakes.map((item) => <Keepsake key={item.libraryId} item={item} />)}{!day.keepsakes.length && <div className="book-sky-empty"><Sparkles size={35} /><h2>A little room for the sky.</h2><Link to="/games/constellation">Make today's constellation <ArrowRight size={15} /></Link></div>}</div><footer className="book-page-number"><span>{dayLabel(date)}</span>{index * 2 + 2}</footer></aside></>}
+          {turning && <div aria-hidden="true" className={`book-turn-sheet turn-${turning}`}><span>{monthLabel(book.month)}</span><strong>{isSky || isReflection ? closingLabel : dayLabel(date, { day: 'numeric' })}</strong><i /><i /><i /><Leaf size={30} /></div>}
+        </div>
+        {isSky && <details className="book-sky-index"><summary>Days in this sky ({stars.length})</summary><nav aria-label="Journal days in this sky">{stars.map((star) => <button type="button" key={star.id} onClick={() => selectDay(star.dateKey)}><time dateTime={star.dateKey}>{dayLabel(star.dateKey)}</time><span>{star.label}</span><ArrowRight size={16} /></button>)}</nav></details>}
+        <div className="book-turn-controls"><button className="secondary-button" aria-label={previousLabel} disabled={index <= 0 || Boolean(turning)} onClick={() => turn(-1)} type="button"><ArrowLeft size={16} />{previousLabel}</button><span role="status">{isSky || isReflection ? `${closingLabel} / ${countLabel(stars.length, 'journal day')}` : `${dayLabel(date)} / Day ${index + 1} of ${dates.length}`}</span><button className="secondary-button" aria-label={nextLabel} disabled={index >= spreads.length - 1 || Boolean(turning)} onClick={() => turn(1)} type="button">{nextLabel} <ArrowRight size={16} /></button></div>
       </>}
     </>}
     {soundNotice && <p role="status" className="library-storage-note">{soundNotice}</p>}
     <p className="library-storage-note">Books gather your saved content. Journal entries follow your journal's sync settings; activity keepsakes stay on this device.</p>
   </section>;
+}
+
+function MonthlySkySpread({ month, today, stars, pageNumber, onDay }) {
+  const [selectedDay, setSelectedDay] = useState(null);
+  const selected = stars.find((star) => star.dateKey === selectedDay);
+  return <article className="book-monthly-sky" aria-label="Monthly night sky">
+    <SkyBackground />
+    <header className="book-sky-summary"><div><p>{monthLabel(month)} / {month.slice(0, 4)}</p><h2>Your monthly night sky.</h2></div><div><p>{month === today.slice(0, 7) ? 'Still growing' : 'Your days, gathered as stars'}</p><span>{countLabel(stars.length, 'journal day')}</span></div></header>
+    <MonthlySkyField stars={stars} selectedDay={selectedDay} onSelect={setSelectedDay} empty={<><Sparkles size={40} /><h3>There is room for your first star.</h3><p>No saved journal days in this month.<br />Activity keepsakes stay on their own pages.</p></>} />
+    <div className="book-sky-bottom">
+      <div className="book-sky-selection" aria-live="polite">{selected ? <><time dateTime={selected.dateKey}>{dayLabel(selected.dateKey)}</time><strong>{selected.label}</strong><span>{countLabel(selected.entryCount, 'entry').replace('entrys', 'entries')}{selected.intensity == null ? '' : ` / intensity ${selected.intensity}`}</span><button type="button" onClick={() => onDay(selected.dateKey)}>Open book day <ArrowRight size={16} /></button></> : <p>Every kind of day belongs here.</p>}</div>
+      <Link state={{ skyReturn: skyBookPath(month) }} to={`/games/night-sky?month=${month}`}>Open full sky <ArrowRight size={16} /></Link>
+    </div>
+    <footer className="book-page-number"><span>{pageNumber}</span><span>Monthly night sky</span><span>{pageNumber + 1}</span></footer>
+  </article>;
 }
 
 function BoundEntry({ entry }) {

@@ -65,7 +65,7 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
   const featuredGame = availableGames[dayNumber % availableGames.length];
   const selectedGame = availableGames.includes(gameId) ? gameId : null;
 
-  if (gameId === 'night-sky') return <PersonalNightSky entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} />;
+  if (gameId === 'night-sky') return <PersonalNightSky key={privateStorage.ownerId} entries={entries} moods={moods} />;
   if (gameId && !selectedGame) return <Navigate to="/games" replace />;
 
   if (selectedGame) {

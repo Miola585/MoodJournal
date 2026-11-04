@@ -22,21 +22,26 @@ Existing records remain in owner-scoped private storage; positions are transient
 
 ## Monthly Personal Night Sky
 
-Clarified November 3, 2026. Planned behavior, not implemented yet.
+Implemented November 4, 2026 on `feature/monthly-night-skies`.
 
-- The active Personal Night Sky grows from saved days in the current local calendar
-  month, rather than gathering all months into one sky.
-- At the month boundary, automatically preserve the completed month's sky in that
-  month's library book and start a fresh active sky for the new month. No manual
-  Save action is required. Resetting the active view must never delete journal entries.
-- Handle rollover while the app is open and catch up on the next visit if it was
-  closed at month-end. Do not depend on a browser task running while the app is closed.
-- Preserve the archived sky's appearance and its links to saved days. Respect owner
-  isolation, journal locks, and encryption. If archival needs a storage write, retain
-  the source data on failure and offer retry; never clear first or claim a failed save
-  succeeded. Repeated rollover checks must not create duplicate archives.
-- Before implementation, settle how later edits/deletions of entries affect an
-  archived sky, consistent with the library's existing live-data behavior and privacy.
+- Current-month skies and historical skies are live views of journal entries, with
+  one star per saved day. Edits, date changes, deletion, and undo update the sky.
+  Free-write-only days have ivory stars without an invented emotion or intensity.
+- The Library's closing sky fills both pages of the open book, across the center
+  binding. It is not a small illustration beside a recap. Contents retains dated
+  navigation, and the full immersive view links back to the closing spread.
+- Default skies advance at local month boundaries and refresh after sleep/focus.
+  Explicit historical selections remain selected. No archive writes, duplicated
+  records, background jobs, or new storage keys are involved.
+- Routes: `/games/night-sky?month=YYYY-MM` and
+  `/journal/library?month=YYYY-MM&view=night-sky`. Existing day links are unchanged.
+- The user also requested monthly graphs and insights in this pass. The closing
+  section now continues from the sky to `view=reflection`, with daily intensity,
+  mood frequencies, factual observations, and writing/check-in/keepsake totals.
+  Graphs use one primary check-in per day; free writes have no inferred mood score.
+  Both closing spreads stay after the latest saved day as the book grows.
+- Privacy and encryption gates remain in place; selection and transitions clear on
+  lock or owner change. The sky follows journal sync coverage, not device keepsakes.
 
 ## Sign-in, sign-up, and Profile
 

@@ -83,6 +83,58 @@
 .book-unwritten p { color: var(--text-secondary); line-height: 1.8; }
 .book-page-number { display: flex; justify-content: space-between; gap: 12px; padding-top: 22px; margin-top: auto; color: var(--text-secondary); font-size: .85em; }
 .book-page-number > span { font-size: .75em; text-transform: uppercase; }
+.month-book--sky::after { z-index: 1; background: linear-gradient(90deg, transparent, #05091299 45%, #c5cfeb15 51%, transparent); opacity: 1; }
+.book-monthly-sky { position: relative; isolation: isolate; grid-column: 1 / -1; min-width: 0; padding: 26px 28px 20px; border-radius: inherit; background: #131a2c; color: #f5f1e9; }
+.book-monthly-sky > :not(.personal-sky-background) { position: relative; z-index: 2; }
+.book-sky-summary { display: flex; align-items: start; justify-content: space-between; gap: 24px; padding-inline: 8px; }
+.book-sky-summary h2 { font-size: 1.8em; line-height: 1.2; margin: 6px 0; color: #f5f1e9; }
+.book-sky-summary p, .book-sky-summary span { color: #c2cadb; font-size: .75em; margin: 0 0 10px; }
+.book-sky-summary > div:last-child { text-align: right; }
+.book-monthly-sky .personal-sky-field { min-height: 510px; max-width: none; margin-block: 20px; }
+.book-monthly-sky .personal-sky-empty { min-height: 510px; padding-inline: 16px; }
+.book-sky-bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 8px; }
+.book-sky-bottom a, .book-sky-bottom button { display: inline-flex; align-items: center; gap: 8px; width: fit-content; min-height: 44px; padding: 8px 12px; border: 1px solid #66758d; border-radius: 8px; background: #202a3d; color: #f5f1e9; font: inherit; font-size: .85em; text-decoration: none; }
+.book-sky-bottom a:hover, .book-sky-bottom button:hover { background: #35435f; color: #fff; transform: none; }
+.book-sky-bottom a:focus-visible, .book-sky-bottom button:focus-visible { outline: 3px solid #edcd9c; outline-offset: 3px; }
+.book-sky-selection { display: grid; gap: 5px; min-height: 90px; align-content: center; font-size: .85em; }
+.book-sky-selection > strong { font-family: var(--app-heading-font); font-size: 1.3em; font-weight: 400; }
+.book-sky-selection > time, .book-sky-selection > span { color: #c2cadb; }
+.book-monthly-sky .book-page-number { color: #c2cadb; }
+.book-sky-index { margin-top: 24px; font-size: .85em; }
+.book-sky-index summary { padding: 10px 0; cursor: pointer; }
+.book-sky-index nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 8px 24px; margin-top: 10px; }
+.book-sky-index button { display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; padding: 10px; min-height: 44px; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--journal-paper); color: var(--text-primary); font: inherit; }
+.book-sky-index button span { color: var(--text-secondary); }
+.book-reflection-leaf > .app-eyebrow { margin-top: 28px; }
+.book-reflection-leaf > h2 { font-size: 1.8em; line-height: 1.2; margin: 26px 0 14px; }
+.book-reflection-caption { color: var(--text-secondary); font-size: .8em; line-height: 1.7; }
+.book-month-chart { min-width: 0; padding-block: 16px; }
+.book-month-chart h3, .book-month-insights h3, .book-reflection-empty h3 { font-family: var(--app-heading-font); font-size: 1.15em; font-weight: 400; color: var(--text-primary); margin: 0 0 14px; }
+.book-month-chart > div { min-width: 0; width: 100%; }
+.book-month-chart .recharts-surface { overflow: visible; }
+.book-chart-values { font-size: .8em; margin: 12px 0; }
+.book-chart-values summary { cursor: pointer; padding-block: 10px; }
+.book-chart-values table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+.book-chart-values th, .book-chart-values td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border-subtle); }
+.book-chart-values caption { text-align: left; padding: 10px 0; color: var(--text-secondary); }
+.book-month-totals { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 20px; padding-block: 12px 26px; border-bottom: 1px solid var(--border-subtle); }
+.book-month-totals dt { font-size: .8em; color: var(--text-secondary); }
+.book-month-totals dd { margin: 7px 0 0; font-family: var(--app-heading-font); font-size: 2em; }
+.book-month-insights { padding-block: 20px; }
+.book-month-insights p { font-size: .9em; line-height: 1.7; }
+.book-month-insights h3:not(:first-child) { margin-top: 30px; }
+.book-month-insights ul { list-style: none; margin: 0; padding: 0; }
+.book-month-insights li { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-subtle); font-size: .85em; }
+.book-reflection-empty { padding-block: 48px; color: var(--text-secondary); line-height: 1.8; }
+.book-reflection-empty h3 { margin-top: 22px; }
+@media (max-width: 760px) {
+  .book-monthly-sky { padding: 22px 6px 16px; }
+  .book-sky-summary { flex-direction: column; gap: 12px; padding-inline: 12px; }
+  .book-sky-summary > div:last-child { text-align: left; }
+  .book-sky-summary h2 { font-size: 1.5em; }
+  .book-sky-bottom { flex-direction: column; align-items: start; gap: 14px; padding-inline: 12px; }
+  .book-monthly-sky .book-page-number { padding-inline: 12px; }
+}
 .book-keepsake-content { flex: 1; min-width: 0; padding: 28px 6px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-content: start; align-items: start; gap: 12px 18px; }
 .book-sky-sticker { position: relative; width: fit-content; max-width: 100%; margin: 8px auto 30px; text-align: center; }
 .book-sky-sticker .sky-decal { width: 205px; height: 205px; margin: auto; }

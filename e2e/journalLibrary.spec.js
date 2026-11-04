@@ -27,7 +27,7 @@ test('shelf, direct links, contents and history use real saved days', async ({ p
   expect(noteSizing.note).toBeLessThan(noteSizing.writing);
   expect(noteSizing.columns).toBe(2);
   await page.getByRole('button', { name: 'Contents', exact: true }).click();
-  await expect(page.getByRole('navigation', { name: 'Days in this book' }).getByRole('button')).toHaveCount(2);
+  await expect(page.getByRole('navigation', { name: 'Days in this book' }).getByRole('button')).toHaveCount(4);
   await page.getByRole('button', { name: /Oct 17 An open window/ }).click();
   await expect(page).toHaveURL(/day=2026-10-17/);
   await expect(book(page)).toContainText('3 small wonders');
