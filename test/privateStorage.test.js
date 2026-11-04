@@ -69,3 +69,35 @@ test('garden care is separate for each account and ignores the unowned legacy fl
   assert.equal(await firstUser.read(key, false), true);
   assert.equal(await secondUser.read(key, false), false);
 });
+
+test('completion records separate accounts and local days without adopting unowned progress', async () => {
+  const storage = new MemoryStorage();
+  const firstDay = 'activityCompletions:2026-11-01';
+  const nextDay = 'activityCompletions:2026-11-02';
+  storage.setItem(firstDay, JSON.stringify({ 'Guest activity': true }));
+  const first = createPrivateStorage({ ownerId: 'account-a', storage });
+  const second = createPrivateStorage({ ownerId: 'account-b', storage });
+  assert.deepEqual(await first.read(firstDay, {}), {});
+  await first.write(firstDay, { 'Account activity': true });
+  assert.deepEqual(await second.read(firstDay, {}), {});
+  assert.deepEqual(await first.read(nextDay, {}), {});
+  assert.deepEqual(await first.read(firstDay, {}), { 'Account activity': true });
+  const guest = createPrivateStorage({ storage });
+  assert.deepEqual(await guest.read(firstDay, {}), { 'Guest activity': true });
+  assert.equal(storage.getItem(firstDay), null);
+  assert.deepEqual(await guest.read(firstDay, {}), { 'Guest activity': true });
+});
+
+test('guest completion migration inherits encryption and refuses reads while locked', async () => {
+  const storage = new MemoryStorage();
+  const key = 'activityCompletions:2026-11-01';
+  storage.setItem(key, JSON.stringify({ 'A private activity': true }));
+  const { dataKey } = await createJournalEncryption('private storage passphrase', { iterations: 100000 });
+  const unlocked = createPrivateStorage({ storage, encryptionEnabled: true, dataKey });
+  await unlocked.migrateKnown();
+  assert.equal(storage.getItem(key), null);
+  assert.equal([...storage.values.values()].some((value) => value.includes('A private activity')), false);
+  assert.deepEqual(await unlocked.read(key, {}), { 'A private activity': true });
+  const locked = createPrivateStorage({ storage, encryptionEnabled: true });
+  await assert.rejects(locked.read(key, {}), /Unlock/);
+});
