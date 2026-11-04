@@ -86,6 +86,8 @@ test('memory archive keeps older memories beyond the visible jar capacity', asyn
   })).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('archive-memory-mobile.png') });
   await page.goto('/games/memory');
+  await expect(page.locator('.memory-marble')).toHaveCount(1);
+  await page.getByLabel('Memory month').selectOption('2026-01');
   await expect(page.locator('.memory-marble')).toHaveCount(24);
 });
 

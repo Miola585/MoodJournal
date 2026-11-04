@@ -58,7 +58,7 @@ const gameLibraryDetails = {
   }
 };
 
-export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEntriesByDate, privateStorage }) {
+export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEntriesByDate, privateStorage, reduceMotion }) {
   const navigate = useNavigate();
   const { gameId } = useParams();
   const dayNumber = Math.floor(new Date(todayKey()).getTime() / 86400000);
@@ -96,11 +96,11 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
           </div>
         ) : (
           <div className="game-route-header">
-            <button className="secondary back-to-games" onClick={() => navigate('/games')} type="button">
+            <button className="secondary back-to-games" onClick={() => navigate(selectedGame === 'memory' ? '/explore' : '/games')} type="button">
               <ArrowLeft aria-hidden="true" size={17} strokeWidth={2.4} />
-              <span>Back to games</span>
+              <span>{selectedGame === 'memory' ? 'Back to Little breaks' : 'Back to games'}</span>
             </button>
-            <PageHeader align="center" title={gameLabels[selectedGame]} subtitle={gameRouteCopy[selectedGame]} />
+            <PageHeader align="center" title={gameLabels[selectedGame]} subtitle={selectedGame === 'memory' ? 'A few good things, kept.' : gameRouteCopy[selectedGame]} />
           </div>
         )}
         <GameStage
@@ -109,6 +109,7 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
           moods={moods}
           todayKey={todayKey}
           getPrimaryEntry={getPrimaryEntry}
+          reduceMotion={reduceMotion}
           privateStorage={privateStorage}
         />
       </section>
@@ -154,23 +155,23 @@ function GameLauncher({ openGame, featuredGame }) {
   );
 }
 
-function GameStage({ game, entries, moods, todayKey, getPrimaryEntry, privateStorage }) {
+function GameStage({ game, entries, moods, todayKey, getPrimaryEntry, privateStorage, reduceMotion }) {
   const todayEntries = entries.filter((entry) => entry.dateKey === todayKey());
   const mainToday = getPrimaryEntry(todayEntries);
   const mood = moods.find((item) => item.key === mainToday?.mood) || moods[0];
 
   return (
     <GamePageShell game={game} label={gameLabels[game]}>
-      <FeaturedGame game={game} mood={mood} mainToday={mainToday} privateStorage={privateStorage} />
+      <FeaturedGame game={game} mood={mood} mainToday={mainToday} privateStorage={privateStorage} reduceMotion={reduceMotion} />
     </GamePageShell>
   );
 }
 
-function FeaturedGame({ game, mood, mainToday, privateStorage }) {
+function FeaturedGame({ game, mood, mainToday, privateStorage, reduceMotion }) {
   const games = {
     match: <EmotionalMatchGame />,
     constellation: <ConstellationGame mood={mood} privateStorage={privateStorage} />,
-    memory: <MemoryJarGame mood={mood} mainToday={mainToday} privateStorage={privateStorage} />,
+    memory: <MemoryJarGame mood={mood} mainToday={mainToday} privateStorage={privateStorage} reduceMotion={reduceMotion} />,
     orbit: <OrbitGame privateStorage={privateStorage} />
   };
   return games[game] || games.match;

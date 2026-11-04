@@ -596,30 +596,6 @@
     width: 100%;
   }
 
-  .memory-jar-scene {
-    min-height: 430px;
-    padding-inline: 0;
-  }
-
-  .css-memory-jar {
-    width: min(350px, 92vw);
-    min-height: 390px;
-  }
-
-  .memory-popover {
-    right: 50%;
-    bottom: 6%;
-    transform: translateX(50%);
-  }
-
-  .memory-input-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .memory-input-actions button {
-    width: 100%;
-  }
 }
 
 @media (max-width: 840px) {

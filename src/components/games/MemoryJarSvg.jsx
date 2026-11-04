@@ -1,3 +1,5 @@
+import '../../styles/memoryJar.css';
+
 export function MemoryJarSvg({ className = '' }) {
   return (
     <svg

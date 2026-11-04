@@ -3,12 +3,13 @@
 Requested November 1, 2026. These are follow-ups, not features to start in this pass.
 Do not push, merge, or deploy without explicit permission.
 
-## Memory Jar overhaul
+## Memory Jar follow-up
 
-- Refresh the whole jar experience, preserving existing saved memories, dates,
-  owner isolation, encryption, and monthly-library links.
-- Make the marbles move and settle more naturally, with contained collisions and
-  smooth motion that works on phones, tablets, and desktop.
+Core refresh implemented November 4, 2026 on `feature/memory-jar-refresh`.
+Monthly jars, 24-memory capacity, contained Matter.js movement, touch/mouse dragging,
+Shuffle, reduced motion, accessible memory lists, and Library links are included.
+Existing records remain in owner-scoped private storage; positions are transient.
+
 - Explore optional shake/tilt interaction on supported phones. Ask for sensor
   permission only after the user enables it. Never require a shake to access a memory.
 - Provide touch/drag and a labeled Shuffle fallback for denied/unavailable sensors,
@@ -16,7 +17,7 @@ Do not push, merge, or deploy without explicit permission.
   hidden or locked. Do not collect or store sensor readings.
 - Browser motion APIs need a secure context; permission requests require a user
   gesture where supported. Test on actual iOS and Android devices before claiming
-  support. No new physics dependency without approval.
+  support. Matter.js was approved for the core refresh; sensors remain deferred.
 - Reference: https://developer.mozilla.org/en-US/docs/Web/API/DeviceMotionEvent/requestPermission_static
 
 ## Monthly Personal Night Sky
