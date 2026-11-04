@@ -16,6 +16,10 @@ Repository hardening only. The paused Supabase project has not been contacted, r
 
 ## Privacy boundaries
 
+The optional journal interface lock gates Home, check-in, activities, journal views, and private game views. While hidden, Settings receives no journal entries; export, backup import, and encryption changes require unlocking. Changing or removing an existing journal code requires that current code, even if the journal is already visible. Signed-in recovery still requires account-password verification. Pending backup reads are invalidated when hidden or leaving Settings.
+
+These are interface protections, not a defense against developer tools, browser storage access, or malicious same-origin code. The journal code remains device-stored. Browser regression tests cover locked routes, plaintext and unlocked-encryption export blocking, code verification, editing after unlock, relocking, and pending backup reads. They do not establish live Supabase permissions or account recovery behavior.
+
 Local guest encryption remains optional. PINs cover the interface, not storage. JSON exports are readable, including the safety export before replacement. Encrypted drafts are account- and tab-scoped; unencrypted drafts are not persisted. Lost browser data cannot be recovered merely by knowing the encryption key.
 
 Support diagnostics are off by default and allow only known page/theme/mode/browser labels and bounded viewport dimensions. Query strings, fragments, raw user agents and storage dumps are excluded. Users can still voluntarily type sensitive information into a support message; diagnostic filtering is not a content scrubber for messages.

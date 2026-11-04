@@ -13,12 +13,15 @@ test('Home and Summary agree on Sunday and previous calendar week', async ({ pag
     ]));
   });
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('.home-rhythm-card strong')).toHaveText('1');
-  await page.goto('/summary');
+  const weeklyReflection = page.getByRole('button', { name: 'This week: 1 of 7 days checked in. Open weekly reflection', exact: true });
+  await expect(weeklyReflection).toBeVisible();
+  await weeklyReflection.click();
   await expect(page.getByText(/Nov 1 - Nov 7/u)).toBeVisible();
+  await page.locator('.summary-data-details summary').click();
   await expect(page.locator('.summary-stat').first().locator('strong')).toHaveText('1');
   await page.getByRole('button', { name: 'Previous week' }).click();
   await expect(page.getByText(/Oct 25 - Oct 31/u)).toBeVisible();
+  await expect(page.locator('.summary-data-details')).toHaveAttribute('open', '');
   await expect(page.locator('.summary-stat').first().locator('strong')).toHaveText('2');
   await page.getByRole('button', { name: 'Next week' }).click();
   await expect(page.getByText(/Nov 1 - Nov 7/u)).toBeVisible();

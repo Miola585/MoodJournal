@@ -1,0 +1,158 @@
+/* Load after ui-system.css. These rules belong only to Calendar and Summary. */
+.app :is(.calendar-screen, .summary-screen) {
+  width: 100%;
+  max-width: 1340px;
+  margin-inline: auto;
+  gap: 24px;
+  color: var(--text-primary);
+  font-size: calc(1rem * var(--font-scale, 1));
+  letter-spacing: 0;
+}
+
+.app :is(.calendar-screen, .summary-screen) > .tab-indicator { order: -1; }
+.app :is(.calendar-screen, .summary-screen) > .page-header { align-items: center; flex-wrap: wrap; gap: 18px; margin-bottom: 0; padding: 8px 0 0; }
+.app :is(.calendar-screen, .summary-screen) .page-header-copy { flex: 1 1 280px; }
+.app :is(.calendar-screen, .summary-screen) .page-header h1 { font-size: 2em; line-height: 1.15; letter-spacing: 0; }
+.app :is(.calendar-screen, .summary-screen) .page-header-eyebrow { color: var(--text-secondary); font-size: 0.72em; letter-spacing: 0; }
+.app :is(.calendar-screen, .summary-screen) .page-header p { font-size: 0.9em; font-weight: 400; }
+.app :is(.calendar-screen, .summary-screen) .page-header-actions { flex: 0 0 auto; width: auto; }
+.app :is(.calendar-screen, .summary-screen) :is(button, summary) { font-size: 1em; letter-spacing: 0; }
+.app :is(.calendar-screen, .summary-screen) :is(button, summary):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.app :is(.calendar-screen, .summary-screen) button:hover { transform: none; }
+.app :is(.calendar-screen, .summary-screen) :is(h2, h3, p) { overflow-wrap: anywhere; }
+
+.app .calendar-screen .calendar-toolbar-actions,
+.app .summary-screen .summary-week-nav { display: flex; flex-wrap: nowrap; align-items: center; justify-content: start; gap: 6px; margin: 0; }
+.app .calendar-screen :is(.calendar-nav-button, .calendar-today-button),
+.app .summary-screen .summary-week-nav button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; margin: 0; padding: 8px 12px; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--surface-major); color: var(--text-primary); box-shadow: none; font-size: 0.85em; }
+.app .calendar-screen .calendar-nav-button,
+.app .summary-screen .summary-week-nav .summary-week-arrow { flex: 0 0 40px; width: 40px; height: 40px; padding: 0; }
+.app .calendar-screen .calendar-today-button { width: auto; overflow: visible; }
+.app .calendar-screen :is(.calendar-nav-button, .calendar-today-button):hover,
+.app .summary-screen .summary-week-nav button:not(:disabled):hover { background: var(--surface-interactive-hover); color: var(--text-primary); }
+.app .summary-screen .summary-week-nav button:disabled { opacity: 0.5; cursor: default; }
+
+.app .calendar-screen .calendar-layout { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(310px, 0.85fr); gap: 28px; align-items: start; }
+.app .calendar-screen .calendar-board { min-width: 0; overflow: visible; padding: 18px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--journal-paper); box-shadow: none; }
+.app .calendar-screen .month-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; padding: 0; background: transparent; }
+.app .calendar-screen .weekday { padding: 12px 0; border: 0; color: var(--text-secondary); font-size: 0.72em; font-weight: 700; text-transform: uppercase; }
+.app .calendar-screen .calendar-cell { display: flex; flex-direction: column; align-items: start; justify-content: space-between; gap: 8px; min-width: 0; min-height: 106px; padding: 8px; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--surface-major); color: var(--text-primary); box-shadow: none; font-size: 0.88em; }
+.app .calendar-screen .calendar-cell-empty { background: transparent; opacity: 0.3; }
+.app .calendar-screen .calendar-cell-day:hover { background: var(--surface-interactive); color: var(--text-primary); border-color: var(--interactive-accent); box-shadow: none; }
+.app .calendar-screen .calendar-cell.has-entries { border-color: color-mix(in srgb, var(--day-mood, var(--interactive-accent)) 50%, var(--border-subtle)); background: color-mix(in srgb, var(--day-mood, var(--interactive-accent)) 12%, var(--surface-major)); }
+.app .calendar-screen .calendar-cell.selected { border-color: var(--interactive-accent); background: var(--surface-secondary); outline: 0; box-shadow: inset 0 0 0 1px var(--interactive-accent); }
+.app .calendar-screen .calendar-cell:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.app .calendar-screen .calendar-day-number { flex-shrink: 0; width: 1.9em; height: 1.9em; font-weight: 700; }
+.app .calendar-screen .calendar-cell.today .calendar-day-number { color: var(--text-primary); background: var(--surface-interactive); text-decoration: underline; text-underline-offset: 3px; }
+.app .calendar-screen .calendar-cell.selected .calendar-day-number { background: var(--interactive-accent); color: var(--text-on-accent); }
+.app .calendar-screen .calendar-today-label { display: none; }
+.app .calendar-screen .calendar-entry-markers { display: flex; flex-wrap: wrap; min-width: 0; gap: 4px; }
+.app .calendar-screen .calendar-entry-markers b { font-size: 1.3em; }
+.app .calendar-screen .calendar-entry-markers small { width: 4px; height: 4px; background: var(--day-mood, var(--interactive-accent)); box-shadow: none; }
+.app .calendar-screen .calendar-cell em { right: 5px; bottom: 5px; padding: 1px 4px; border-radius: 3px; font-size: 0.7em; background: var(--surface-interactive); color: var(--text-primary); }
+
+.app .calendar-screen .calendar-detail { min-width: 0; min-height: 360px; gap: 18px; padding: 22px; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--journal-paper); box-shadow: 3px 3px 0 var(--surface-secondary), 4px 4px 0 var(--border-subtle); }
+.app .calendar-screen .calendar-detail-heading { display: grid; align-items: start; justify-content: stretch; gap: 10px; margin: 0; padding: 0 0 18px; border-bottom: 1px solid var(--journal-rule); border-radius: 0; background: transparent; }
+.app .calendar-screen .calendar-detail-heading > div > span { color: var(--text-secondary); font-size: 0.72em; }
+.app .calendar-screen .calendar-detail-heading h2 { margin-top: 6px; color: var(--text-primary); font-size: 1.25em; line-height: 1.3; }
+.app .calendar-screen .calendar-detail-count { min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--text-secondary); font-size: 0.8em; font-weight: 400; }
+.app .calendar-screen .calendar-detail-empty { display: grid; align-content: center; justify-items: start; gap: 18px; min-height: 220px; margin: 0; padding: 12px 0; border: 0; }
+.app .calendar-screen .calendar-detail-empty > svg { color: var(--interactive-accent); }
+.app .calendar-screen .calendar-detail-empty p { margin-bottom: 12px; font-size: 1.05em; }
+.app .calendar-screen .calendar-detail-empty span { color: var(--text-secondary); }
+.app .calendar-screen .calendar-detail-empty button,
+.app .summary-screen .summary-empty-week button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 44px; max-width: 100%; padding: 10px 14px; border: 1px solid var(--interactive-accent); border-radius: 6px; background: var(--interactive-accent); color: var(--text-on-accent); font-size: 0.9em; }
+.app .calendar-screen .calendar-detail-empty button svg { color: inherit; }
+.app .calendar-screen .calendar-page-preview { display: grid; gap: 12px; min-width: 0; padding: 0 0 18px; border: 0; border-bottom: 1px solid var(--journal-rule); border-radius: 0; background: transparent; }
+.app .calendar-screen .calendar-page-preview:last-child { padding-bottom: 0; border-bottom: 0; }
+.app .calendar-screen .calendar-page-preview .entry-card { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.app .calendar-screen .entry-card-topline { flex-wrap: wrap; align-items: start; gap: 8px; }
+.app .calendar-screen .entry-card-topline > div { min-width: 0; }
+.app .calendar-screen .entry-card-date-actions { flex-wrap: nowrap; align-items: center; margin-left: auto; }
+.app .calendar-screen .entry-bookmark { position: static; flex: 0 0 36px; width: 36px; height: 36px; min-height: 36px; padding: 0; }
+.app .calendar-screen .entry-card-topline time { position: static; width: auto; font-size: 0.75em; color: var(--text-secondary); }
+.app .calendar-screen .entry-card-topline time span:last-child { font-size: 0.95em; }
+.app .calendar-screen :is(.entry-type-badge, .primary-marker) { max-width: 100%; font-size: 0.7em; border-radius: 4px; }
+.app .calendar-screen .entry-card h2 { margin: 0; padding: 0; border: 0; background: transparent; color: var(--text-primary); font-size: 1.2em; text-align: left; }
+.app .calendar-screen .entry-compact-preview { display: flex; align-items: start; gap: 8px; min-width: 0; width: 100%; margin: 0; padding: 12px 0; border: 0; border-radius: 0; background: transparent; color: var(--text-primary); font-size: 0.95em; line-height: 1.6; }
+.app .calendar-screen .entry-compact-preview svg { flex-shrink: 0; margin-top: 5px; }
+.app .calendar-screen .entry-compact-preview span { white-space: normal; overflow-wrap: anywhere; -webkit-line-clamp: 4; }
+.app .calendar-screen .entry-card-actions { flex-wrap: wrap; gap: 8px; }
+.app .calendar-screen .entry-card-actions button,
+.app .calendar-screen .calendar-page-preview > button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; max-width: 100%; padding: 8px 10px; border-radius: 6px; font-size: 0.8em; white-space: normal; }
+.app .calendar-screen .calendar-page-preview > button { justify-self: start; color: var(--text-primary); }
+.app .calendar-screen .entry-card :is(.entry-page, .entry-next-step, .meta) { min-width: 0; overflow-wrap: anywhere; }
+.app .calendar-screen .entry-page { font-size: 0.95em; }
+
+.app .summary-screen { max-width: 1160px; --chart-line: var(--interactive-accent); --chart-dot: var(--surface-major); --chart-grid: var(--border-subtle); --chart-hover: var(--surface-secondary); }
+.app .summary-screen .summary-week-spread { display: grid; gap: 32px; padding: 32px 20px; border: 0; border-block: 1px solid var(--border-subtle); border-radius: 0; background: var(--surface-major); }
+.app .summary-screen .summary-empty-week { display: grid; align-content: center; justify-items: center; gap: 16px; min-height: 340px; padding: 24px 0; text-align: center; }
+.app .summary-screen .summary-empty-sprout { width: 48px; height: 48px; color: var(--interactive-accent); }
+.app .summary-screen :is(.summary-empty-week, .summary-week-story) h2 { max-width: 28ch; margin: 0; color: var(--text-primary); font-size: 1.5em; line-height: 1.3; }
+.app .summary-screen :is(.summary-empty-week, .summary-week-story) p { max-width: 56ch; margin: 0; color: var(--text-secondary); font-size: 1em; }
+.app .summary-screen .summary-empty-week button { margin-top: 8px; }
+.app .summary-screen .summary-day-rhythm { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; width: min(100%, 760px); margin-inline: auto; }
+.app .summary-screen .summary-day-mark { display: grid; justify-items: center; align-content: start; gap: 6px; min-width: 0; color: var(--text-secondary); text-align: center; }
+.app .summary-screen .summary-day-mark > span { display: block; width: min(100%, 52px); aspect-ratio: 1; border: 1px solid var(--border-subtle); border-radius: 50%; background: var(--surface-secondary); }
+.app .summary-screen .summary-day-mark.filled > span { border-color: var(--interactive-accent); background: var(--interactive-accent); box-shadow: inset 0 0 0 5px var(--surface-major); }
+.app .summary-screen .summary-day-mark strong { color: var(--text-primary); font-size: 0.85em; }
+.app .summary-screen .summary-day-mark small { font-size: 0.75em; }
+.app .summary-screen .summary-week-story { display: grid; justify-items: center; gap: 12px; text-align: center; }
+.app .summary-screen .summary-data-details { display: block; min-width: 0; }
+.app .summary-screen .summary-data-details > summary { cursor: pointer; padding: 16px 0; border: 0; border-bottom: 1px solid var(--border-subtle); border-radius: 0; background: transparent; color: var(--text-primary); font-weight: 700; }
+.app .summary-screen .summary-data-details[open] > summary { margin-bottom: 24px; }
+.app .summary-screen .summary-data-details > :is(.summary-stat-grid, .summary-chart-card, .summary-chart-grid) { margin-bottom: 24px; }
+.app .summary-screen .summary-stat-grid { gap: 12px; }
+.app .summary-screen .summary-stat { min-width: 0; min-height: 116px; padding: 16px; border: 1px solid var(--border-subtle); border-radius: 6px; background: var(--surface-major); box-shadow: none; backdrop-filter: none; }
+.app .summary-screen .summary-stat strong { overflow-wrap: anywhere; font-size: 1.4em; line-height: 1.2; color: var(--text-primary); }
+.app .summary-screen .summary-stat span { font-size: 0.85em; color: var(--text-secondary); }
+.app .summary-screen .summary-stat small { font-size: 0.75em; color: var(--text-secondary); }
+.app .summary-screen .summary-chart-card { gap: 18px; padding: 20px 0; border: 0; border-top: 1px solid var(--border-subtle); border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.app .summary-screen .summary-chart-card-wide { min-height: 0; }
+.app .summary-screen .summary-chart-header { justify-items: start; text-align: left; }
+.app .summary-screen .summary-chart-header h2 { color: var(--text-primary); font-size: 1.2em; text-align: left; }
+.app .summary-screen .summary-chart-header p { color: var(--text-secondary); font-size: 0.85em; font-weight: 400; }
+.app .summary-screen .patterns-card { justify-items: start; text-align: left; }
+.app .summary-screen .summary-chart-frame { min-width: 0; min-height: 260px; border: 0; border-radius: 0; background: transparent; }
+.app .summary-screen .summary-tooltip { border-color: var(--border-subtle); border-radius: 6px; background: var(--surface-major); color: var(--text-primary); }
+.app .summary-screen .mood-legend span { font-size: 0.8em; border-radius: 4px; }
+
+@media (max-width: 1050px) {
+  .app .calendar-screen .calendar-layout { grid-template-columns: minmax(0, 1fr); }
+  .app .calendar-screen .calendar-detail { min-height: 280px; }
+  .app .calendar-screen .calendar-detail-empty { min-height: 140px; }
+}
+
+@media (max-width: 760px) {
+  .app :is(.calendar-screen, .summary-screen) { gap: 20px; }
+  .app :is(.calendar-screen, .summary-screen) .page-header { flex-direction: column; align-items: start; }
+  .app :is(.calendar-screen, .summary-screen) .page-header-copy { flex: 0 1 auto; }
+  .app :is(.calendar-screen, .summary-screen) .page-header h1 { font-size: 1.6em; }
+  .app .calendar-screen .month-grid { gap: 4px; }
+  .app .calendar-screen .calendar-cell { align-items: center; justify-content: center; min-height: 60px; padding: 3px; gap: 3px; border-color: transparent; background: transparent; }
+  .app .calendar-screen .calendar-cell.selected { border-color: transparent; background: transparent; box-shadow: none; }
+  .app .calendar-screen .calendar-day-number { border-radius: 50%; }
+  .app .calendar-screen .calendar-board { padding: 12px; }
+  .app .calendar-screen .calendar-detail { padding: 18px; }
+  .app .summary-screen .summary-week-spread { padding: 24px 12px; }
+  .app .summary-screen .summary-empty-week { min-height: 300px; }
+  .app .summary-screen .summary-empty-week h2 { font-size: 1.3em; }
+  .app .summary-screen .summary-day-rhythm { gap: 6px; }
+  .app .summary-screen .summary-chart-grid { grid-template-columns: minmax(0, 1fr); }
+  .app .summary-screen .summary-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 430px) {
+  .app .calendar-screen .month-grid { gap: 3px; }
+  .app .calendar-screen .weekday { font-size: 0.62em; }
+  .app .calendar-screen .calendar-cell { min-height: 52px; padding: 2px; font-size: 0.75em; }
+  .app .calendar-screen .calendar-entry-markers { gap: 3px; }
+  .app .calendar-screen .calendar-entry-markers > span { display: none; }
+  .app .calendar-screen .calendar-cell.has-entries { border-bottom-width: 3px; }
+  .app .calendar-screen .calendar-cell em { top: 30px; right: 3px; bottom: auto; padding: 0 2px; }
+  .app .calendar-screen .calendar-detail { padding: 16px; }
+  .app .summary-screen .summary-day-rhythm { gap: 4px; }
+  .app .summary-screen .summary-day-mark strong { font-size: 0.68em; }
+  .app .summary-screen .summary-day-mark small { font-size: 0.62em; }
+  .app .summary-screen .summary-stat-grid { grid-template-columns: minmax(0, 1fr); }
+}

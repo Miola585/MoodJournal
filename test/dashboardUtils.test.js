@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getJournalRhythm, getRecentJournalEntries } from '../src/utils/dashboardUtils.js';
+import { getJournalGreeting, getJournalRhythm, getRecentJournalEntries } from '../src/utils/dashboardUtils.js';
 import { calendarWeekDays, formatDateKey, journalDateFromEntry } from '../src/utils/journalUtils.js';
 
 const entry = (id, dateKey, type = 'checkin') => ({
@@ -9,6 +9,14 @@ const entry = (id, dateKey, type = 'checkin') => ({
   dateKey,
   created: `${dateKey}T12:00:00.000Z`,
   note: 'A note'
+});
+
+test('greetings use local time and the actual profile name without a sample fallback', () => {
+  assert.equal(getJournalGreeting('Miche', new Date(2026, 10, 1, 9)), 'Good morning, Miche!');
+  assert.equal(getJournalGreeting(' Miche ', new Date(2026, 10, 1, 12)), 'Good afternoon, Miche!');
+  assert.equal(getJournalGreeting('Miche', new Date(2026, 10, 1, 18)), 'Good evening, Miche!');
+  assert.equal(getJournalGreeting(undefined, new Date(2026, 10, 1, 9)), 'Good morning!');
+  assert.equal(getJournalGreeting(' ', new Date(2026, 10, 1, 12)), 'Good afternoon!');
 });
 
 test('journal rhythm counts unique check-in days in the current week', () => {

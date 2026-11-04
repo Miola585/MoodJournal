@@ -152,6 +152,7 @@ export function useJournalDraft({ privateStorage, formId, draft, setDraft, debou
     || window.confirm('Discard these unsaved journal changes?'), [dirty]);
 
   return {
+    draftReady,
     dirty,
     storedDraft,
     draftStatus,

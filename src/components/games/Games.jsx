@@ -1,14 +1,16 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArrowLeft, Flower2, Heart, Orbit, Sparkles } from 'lucide-react';
 import { ConstellationGame } from './ConstellationGame';
 import { EmotionalMatchGame } from './EmotionalMatchGame';
 import { MemoryJarGame } from './MemoryJarGame';
-import { MoodGardenGame } from './MoodGardenGame';
 import { NightSkyGalaxy } from './NightSkyGame';
+import { PersonalNightSky } from './PersonalNightSky';
 import { OrbitGame } from './OrbitGame';
+import { MemoryJarSvg } from './MemoryJarSvg';
 import { PageHeader } from '../layout/PageHeader';
 import { GamePageShell } from './GamePageShell';
 import {
+  availableGames,
   gameLabels,
   rotatingGames
 } from './gameUtils';
@@ -22,7 +24,6 @@ const gameRouteCopy = {
 };
 
 const gameInstructions = {
-  garden: 'Choose a plant to see what it reflects. Tend the garden once a day. A check-in helps it grow.',
   constellation: 'Drag between two stars, or tap one and then another. Use Tab and Enter to connect with a keyboard. Undo removes the last line. Name your shape and finish when it feels complete.',
   orbit: 'Drag a planet between distances, or select it and use the distance buttons. The numbered keys also move a focused planet. Distance shows presence, not importance. Reflect or finish to save your arrangement.'
 };
@@ -61,8 +62,11 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
   const navigate = useNavigate();
   const { gameId } = useParams();
   const dayNumber = Math.floor(new Date(todayKey()).getTime() / 86400000);
-  const featuredGame = rotatingGames[dayNumber % rotatingGames.length];
-  const selectedGame = rotatingGames.includes(gameId) ? gameId : null;
+  const featuredGame = availableGames[dayNumber % availableGames.length];
+  const selectedGame = availableGames.includes(gameId) ? gameId : null;
+
+  if (gameId === 'night-sky') return <PersonalNightSky entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} />;
+  if (gameId && !selectedGame) return <Navigate to="/games" replace />;
 
   if (selectedGame) {
     return (
@@ -113,10 +117,10 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
 
   return (
     <section className="screen app-screen games-screen games-hub-screen">
-      <PageHeader align="center" eyebrow="Play and reflect" title="Games" subtitle="Small reflection spaces for when you want to reset, notice, or make something gentle." />
+      <PageHeader align="center" title="Games" subtitle="Small ways to play and reflect." />
       {nav}
       <GameLauncher openGame={(game) => navigate(`/games/${game}`)} featuredGame={featuredGame} />
-      <NightSkyGalaxy entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} />
+      <NightSkyGalaxy entries={entries} moods={moods} groupEntriesByDate={groupEntriesByDate} getPrimaryEntry={getPrimaryEntry} onStart={() => navigate('/entries')} />
     </section>
   );
 }
@@ -124,23 +128,21 @@ export function Games({ nav, entries, moods, todayKey, getPrimaryEntry, groupEnt
 function GameLauncher({ openGame, featuredGame }) {
   return (
     <section className="game-launcher">
-      <div className="game-library-heading">
-        <span>Choose a small reset</span>
-        <h2>Game Library</h2>
-      </div>
       <div className="game-card-grid">
         {rotatingGames.map((game) => {
-          const { Icon, eyebrow, description } = gameLibraryDetails[game];
+          const { Icon, description } = gameLibraryDetails[game];
+          const comingSoon = !availableGames.includes(game);
           return (
             <button
-              className={game === featuredGame ? 'game-library-card featured' : 'game-library-card'}
+              className={`game-library-card${game === featuredGame ? ' featured' : ''}${comingSoon ? ' coming-soon' : ''}`}
+              disabled={comingSoon}
               key={game}
               onClick={() => openGame(game)}
               type="button"
             >
-              <span className="game-card-icon"><Icon aria-hidden="true" size={22} strokeWidth={2.4} /></span>
+              <span className={`game-card-scene game-card-scene-${game}`} aria-hidden="true">{game === 'memory' ? <MemoryJarSvg /> : <Icon size={48} strokeWidth={1.6} />}</span>
               <span className="game-card-copy">
-                <span>{game === featuredGame ? 'Featured today' : eyebrow}</span>
+                {(comingSoon || game === featuredGame) && <span>{comingSoon ? 'Coming soon' : 'Today'}</span>}
                 <strong>{gameLabels[game]}</strong>
                 <small>{description}</small>
               </span>
@@ -159,16 +161,15 @@ function GameStage({ game, entries, moods, todayKey, getPrimaryEntry, privateSto
 
   return (
     <GamePageShell game={game} label={gameLabels[game]}>
-      <FeaturedGame game={game} mood={mood} mainToday={mainToday} todayEntries={todayEntries} privateStorage={privateStorage} />
+      <FeaturedGame game={game} mood={mood} mainToday={mainToday} privateStorage={privateStorage} />
     </GamePageShell>
   );
 }
 
-function FeaturedGame({ game, mood, mainToday, todayEntries, privateStorage }) {
+function FeaturedGame({ game, mood, mainToday, privateStorage }) {
   const games = {
     match: <EmotionalMatchGame />,
     constellation: <ConstellationGame mood={mood} privateStorage={privateStorage} />,
-    garden: <MoodGardenGame mood={mood} mainToday={mainToday} todayEntries={todayEntries} privateStorage={privateStorage} />,
     memory: <MemoryJarGame mood={mood} mainToday={mainToday} privateStorage={privateStorage} />,
     orbit: <OrbitGame privateStorage={privateStorage} />
   };

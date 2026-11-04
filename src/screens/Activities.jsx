@@ -1,6 +1,8 @@
 import { ArrowLeft, ArrowRight, CheckCircle2, Heart, Pause, Play, RotateCcw, Sparkles, Wind, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { DailyGroundingTools } from '../components/games/DailyGroundingTools';
+import { SmallWonders } from '../components/games/SmallWonders';
 import { quickActivityGroups } from '../data/journalData';
 import { todayKey } from '../utils/journalUtils';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -8,6 +10,9 @@ import { usePrivateStorageState } from '../hooks/usePrivateStorageState';
 import { selectDailyActivities, selectFeaturedDailyActivity } from '../utils/activityUtils';
 
 export function Activities({ nav, privateStorage }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTool = searchParams.get('tool');
+  const quickTool = ['breathing', 'senses', 'scavenger'].includes(requestedTool) ? requestedTool : null;
   const today = todayKey();
   const list = useMemo(() => selectDailyActivities(quickActivityGroups, today), [today]);
   const featured = useMemo(() => selectFeaturedDailyActivity(list, today), [list, today]);
@@ -22,6 +27,16 @@ export function Activities({ nav, privateStorage }) {
   const beginButtonRef = useRef(null);
   const selectedActivity = choices.find((activity) => activity.title === selectedTitle) || featured;
   const selectedIndex = choices.indexOf(selectedActivity);
+
+  useEffect(() => {
+    if (quickTool) { setOpenedTitle(''); setFocusTitle(''); }
+  }, [quickTool]);
+
+  const selectQuickTool = (tool) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('tool', tool);
+    setSearchParams(next);
+  };
 
   useEffect(() => {
     if (!list.some((activity) => activity.title === selectedTitle)) {
@@ -69,11 +84,11 @@ export function Activities({ nav, privateStorage }) {
   };
 
   return (
-    <section className="screen app-screen activities-screen">
-      <PageHeader align="center" eyebrow={formatActivityDate(today)} title="Quick Activities" subtitle="Choose a small pause for right now." />
+    <section className={`screen app-screen activities-screen${quickTool ? ' focused-pause' : ''}`}>
       {nav}
+      {!quickTool && <PageHeader align="center" title="Take a pause" />}
 
-      <section className="activities-focus" aria-labelledby="activity-picker-title">
+      {!quickTool && <section className="activities-focus" aria-labelledby="activity-picker-title">
         {notesStorageError && <p className="form-error" role="alert">{notesStorageError}</p>}
         <h2 className="visually-hidden" id="activity-picker-title">Choose an activity</h2>
         {selectedActivity && (
@@ -81,7 +96,7 @@ export function Activities({ nav, privateStorage }) {
             <div className="activity-feature-copy">
               <span className="activities-eyebrow">{selectedActivity === featured ? 'Suggested for today' : activityLabels[selectedActivity.kind]} &middot; {selectedActivity.minutes} min</span>
               <h2 id="activity-feature-title">{selectedActivity.title}</h2>
-              <p>{selectedActivity.detail}</p>
+              {!openedTitle && <p>{selectedActivity.detail}</p>}
               {completed[selectedActivity.title] && <span className="activity-feature-completed"><CheckCircle2 aria-hidden="true" size={17} /> Completed today</span>}
               <button
                 aria-controls={`activity-panel-${toId(selectedActivity.title)}`}
@@ -122,11 +137,18 @@ export function Activities({ nav, privateStorage }) {
             />
           ))}
         </div>
-      </section>
+      </section>}
 
-      <DailyGroundingTools todayKey={todayKey} />
+      {quickTool === 'scavenger' ? <SmallWonders key={`${privateStorage.ownerId}:${today}`} today={today} privateStorage={privateStorage} />
+        : quickTool ? <DailyGroundingTools todayKey={todayKey} selectedTool={quickTool} focusActiveTool active privateStorage={privateStorage} />
+          : <nav className="pause-destinations" aria-label="Grounding activities" hidden={Boolean(openedTitle)}>
+            <h2>A small pause</h2>
+            <button type="button" onClick={() => selectQuickTool('breathing')}>Breathe<ArrowRight size={18} aria-hidden="true" /></button>
+            <button type="button" onClick={() => selectQuickTool('senses')}>Five senses<ArrowRight size={18} aria-hidden="true" /></button>
+            <button type="button" onClick={() => selectQuickTool('scavenger')}>Small wonders: scavenger hunt<ArrowRight size={18} aria-hidden="true" /></button>
+          </nav>}
 
-      {completedActivities.length > 0 && (
+      {!quickTool && completedActivities.length > 0 && (
         <section className="completed-today" aria-labelledby="completed-activities-title">
           <div>
             <span className="activities-eyebrow">Today&apos;s small wins</span>
@@ -156,6 +178,7 @@ const activityLabels = { body: 'A moment for your body', reflection: 'A moment t
 
 function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, onNoteChange, onClose }) {
   const [secondsLeft, setSecondsLeft] = useState(activity.minutes * 60);
+  const [stepIndex, setStepIndex] = useState(0);
   const [running, setRunning] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -220,11 +243,14 @@ function ActivitySheet({ active, activity, dateLabel, done, note, onDoneChange, 
       </header>
 
       <div className="activity-writing-area">
-        <p className="activity-sheet-intro">{activity.detail}</p>
-
-        <ol className="activity-step-list" aria-label={`${activity.title} steps`}>
-          {activity.steps.map((step) => <li key={step}>{step}</li>)}
-        </ol>
+        <div className="activity-current-step">
+          <span>Step {stepIndex + 1} of {activity.steps.length}</span>
+          <p>{activity.steps[stepIndex]}</p>
+          <div className="activity-step-actions">
+            <button className="secondary" disabled={stepIndex === 0} onClick={() => setStepIndex((current) => current - 1)} type="button"><ArrowLeft aria-hidden="true" size={16} />Back</button>
+            <button className="secondary" disabled={stepIndex === activity.steps.length - 1} onClick={() => setStepIndex((current) => current + 1)} type="button">Next step <ArrowRight aria-hidden="true" size={16} /></button>
+          </div>
+        </div>
 
         <label className="activity-note-field">
           <span>A small note <small>optional</small></span>

@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap');
 @import './styles/base.css';
 @import './styles/themes.css';
 @import './styles/layout.css';
@@ -9,3 +10,11 @@
 @import './styles/ui-system.css';
 @import './styles/support.css';
 @import './styles/gardenImmersive.css';
+@import './styles/appShell.css';
+@import './styles/home.css';
+@import './styles/checkin.css';
+@import './styles/moodColors.css';
+@import './styles/supportPreview.css';
+@import './styles/editor.css';
+@import './styles/explore.css';
+@import './styles/reflections.css';

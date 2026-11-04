@@ -1,22 +1,21 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { JournalTags } from '../components/journal/JournalTags';
-import { ArrowLeft, CalendarDays, ChevronDown, MessageCircleQuestionMark, Sparkles } from 'lucide-react';
+import { Angry, ArrowLeft, ArrowRight, CalendarDays, Check, ChevronDown, Circle, Footprints, Frown, Heart, Leaf, Meh, MessageCircle, MessageCircleQuestionMark, Moon, RotateCw, Smile, Sparkles, Wind, X } from 'lucide-react';
 import { createEntry, factors, guidedPrompts, moods } from '../data/journalData';
-import { PageHeader } from '../components/layout/PageHeader';
 import { isJournalDateAllowed, todayKey } from '../utils/journalUtils';
-import { useJournalDraft } from '../hooks/useJournalDraft';
+import { confirmJournalNavigation, useJournalDraft } from '../hooks/useJournalDraft';
 import { DraftRecoveryNotice, SaveState } from '../components/journal/DraftRecoveryNotice';
+import '../styles/checkin.css';
 
-const stepLabels = ['Mood', 'Details', 'Journal', 'Context'];
-const primaryMoodKeys = ['Happy', 'Calm', 'Content', 'Sad', 'Overwhelmed'];
+const stepLabels = ['Notice', 'Reflect', 'Close'];
+const primaryMoodKeys = ['Happy', 'Content', 'Calm', 'Sad', 'Overwhelmed'];
+const moodLabels = { Happy: 'Bright', Sad: 'Low' };
+const moodIcons = { Happy: Smile, Content: Smile, Calm: Smile, Sad: Frown, Overwhelmed: Frown, Excited: Smile, Anxious: Frown, Angry, Lonely: Frown, Grateful: Heart, Tired: Moon, Panic: Frown, Numb: Meh };
+const intensityChoices = [{ label: 'A little', value: 2 }, { label: 'Noticeable', value: 5 }, { label: 'A lot', value: 8 }];
 const promptModes = ['Reflect', 'Gratitude', 'Grounding', 'Growth', 'Support'];
-const intensityLevels = [
-  { label: 'Very light', value: 2 },
-  { label: 'Light', value: 4 },
-  { label: 'Medium', value: 6 },
-  { label: 'Strong', value: 8 },
-  { label: 'Very strong', value: 10 }
-];
+const supportChoices = ['Rest', 'Move', 'Reach out', 'Breathe', 'Take space', 'Nothing right now'];
+const supportIcons = [Moon, Footprints, MessageCircle, Wind, Leaf, Circle];
 const bodyCheckGroups = [
   {
     field: 'meals',
@@ -49,22 +48,40 @@ const bodyCheckGroups = [
   }
 ];
 
-export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStorage }) {
-  const [entry, setEntry] = useState(createEntry);
+export function CheckIn({ nav, entries = [], onSave, onDone, onPause, onHelp, privateStorage }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const saving = useRef(false);
+  const [entry, setEntry] = useState(() => {
+    const initial = createEntry();
+    const seed = location.state || {};
+    if (moods.some((item) => item.key === seed.mood)) initial.mood = seed.mood;
+    if (seed.dateKey && isJournalDateAllowed(seed.dateKey)) initial.dateKey = seed.dateKey;
+    return initial;
+  });
   const [promptType, setPromptType] = useState('Reflect');
+  const [promptIndex, setPromptIndex] = useState(0);
   const [step, setStep] = useState(0);
+  const [savedEntry, setSavedEntry] = useState(null);
+  const [draftCleanupError, setDraftCleanupError] = useState('');
+  const [supportChoice, setSupportChoice] = useState('');
   const [showMoreMoods, setShowMoreMoods] = useState(false);
-  const [showBodyDetails, setShowBodyDetails] = useState(false);
   const [showExtraContext, setShowExtraContext] = useState(false);
+  const [showFactors, setShowFactors] = useState(false);
   const [showFullCheckIn, setShowFullCheckIn] = useState(false);
   const [saveState, setSaveState] = useState('');
   const draftState = useJournalDraft({ privateStorage, formId: 'checkin:new', draft: entry, setDraft: setEntry });
   const mood = moods.find((item) => item.key === entry.mood);
-  const visibleMoods = showMoreMoods ? moods : moods.filter((item) => primaryMoodKeys.includes(item.key));
+  const visibleMoods = [
+    ...primaryMoodKeys.map((key) => moods.find((item) => item.key === key)),
+    ...moods.filter((item) => !primaryMoodKeys.includes(item.key) && (showMoreMoods || item.key === entry.mood))
+  ];
+  const prompt = guidedPrompts[promptType][promptIndex % guidedPrompts[promptType].length];
   const sameDayCheckIns = entries.filter((item) => (item.type || 'checkin') === 'checkin' && item.dateKey === entry.dateKey);
   const isAdditionalCheckIn = sameDayCheckIns.length > 0 && !showFullCheckIn;
   const dateAllowed = isJournalDateAllowed(entry.dateKey);
-  const canSave = Boolean(dateAllowed && entry.mood && (sameDayCheckIns.length > 0 || entry.note.trim()));
+  const recoveryResolved = draftState.draftReady && !draftState.storedDraft;
+  const canSave = Boolean(recoveryResolved && dateAllowed && entry.mood);
   const setField = (field, value) => {
     setSaveState('');
     setEntry((current) => ({ ...current, [field]: value }));
@@ -85,45 +102,77 @@ export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStor
     }));
   };
   const goNext = () => {
-    if (step === 0 && !entry.mood) return;
+    if (!recoveryResolved || (step === 0 && !entry.mood)) return;
     setStep((current) => Math.min(current + 1, stepLabels.length - 1));
   };
   const goBack = () => setStep((current) => Math.max(current - 1, 0));
   const submit = async (event) => {
     event?.preventDefault();
-    if (!canSave) return;
+    if (!canSave || saving.current) return;
+    saving.current = true;
     setSaveState('saving');
-    const saved = await onSave(entry);
+    let saved = false;
+    try {
+      saved = await onSave(entry);
+    } catch {
+      saved = false;
+    }
     if (!saved) {
+      saving.current = false;
       setSaveState('error');
       return;
     }
+    try {
+      await draftState.clearDraft(entry);
+    } catch {
+      setDraftCleanupError('Your entry was saved, but the device draft could not be removed.');
+    }
     setSaveState('saved');
-    await draftState.clearDraft(entry);
-    setEntry(createEntry());
-    setPromptType('Reflect');
-    setStep(0);
-    setShowMoreMoods(false);
-    setShowBodyDetails(false);
-    setShowExtraContext(false);
-    setShowFullCheckIn(false);
-    onDone?.();
+    setSavedEntry(entry);
   };
+
+  if (savedEntry) return (
+    <section className="screen app-screen checkin-screen checkin-complete">
+      {nav}
+      <div className="checkin-complete-content">
+        <span className="checkin-complete-mark" aria-hidden="true"><Sparkles size={36} /></span>
+        <p className="page-header-eyebrow">Your journal</p>
+        <h1>You made room for what's here</h1>
+        <time dateTime={savedEntry.dateKey}>{new Date(`${savedEntry.dateKey}T12:00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</time>
+        <p className="checkin-kept"><Check aria-hidden="true" />Moment kept</p>
+        <FeelingRecap entry={savedEntry} includeDetails />
+        {draftCleanupError && <p className="form-error" role="alert">{draftCleanupError}</p>}
+        <div className="checkin-complete-actions">
+          <button className="primary" onClick={onDone} type="button">Back to today <ArrowRight aria-hidden="true" size={17} /></button>
+          <button className="secondary" onClick={onPause} type="button">Take a pause</button>
+        </div>
+      </div>
+    </section>
+  );
 
   return (
     <section className="screen app-screen checkin-screen">
-      <PageHeader align="center" eyebrow="A quiet minute" title="Daily Mood Check-In" subtitle="Name what you feel, notice what shaped it, and choose one small next step." actions={onHelp && <button aria-label="Help & feedback" className="mobile-form-help" onClick={onHelp} title="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" size={20} /></button>} />
       {nav}
-      <DraftRecoveryNotice record={draftState.storedDraft} onRestore={draftState.restoreDraft} onDiscard={draftState.discardDraft} />
-      <form className="flow checkin-flow" onSubmit={submit}>
-        <div className="journal-date-row">
+      <form className="flow checkin-flow" onSubmit={submit} aria-busy={saveState === 'saving'}>
+        <fieldset className="checkin-fields" disabled={saveState === 'saving'}>
+        <div className="checkin-top-row">
           <label>
             <CalendarDays aria-hidden="true" size={17} />
-            Journal date
+            <span className="visually-hidden">Journal date</span>
             <input aria-describedby={!dateAllowed ? 'checkin-date-warning' : undefined} max={todayKey()} onChange={(event) => setField('dateKey', event.target.value)} required type="date" value={entry.dateKey} />
           </label>
-          {!dateAllowed ? <span id="checkin-date-warning" role="alert">Choose today or an earlier date.</span> : sameDayCheckIns.length > 0 ? <span>{sameDayCheckIns.length} check-in{sameDayCheckIns.length === 1 ? '' : 's'} already saved for this day</span> : <span>This will be the main check-in for this day</span>}
+          <nav className="checkin-step-nav" aria-label="Check-in progress">
+            {stepLabels.map((label, index) => (
+              <button aria-current={index === step ? 'step' : undefined} className={index <= step ? 'reached' : ''} disabled={isAdditionalCheckIn || !recoveryResolved || (index > 0 && !entry.mood)} key={label} onClick={() => setStep(index)} type="button">{label}</button>
+            ))}
+          </nav>
+          <div className="checkin-top-actions">
+            {onHelp && <button aria-label="Help & feedback" onClick={onHelp} title="Help & feedback" type="button"><MessageCircleQuestionMark aria-hidden="true" /></button>}
+            <button aria-label="Close check-in" onClick={() => { if (confirmJournalNavigation()) navigate('/'); }} type="button"><X aria-hidden="true" /><span>Close</span></button>
+          </div>
         </div>
+        {!dateAllowed && <p className="form-error" id="checkin-date-warning" role="alert">Choose today or an earlier date.</p>}
+        <DraftRecoveryNotice record={draftState.storedDraft} onRestore={() => { setSupportChoice(''); draftState.restoreDraft(); }} onDiscard={draftState.discardDraft} />
 
         {isAdditionalCheckIn ? (
           <div className="checkin-step-panel compact-checkin-panel">
@@ -133,13 +182,7 @@ export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStor
                 <h2>How are you feeling now?</h2>
                 <p>Add a quick mood moment without replacing the main reflection for this day.</p>
               </div>
-              <div className="mood-grid checkin-mood-grid">
-                {visibleMoods.map((item) => (
-                  <button aria-pressed={entry.mood === item.key} className={entry.mood === item.key ? 'mood selected' : 'mood'} key={item.key} onClick={() => selectMood(item.key)} style={{ '--mood': item.color }} type="button">
-                    <span>{item.emoji}</span>{item.key}
-                  </button>
-                ))}
-              </div>
+              <MoodChoices items={visibleMoods} selected={entry.mood} onSelect={selectMood} />
               <button className="secondary subtle-action" onClick={() => setShowMoreMoods((current) => !current)} type="button">{showMoreMoods ? 'Show fewer moods' : 'More feelings'}</button>
               <label className="compact-checkin-note">Optional note
                 <textarea value={entry.note} onChange={(event) => setField('note', event.target.value)} placeholder="What changed, or what do you want to remember?" />
@@ -150,93 +193,70 @@ export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStor
             </div>
           </div>
         ) : <>
-        <div className="checkin-progress" aria-label="Check-in progress">
-          {stepLabels.map((label, index) => (
-            <button
-              className={index === step ? 'step-pill active' : index < step ? 'step-pill complete' : 'step-pill'}
-              disabled={index > 0 && !entry.mood}
-              key={label}
-              onClick={() => setStep(index)}
-              type="button"
-            >
-              <span>{index + 1}</span>
-              <strong>{label}</strong>
-            </button>
-          ))}
-        </div>
-
         <div className="checkin-step-panel">
           {step === 0 && (
-            <div className="checkin-step-content">
+            <div className="checkin-step-content ritual-notice">
               <div className="step-copy">
-                <span>Start here</span>
-                <h2>How are you feeling right now?</h2>
-                <p>Pick the closest one. You can name it more clearly next.</p>
+                <h1>What's here right now?</h1>
+                <p>Choose what feels closest.</p>
               </div>
-              <div className="mood-grid checkin-mood-grid">
-                {visibleMoods.map((item) => (
-                  <button aria-pressed={entry.mood === item.key} className={entry.mood === item.key ? 'mood selected' : 'mood'} key={item.key} onClick={() => selectMood(item.key)} style={{ '--mood': item.color }} type="button">
-                    <span>{item.emoji}</span>
-                    {item.key}
-                  </button>
-                ))}
-              </div>
-              <button className="secondary subtle-action" onClick={() => setShowMoreMoods((current) => !current)} type="button">
+              <MoodChoices items={visibleMoods} selected={entry.mood} onSelect={selectMood} />
+              <button aria-expanded={showMoreMoods} className="ghost-button subtle-action" onClick={() => setShowMoreMoods((current) => !current)} type="button">
                 {showMoreMoods ? 'Show fewer moods' : 'More feelings'}
               </button>
+              {mood && <div className="ritual-notice-detail">
+                <ChoiceChips label="Does one feel closer?" values={mood.feelings} selected={entry.specificFeeling} onSelect={(value) => setField('specificFeeling', entry.specificFeeling === value ? '' : value)} />
+                <div className="checkin-intensity">
+                  <p className="field-label">How much space is it taking up?</p>
+                  <div className="checkin-intensity-options" role="group" aria-label="Feeling intensity">
+                    {intensityChoices.map(({ label, value }) => <button aria-pressed={entry.intensity === value} key={value} onClick={() => setField('intensity', value)} type="button">{label}</button>)}
+                  </div>
+                  <p className="checkin-intensity-value">Intensity: {entry.intensity} / 10</p>
+                </div>
+              </div>}
             </div>
           )}
 
           {step === 1 && (
-            <div className="checkin-step-content details-step-content">
-              <div className="step-copy">
-                <span>Details</span>
-                <h2>{entry.mood ? `What kind of ${entry.mood.toLowerCase()} is it?` : 'Add a little more detail'}</h2>
-                <p>Optional. These details can help you notice patterns later.</p>
-              </div>
-              <div className="panel quiet-panel detail-choice-panel">
-                <ChoiceChips hint="Choose the word that feels closest." label="Specific feeling" stepNumber="1" values={mood?.feelings || []} selected={entry.specificFeeling} onSelect={(value) => setField('specificFeeling', value)} />
-                <div className="choice-section intensity-choice-section">
-                  <DetailSectionHeading hint="A quick estimate is enough." label="How strong does this feeling feel?" number="2" />
-                  <div className="choice-grid intensity-grid" role="group" aria-label="Intensity">
-                    {intensityLevels.map((level, index) => (
-                      <button aria-pressed={entry.intensity === level.value} className={entry.intensity === level.value ? 'choice-button intensity-choice selected' : 'choice-button intensity-choice'} key={level.label} onClick={() => setField('intensity', level.value)} style={{ '--intensity-level': `${(index + 1) * 20}%` }} type="button">
-                        <span>{level.label}</span>
-                        <small>{level.value}/10</small>
-                      </button>
-                    ))}
-                  </div>
+            <div className="checkin-step-content ritual-reflect">
+              <h1 className="visually-hidden">Reflect on this feeling</h1>
+              <FeelingRecap entry={entry} />
+              <div className="ritual-writing">
+                <label className="ritual-prompt-picker">Need a starting point?
+                  <select onChange={(event) => { setPromptType(event.target.value); setPromptIndex(0); }} value={promptType}>
+                    {promptModes.map((mode) => <option key={mode} value={mode}>{mode}</option>)}
+                  </select>
+                </label>
+                <div className="checkin-prompt-row">
+                  <p id="checkin-writing-prompt">{prompt}</p>
+                  <button className="ghost-button" onClick={() => setPromptIndex((current) => current + 1)} type="button"><RotateCw aria-hidden="true" />Try another prompt</button>
                 </div>
+                <label className="journal-writing-field">
+                  <span className="visually-hidden">Your note</span>
+                  <textarea aria-describedby="checkin-writing-prompt" value={entry.note} onChange={(event) => setField('note', event.target.value)} placeholder="Start wherever you are..." />
+                </label>
+              <Disclosure title="Anything shaping it?" open={showFactors} onToggle={() => setShowFactors((current) => !current)}>
+                <ChipGroup label="Factors" values={factors} selected={entry.factors} onToggle={(value) => toggleList('factors', value)} />
+              </Disclosure>
               </div>
-              <ChipGroup hint="Choose as many as fit, or leave this blank." label="What might be affecting your mood?" stepNumber="3" values={factors} selected={entry.factors} onToggle={(value) => toggleList('factors', value)} />
+              <button className="ghost-button" onClick={goNext} type="button">Skip writing</button>
             </div>
           )}
 
           {step === 2 && (
-            <div className="checkin-step-content journal-checkin-content">
+            <div className="checkin-step-content ritual-close">
               <div className="step-copy">
-                <span>Journal</span>
-                <h2>Write one honest note.</h2>
-                <p>No perfect wording needed. A few real words are enough.</p>
+                <h1>What would feel supportive now?</h1>
               </div>
-              <div className="journal-step-panel">
-                <ChoiceChips hint="Choose a gentle direction for your note." label="Guided journaling mode" stepNumber="1" values={promptModes} selected={promptType} onSelect={setPromptType} variant="prompt" />
-                <label className="journal-writing-field">
-                  <DetailSectionHeading hint="Start wherever your mind goes. You can keep it short." label="Your note" number="2" />
-                  <textarea value={entry.note} onChange={(event) => setField('note', event.target.value)} placeholder={guidedPrompts[promptType][entry.intensity % guidedPrompts[promptType].length]} />
-                </label>
+              <div className="ritual-support-grid" role="group" aria-label="A supportive next step">
+                {supportChoices.map((choice, index) => {
+                  const Icon = supportIcons[index];
+                  return <button aria-pressed={supportChoice === choice || (!supportChoice && entry.copingStep === choice)} className="ritual-support-choice" key={choice} onClick={() => { setSupportChoice(choice); setField('copingStep', choice === 'Nothing right now' ? '' : choice); }} type="button"><Icon aria-hidden="true" /><span>{choice}</span></button>;
+                })}
               </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="checkin-step-content context-step-content">
-              <div className="step-copy">
-                <span>Optional context</span>
-                <h2>Add anything that might help later.</h2>
-                <p>Skip what does not matter today.</p>
-              </div>
-              <Disclosure hint="Meals, water, and rest can add useful context." number="1" title="Body check" open={showBodyDetails} onToggle={() => setShowBodyDetails((current) => !current)}>
+              <FeelingRecap entry={entry} includeDetails />
+              <Disclosure title="Add details" open={showExtraContext} onToggle={() => setShowExtraContext((current) => !current)}>
+                <h3>How is your body?</h3>
                 <div className="body-check-grid">
                   {bodyCheckGroups.map((group) => (
                     <TapCardGroup
@@ -248,12 +268,10 @@ export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStor
                     />
                   ))}
                 </div>
-              </Disclosure>
-              <Disclosure hint="Add searchable words or one kind next step." number="2" title="Tiny extras" open={showExtraContext} onToggle={() => setShowExtraContext((current) => !current)}>
                 <div className="two-col">
                   <JournalTags entry={entry} onChange={(tags) => setField('tags', tags)} />
-                  <label>One small next step
-                    <input value={entry.copingStep} onChange={(event) => setField('copingStep', event.target.value)} placeholder="drink water, stretch, message someone" />
+                  <label>Write your own next step
+                    <input value={entry.copingStep} onChange={(event) => { setSupportChoice(''); setField('copingStep', event.target.value); }} placeholder="A small step, if one comes to mind" />
                   </label>
                 </div>
               </Disclosure>
@@ -263,23 +281,48 @@ export function CheckIn({ nav, entries = [], onSave, onDone, onHelp, privateStor
         </div>
         </>}
 
-        <div className={`${step === 2 && canSave ? 'checkin-action-bar has-save' : 'checkin-action-bar'}${isAdditionalCheckIn ? ' compact-checkin-actions' : ''}`}>
+        <div className={`checkin-action-bar ritual-action-bar${isAdditionalCheckIn ? ' compact-checkin-actions' : ''}`}>
           {isAdditionalCheckIn ? <span className="compact-checkin-primary-note"><Sparkles aria-hidden="true" size={16} />Your earlier check-in stays the main one.</span> : null}
           {!isAdditionalCheckIn && <>
-          <button aria-label="Back" className="secondary checkin-back-button" disabled={step === 0} onClick={goBack} type="button"><ArrowLeft aria-hidden="true" size={17} /><span>Back</span></button>
+          {step > 0 && <button aria-label="Back" className="secondary checkin-back-button" onClick={goBack} type="button"><ArrowLeft aria-hidden="true" size={17} /><span>Back</span></button>}
+          {step === 0 && <button className="secondary ritual-finish-early" disabled={!canSave || saveState === 'saving'} onClick={submit} type="button">Keep this moment</button>}
           {step < stepLabels.length - 1 && (
-            <button aria-label={step === 2 ? 'Continue to context' : 'Next'} className="primary" disabled={step === 0 && !entry.mood} onClick={goNext} type="button"><span className="checkin-long-label">{step === 2 ? 'Continue to context' : 'Next'}</span><span className="checkin-short-label">Next</span></button>
+            <button aria-label="Continue" className="primary" disabled={!recoveryResolved || (step === 0 && !entry.mood)} onClick={goNext} type="button">Continue <ArrowRight aria-hidden="true" size={17} /></button>
           )}
-          {(step === stepLabels.length - 1 || (step === 2 && canSave)) && (
-            <button aria-label="Save Check-In" className="primary" disabled={!canSave || saveState === 'saving'} type="submit"><span className="checkin-long-label">Save Check-In</span><span className="checkin-short-label">Save</span></button>
+          {step === stepLabels.length - 1 && (
+            <button aria-label="Keep this moment" className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Keep this moment</button>
           )}
           </>}
-          {isAdditionalCheckIn && <button className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Save mood moment</button>}
+          {isAdditionalCheckIn && <button className="primary" disabled={!canSave || saveState === 'saving'} type="submit">Keep this moment</button>}
           <SaveState state={saveState} onRetry={submit} draftStatus={draftState.dirty ? draftState.draftStatus : ''} />
         </div>
+        </fieldset>
       </form>
     </section>
   );
+}
+
+function MoodChoices({ items, selected, onSelect }) {
+  return <div className="mood-grid checkin-mood-grid" role="group" aria-label="Current feeling">
+    {items.map((item) => {
+      const Icon = moodIcons[item.key];
+      return <button aria-label={moodLabels[item.key] || item.key} aria-pressed={selected === item.key} className={selected === item.key ? 'mood selected' : 'mood'} key={item.key} onClick={() => onSelect(item.key)} type="button">
+        <Icon aria-hidden="true" /><span>{moodLabels[item.key] || item.key}</span>
+      </button>;
+    })}
+  </div>;
+}
+
+function FeelingRecap({ entry, includeDetails = false }) {
+  const Icon = moodIcons[entry.mood] || Circle;
+  return <div className="checkin-recap" aria-label="Your moment">
+    <p><Icon aria-hidden="true" /><strong>{moodLabels[entry.mood] || entry.mood}{entry.specificFeeling ? ` / ${entry.specificFeeling}` : ''}</strong><span>Intensity {entry.intensity} / 10</span></p>
+    {includeDetails && <>
+      {entry.note && <p className="checkin-recap-note">{entry.note}</p>}
+      {entry.factors.length > 0 && <p>Shaped by: {entry.factors.join(', ')}</p>}
+      {entry.copingStep && <p>Next step: {entry.copingStep}</p>}
+    </>}
+  </div>;
 }
 
 function DetailSectionHeading({ number, label, hint }) {
@@ -330,10 +373,10 @@ function TapCardGroup({ label, value, options, onSelect }) {
 
 function Disclosure({ title, hint, number, open, onToggle, children }) {
   return (
-    <div className={open ? 'panel disclosure-panel open' : 'panel disclosure-panel'}>
+    <div className={open ? 'disclosure-panel open' : 'disclosure-panel'}>
       <button className="disclosure-trigger" onClick={onToggle} type="button" aria-expanded={open}>
         <span className="disclosure-heading">
-          <span className="detail-section-number" aria-hidden="true">{number}</span>
+          {number && <span className="detail-section-number" aria-hidden="true">{number}</span>}
           <span>
             <strong>{title}</strong>
             <small>{hint}</small>
@@ -348,7 +391,7 @@ function Disclosure({ title, hint, number, open, onToggle, children }) {
 
 function ChipGroup({ label, values, selected, onToggle, stepNumber, hint }) {
   return (
-    <div className="panel quiet-panel factor-choice-panel">
+    <div className="factor-choice-panel">
       <DetailSectionHeading hint={hint} label={label} number={stepNumber} />
       <div className="chips" role="group" aria-label={label}>
         {values.map((value) => (

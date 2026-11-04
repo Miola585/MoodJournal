@@ -871,6 +871,10 @@ button.topnav-menu-button {
   gap: 12px;
 }
 
+.home-space-grid.single-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .home-space-card {
   display: grid;
   grid-template-rows: auto 112px auto;
@@ -3173,11 +3177,6 @@ button.topnav-menu-button {
 .app.theme-night .theme-art-image,
 .app.theme-night .theme-art-night {
   opacity: 0.2;
-}
-
-.app:has(.entries-screen) .theme-atmosphere .theme-art-image,
-.app:has(.freewrite-screen) .theme-atmosphere .theme-art-image {
-  display: none;
 }
 
 @media (max-width: 1024px) {

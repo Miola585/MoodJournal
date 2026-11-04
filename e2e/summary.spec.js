@@ -22,28 +22,34 @@ test('Summary loads only on navigation and preserves the current page while load
     await waiting;
     await route.continue();
   });
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: 'More', exact: true })).toBeVisible();
+  await page.goto('/calendar');
+  await expect(page.locator('.calendar-screen')).toBeVisible();
   expect(requested.some((url) => summaryModule.test(url) || /recharts/i.test(url))).toBe(false);
   try {
-    await page.getByRole('button', { name: 'More', exact: true }).click();
-    await page.getByRole('button', { name: 'Summary', exact: true }).click();
+    await page.getByRole('navigation', { name: 'Main destinations' }).getByRole('button', { name: 'My journal', exact: true }).click();
+    await page.getByRole('navigation', { name: 'Main destinations' }).getByRole('button', { name: 'Weekly reflection', exact: true }).click();
     await expect.poll(() => requested.some((url) => summaryModule.test(url))).toBe(true);
     // React Router transitions retain the current page until the lazy route is ready.
-    await expect(page.getByRole('button', { name: 'Quick activities', exact: true })).toBeVisible();
+    await expect(page.locator('.calendar-screen')).toBeVisible();
   } finally {
     releaseModule();
   }
   await expect(page).toHaveURL(/\/summary$/u);
-  await expect(page.getByRole('heading', { name: 'Weekly Summary', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Your week, gently gathered', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.summary-data-details')).not.toHaveAttribute('open', '');
+  await page.locator('.summary-data-details summary').click();
   expect(requested.some((url) => summaryModule.test(url))).toBe(true);
   await expect(page.locator('.recharts-wrapper')).toHaveCount(3);
   await expect(page.locator('.recharts-line-dot')).toHaveCount(1);
   await expect(page.locator('.recharts-pie-sector')).toHaveCount(1);
   await expect(page.locator('.recharts-bar-rectangle')).toHaveCount(1);
   await page.getByRole('button', { name: 'Previous week', exact: true }).click();
-  await expect(page.getByText('No check-ins this week yet.', { exact: true })).toBeVisible();
+  await expect(page.getByText('This week is still unwritten')).toBeVisible();
+  await expect(page.locator('.summary-empty-sprout')).toBeVisible();
+  await expect(page.locator('.summary-day-rhythm')).toHaveCount(0);
+  await expect(page.locator('.summary-data-details')).toHaveCount(0);
   await page.getByRole('button', { name: 'Next week', exact: true }).click();
+  await page.locator('.summary-data-details summary').click();
   await expect(page.locator('.recharts-wrapper')).toHaveCount(3);
 });
 
@@ -61,9 +67,11 @@ test('Summary supports direct links, refresh, and mobile charts', async ({ page 
   } finally {
     releaseModule();
   }
-  await expect(page.getByRole('heading', { name: 'Weekly Summary', exact: true })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Your week, gently gathered', exact: true })).toBeVisible({ timeout: 15_000 });
+  await page.locator('.summary-data-details summary').click();
   await expect(page.locator('.recharts-wrapper')).toHaveCount(3);
   await page.reload();
+  await page.locator('.summary-data-details summary').click();
   await expect(page.locator('.recharts-wrapper')).toHaveCount(3);
   await expect(page.locator('.recharts-line-dot')).toBeVisible();
   await expect(page.locator('.recharts-pie-sector')).toBeVisible();

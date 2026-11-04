@@ -1,0 +1,317 @@
+/* Scoped overrides keep the ritual independent of shared journal panels. */
+.checkin-screen.app-screen {
+  color: var(--text-primary);
+  font-size: calc(1rem * var(--font-scale, 1));
+  padding-bottom: 3rem;
+  letter-spacing: 0;
+}
+
+.checkin-screen.app-screen :is(button, input, select, textarea, label, summary, p, small, strong) {
+  font-size: inherit;
+  letter-spacing: 0;
+}
+
+.checkin-screen.app-screen :is(button, input, select, textarea) {
+  max-width: 100%;
+  min-width: 0;
+  border-radius: 0.375rem;
+}
+
+.checkin-screen.app-screen button {
+  min-height: 2.75rem;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.checkin-screen.app-screen button svg {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  flex-shrink: 0;
+}
+
+.checkin-screen.app-screen :is(button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 3px;
+}
+
+.checkin-screen.app-screen button:not(:disabled):hover { transform: none; }
+.checkin-screen.app-screen button:disabled { cursor: default; opacity: 0.5; }
+
+.checkin-screen.app-screen .checkin-flow {
+  width: 100%;
+  max-width: 70rem;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.checkin-screen.app-screen .checkin-fields {
+  display: grid;
+  gap: 2rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.checkin-screen.app-screen .checkin-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(16rem, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.25rem;
+  padding-block: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: calc(0.875rem * var(--font-scale, 1));
+}
+
+.checkin-screen.app-screen .checkin-top-row > label,
+.checkin-screen.app-screen .checkin-top-actions,
+.checkin-screen.app-screen .checkin-top-actions button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkin-screen.app-screen .checkin-top-row > label { min-width: 0; }
+.checkin-screen.app-screen .checkin-top-row > label > svg { flex-shrink: 0; }
+.checkin-screen.app-screen .checkin-top-row input {
+  width: 100%;
+  max-width: 12rem;
+  min-height: 2.75rem;
+  padding: 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.checkin-screen.app-screen .checkin-top-actions { justify-content: flex-end; }
+.checkin-screen.app-screen .checkin-top-actions button {
+  padding: 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 0;
+}
+
+.checkin-screen.app-screen .checkin-step-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.375rem; }
+.checkin-screen.app-screen .checkin-step-nav button {
+  padding: 0.5rem 0.25rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid var(--border-subtle);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+.checkin-screen.app-screen .checkin-step-nav button.reached { border-bottom-color: var(--interactive-accent); }
+.checkin-screen.app-screen .checkin-step-nav button[aria-current='step'] { color: var(--text-primary); font-weight: 700; }
+
+.checkin-screen.app-screen .checkin-step-panel,
+.checkin-screen.app-screen .checkin-step-content {
+  width: 100%;
+  max-width: 62rem;
+  min-width: 0;
+  margin-inline: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  overflow: visible;
+}
+.checkin-screen.app-screen .checkin-step-content { display: grid; gap: 1.5rem; }
+.checkin-screen.app-screen .step-copy { max-width: none; text-align: center; gap: 0.5rem; padding: 0; border: 0; }
+.checkin-screen.app-screen .step-copy :is(h1, h2) {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--app-heading-font, Georgia, serif);
+  font-size: calc(2.75rem * var(--font-scale, 1));
+  line-height: 1.25;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.checkin-screen.app-screen .step-copy p { margin: 0; color: var(--text-secondary); }
+.checkin-screen.app-screen .step-copy > span { font-size: calc(0.8rem * var(--font-scale, 1)); }
+
+.checkin-screen.app-screen .checkin-mood-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; }
+.checkin-screen.app-screen .checkin-mood-grid .mood {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 10rem;
+  padding: 1rem 0.375rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+  font-size: calc(0.9rem * var(--font-scale, 1));
+  font-weight: 400;
+}
+.checkin-screen.app-screen .checkin-mood-grid .mood svg { width: 2.5em; height: 2.5em; stroke-width: 1.3; }
+.checkin-screen.app-screen .checkin-mood-grid .mood span { font-size: inherit; line-height: 1.4; transform: none; }
+.checkin-screen.app-screen .checkin-mood-grid .mood::after { content: none; }
+.checkin-screen.app-screen .checkin-mood-grid .mood:is(:hover, [aria-pressed='true']) {
+  border-width: 1px;
+  border-color: var(--interactive-accent);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+.checkin-screen.app-screen .subtle-action { justify-self: center; }
+.checkin-screen.app-screen .ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+.checkin-screen.app-screen .ghost-button:hover { background: var(--surface-interactive-hover); color: var(--text-primary); }
+.checkin-screen.app-screen .ritual-notice-detail { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 2rem; padding: 1.5rem; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--surface-secondary); }
+.checkin-screen.app-screen .field-label { margin: 0 0 0.5rem; color: var(--text-primary); font-size: inherit; font-weight: 400; }
+.checkin-screen.app-screen .detail-section-heading { display: block; }
+.checkin-screen.app-screen :is(.choice-grid, .chips, .body-card-options) { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0; }
+.checkin-screen.app-screen :is(.choice-button, .chip, .body-card) {
+  width: auto;
+  padding: 0.5rem 1rem;
+  min-height: 2.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.375rem;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: inherit;
+  font-weight: 400;
+  box-shadow: none;
+}
+.checkin-screen.app-screen :is(.choice-button, .chip, .body-card)[aria-pressed='true'] {
+  border-color: var(--interactive-accent);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+.checkin-screen.app-screen .checkin-intensity-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.375rem; }
+.checkin-screen.app-screen .checkin-intensity-options button { padding: 0.625rem; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary); font-weight: 400; }
+.checkin-screen.app-screen .checkin-intensity-options button[aria-pressed='true'] { border-color: var(--interactive-accent); background: var(--surface-secondary); color: var(--text-primary); }
+.checkin-screen.app-screen .checkin-intensity-value { margin: 0.5rem 0 0; color: var(--text-secondary); font-size: calc(0.8rem * var(--font-scale, 1)); }
+
+.checkin-screen.app-screen .checkin-recap { padding-block: 1rem; border-block: 1px solid var(--border-subtle); color: var(--text-secondary); }
+.checkin-screen.app-screen .checkin-recap p { margin: 0; overflow-wrap: anywhere; }
+.checkin-screen.app-screen .checkin-recap p + p { margin-top: 0.75rem; }
+.checkin-screen.app-screen .checkin-recap p:first-child { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+.checkin-screen.app-screen .checkin-recap svg { width: 1.5em; height: 1.5em; flex-shrink: 0; }
+.checkin-screen.app-screen .checkin-recap strong { color: var(--text-primary); font-weight: 400; }
+.checkin-screen.app-screen .checkin-recap-note { white-space: pre-wrap; }
+.checkin-screen.app-screen .ritual-reflect > .checkin-recap { border: 0; padding-block: .5rem 1.5rem; }
+.checkin-screen.app-screen .ritual-reflect > .checkin-recap p { justify-content: center; }
+.checkin-screen.app-screen .ritual-reflect > .checkin-recap svg { width: 3.5em; height: 3.5em; padding: .75em; border-radius: 50%; background: var(--surface-secondary); color: var(--interactive-accent); }
+.checkin-screen.app-screen .ritual-reflect > .checkin-recap strong { font-family: var(--app-heading-font, Georgia, serif); font-size: 1.6em; }
+.checkin-screen.app-screen .ritual-writing { display: grid; gap: 1.25rem; padding: 2rem 2.5rem; background: var(--journal-paper); border: 1px solid var(--border-subtle); border-radius: 4px; }
+.checkin-screen.app-screen .ritual-prompt-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; font-weight: 400; }
+.checkin-screen.app-screen .ritual-prompt-picker select { min-width: 0; width: auto; padding: 0.5rem; background: var(--surface-major); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+.checkin-screen.app-screen .checkin-prompt-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 1.25rem; border-left: 3px solid var(--interactive-accent); background: var(--bg); }
+.checkin-screen.app-screen .checkin-prompt-row p { margin: 0; flex: 1 1 100%; font-family: var(--app-heading-font, Georgia, serif); font-size: 1.3em; color: var(--text-primary); }
+.checkin-screen.app-screen .checkin-prompt-row button { font-size: calc(0.875rem * var(--font-scale, 1)); }
+.checkin-screen.app-screen .journal-writing-field { display: block; min-height: 0; padding: 0; background: transparent; overflow: visible; }
+.checkin-screen.app-screen .journal-writing-field::before { content: none; }
+.checkin-screen.app-screen .journal-writing-field textarea,
+.checkin-screen.app-screen .compact-checkin-note textarea {
+  --checkin-line-height: calc(2.25rem * var(--font-scale, 1));
+  width: 100%;
+  min-height: 19rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--checkin-line-height) - 1px), var(--border-subtle) calc(var(--checkin-line-height) - 1px), var(--border-subtle) var(--checkin-line-height));
+  background-attachment: local;
+  color: var(--text-primary);
+  font-size: calc(1.05rem * var(--font-scale, 1));
+  line-height: var(--checkin-line-height);
+  resize: vertical;
+  box-shadow: none;
+}
+.checkin-screen.app-screen textarea::placeholder { color: var(--text-secondary); opacity: 1; }
+.checkin-screen.app-screen .compact-checkin-note textarea { min-height: 9rem; }
+.checkin-screen.app-screen .ritual-reflect > .ghost-button { justify-self: start; }
+.checkin-screen.app-screen .ritual-support-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.checkin-screen.app-screen .ritual-support-choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; min-height: 6.5rem; padding: 1rem 0.5rem; border: 1px solid var(--border-subtle); border-radius: 0.5rem; background: transparent; color: var(--text-primary); font-weight: 400; }
+.checkin-screen.app-screen .ritual-support-choice svg { width: 1.75em; height: 1.75em; stroke-width: 1.5; }
+.checkin-screen.app-screen .ritual-support-choice:is(:hover, [aria-pressed='true']) { background: var(--surface-secondary); border-color: var(--interactive-accent); }
+.checkin-screen.app-screen .disclosure-panel { border: 0; border-block: 1px solid var(--border-subtle); border-radius: 0; background: transparent; box-shadow: none; }
+.checkin-screen.app-screen .disclosure-trigger { padding: 0.875rem 0; color: var(--text-secondary); background: transparent; }
+.checkin-screen.app-screen .disclosure-trigger strong { font-weight: 400; }
+.checkin-screen.app-screen .disclosure-content { display: grid; gap: 1.5rem; padding: 0 0 1rem; }
+.checkin-screen.app-screen .factor-choice-panel { padding: 0; border: 0; background: transparent; box-shadow: none; }
+.checkin-screen.app-screen .body-check-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.checkin-screen.app-screen .two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.checkin-screen.app-screen .disclosure-content h3 { margin: 0; font-size: calc(1.125rem * var(--font-scale, 1)); }
+.checkin-screen.app-screen .disclosure-content label { display: grid; gap: 0.5rem; }
+.checkin-screen.app-screen .disclosure-content input { width: 100%; padding: 0.75rem; color: var(--text-primary); background: var(--surface-major); border: 1px solid var(--border-subtle); }
+.checkin-screen.app-screen .journal-tags { margin: 0; padding: 0; border: 0; background: transparent; }
+.checkin-screen.app-screen .compact-support-note { padding: 0; border: 0; background: transparent; color: var(--text-secondary); font-size: calc(0.8rem * var(--font-scale, 1)); }
+
+.checkin-screen.app-screen .checkin-action-bar {
+  position: static;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.checkin-screen.app-screen :is(.primary, .secondary) { display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; min-height: 2.75rem; padding: 0.75rem 1.25rem; font-weight: 400; }
+.checkin-screen.app-screen .primary { background: var(--interactive-accent); color: var(--text-on-accent); border: 1px solid var(--interactive-accent); }
+.checkin-screen.app-screen .secondary { background: transparent; color: var(--text-primary); border: 1px solid var(--border-subtle); }
+.checkin-screen.app-screen .checkin-action-bar .primary { margin-left: auto; }
+.checkin-screen.app-screen .checkin-action-bar .checkin-back-button { width: auto; min-width: 0; padding: 0.75rem; }
+.checkin-screen.app-screen .checkin-back-button span { display: inline; }
+.checkin-screen.app-screen .journal-save-state { flex-basis: 100%; justify-content: center; font-size: calc(0.8rem * var(--font-scale, 1)); }
+.checkin-screen.app-screen .compact-checkin-primary-note { display: flex; flex-wrap: wrap; font-size: calc(0.8rem * var(--font-scale, 1)); }
+.checkin-screen.app-screen .draft-recovery-notice { max-width: 52rem; font-size: calc(0.875rem * var(--font-scale, 1)); }
+.checkin-screen.app-screen .draft-recovery-notice span { font-size: inherit; }
+.checkin-screen.app-screen .checkin-complete-content { display: grid; justify-items: center; align-content: center; text-align: center; margin-inline: auto; max-width: 44rem; min-height: 38rem; gap: 1.5rem; padding-block: 2rem; }
+.checkin-screen.app-screen .checkin-complete-content h1 { display: block; margin: 0; max-width: 18ch; padding: 0; border: 0; background: transparent; font-family: var(--app-heading-font, Georgia, serif); font-size: calc(3.25rem * var(--font-scale, 1)); line-height: 1.15; font-weight: 400; color: var(--text-primary); }
+.checkin-screen.app-screen .checkin-complete-mark { background: transparent; width: 3rem; color: var(--interactive-accent); }
+.checkin-screen.app-screen .checkin-complete-content .checkin-recap { width: 100%; text-align: center; }
+.checkin-screen.app-screen .checkin-complete-content .checkin-recap p { justify-content: center; }
+.checkin-screen.app-screen .checkin-kept { display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); }
+.checkin-screen.app-screen .checkin-complete-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+
+@media (max-width: 760px) {
+  .checkin-screen.app-screen .checkin-top-row { grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; }
+  .checkin-screen.app-screen .checkin-step-nav { grid-column: 1 / -1; grid-row: 2; }
+  .checkin-screen.app-screen .checkin-top-actions { grid-column: 2; grid-row: 1; }
+  .checkin-screen.app-screen .checkin-fields { gap: 1.5rem; }
+  .checkin-screen.app-screen .step-copy :is(h1, h2) { font-size: calc(1.75rem * var(--font-scale, 1)); }
+  .checkin-screen.app-screen .checkin-mood-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; }
+  .checkin-screen.app-screen .checkin-mood-grid .mood { min-height: 6.5rem; }
+  .checkin-screen.app-screen .ritual-support-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .checkin-screen.app-screen .two-col { grid-template-columns: 1fr; }
+  .checkin-screen.app-screen .ritual-notice-detail { grid-template-columns: 1fr; padding: 1rem; gap: 1.5rem; }
+  .checkin-screen.app-screen .ritual-writing { padding: 1.25rem; }
+  .checkin-screen.app-screen .checkin-action-bar :is(.primary, .secondary) { padding: 0.75rem; }
+  .checkin-screen.app-screen .checkin-complete-content h1 { font-size: calc(2.5rem * var(--font-scale, 1)); }
+  .checkin-screen.app-screen .draft-recovery-notice { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .checkin-screen.app-screen .checkin-mood-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .checkin-screen.app-screen .checkin-intensity-options button { padding-inline: 0.25rem; font-size: calc(0.875rem * var(--font-scale, 1)); }
+}

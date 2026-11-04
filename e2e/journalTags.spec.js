@@ -13,7 +13,7 @@ for (const [width, scale] of [[1280, 1], [390, 1.5]]) {
       localStorage.setItem('fontScale', String(fontScale));
     }, scale);
     await page.goto('/entries');
-    await page.getByRole('button', { name: 'New free write', exact: true }).click();
+    await page.getByRole('button', { name: 'Start writing', exact: true }).click();
     await page.getByRole('textbox', { name: 'Title', exact: true }).fill('A title #not-a-tag');
     await page.locator('[contenteditable=true]').fill('A #School day with #walking and #free-write.');
     const tags = page.locator('.journal-tags');
@@ -47,10 +47,10 @@ for (const [width, scale] of [[1280, 1], [390, 1.5]]) {
 test('check-in writing hashtags work on creation and in its editor without changing type', async ({ page }) => {
   await page.goto('/checkin');
   await page.getByRole('button', { name: /Calm$/ }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
   await page.locator('textarea').fill('Today #garden #game #free-write');
-  await page.getByRole('button', { name: 'Save Check-In', exact: true }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Keep this moment', exact: true }).click();
   await expect.poll(async () => (await savedEntries(page)).length).toBe(1);
   expect((await savedEntries(page))[0].type).toBe('checkin');
   expect((await savedEntries(page))[0].tags).toEqual([]);
@@ -69,7 +69,7 @@ test('check-in writing hashtags work on creation and in its editor without chang
 test('failed hashtag save retains the original writing and manual tags in the draft', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(navigator, 'locks', { value: undefined }));
   await page.goto('/entries');
-  await page.getByRole('button', { name: 'New free write', exact: true }).click();
+  await page.getByRole('button', { name: 'Start writing', exact: true }).click();
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Unsaved');
   await page.locator('[contenteditable=true]').fill('Keep #my-draft');
   await page.locator('.journal-tags summary').click();

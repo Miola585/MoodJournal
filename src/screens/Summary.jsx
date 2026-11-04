@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, Sprout } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -20,7 +20,7 @@ import { PageHeader } from '../components/layout/PageHeader';
 const moodPalette = ['#c9825a', '#d9a441', '#8fae73', '#7eaeb4', '#9c8bc2', '#d88b9b', '#b98b66', '#7f9f83'];
 const factorPalette = '#b87955';
 
-export function Summary({ nav, entries }) {
+export function Summary({ nav, entries, onCheckIn }) {
   const [weekOffset, setWeekOffset] = useState(0);
   const checkInEntries = selectDailyPrimaryCheckIns(entries);
   const weekDays = buildWeekDays(weekOffset);
@@ -50,23 +50,29 @@ export function Summary({ nav, entries }) {
 
   return (
     <section className="screen app-screen summary-screen">
-      <PageHeader eyebrow={weekLabel} title="Weekly Summary" subtitle={`${weekRange} - A softer look at check-ins, mood patterns, and common factors.`} actions={(
+      {nav}
+      <PageHeader eyebrow={weekLabel} title="Your week, gently gathered" subtitle={weekRange} actions={(
         <div className="summary-week-nav" aria-label="Choose summary week">
-          <button className="secondary" type="button" onClick={() => setWeekOffset((offset) => offset - 1)}>
+          <button className="secondary summary-week-arrow" aria-label="Previous week" title="Previous week" type="button" onClick={() => setWeekOffset((offset) => offset - 1)}>
             <ChevronLeft aria-hidden="true" size={17} />
-            Previous week
           </button>
           <button className="secondary" type="button" onClick={() => setWeekOffset(0)} disabled={weekOffset === 0}>
             This week
           </button>
-          <button className="secondary" type="button" onClick={() => setWeekOffset((offset) => Math.min(offset + 1, 0))} disabled={weekOffset === 0}>
-            Next week
+          <button className="secondary summary-week-arrow" aria-label="Next week" title="Next week" type="button" onClick={() => setWeekOffset((offset) => Math.min(offset + 1, 0))} disabled={weekOffset === 0}>
             <ChevronRight aria-hidden="true" size={17} />
           </button>
         </div>
       )} />
-      {nav}
+      <div className="summary-week-spread">
+        {weeklyEntries.length > 0 && <div className="summary-day-rhythm" role="list" aria-label="Days checked in this week">
+          {intensityData.map((day) => <div className={day.intensity !== null ? 'summary-day-mark filled' : 'summary-day-mark'} role="listitem" aria-label={`${day.label}, ${day.monthDay}: ${day.intensity !== null ? 'Check-in saved' : 'No check-in'}`} key={day.dateKey}><span aria-hidden="true" /><strong>{day.label}</strong><small>{day.monthDay}</small></div>)}
+        </div>}
+        {weeklyEntries.length === 0 ? <div className="summary-empty-week"><Sprout className="summary-empty-sprout" aria-hidden="true" size={48} strokeWidth={1.5} /><h2>This week is still unwritten</h2><p>One check-in can start the picture.</p><button className="primary" onClick={onCheckIn} type="button">Check in now <ArrowRight aria-hidden="true" size={17} /></button></div> : <div className="summary-week-story"><h2>{topLabel(moodCounts)} appeared most often</h2><p>{hasFactorData ? `You mentioned ${topLabel(factorCounts).toLowerCase()} this week.` : `You checked in on ${countFilledDays(intensityData)} of 7 days.`}</p>{patterns.length > 0 && <p>{patterns[0]}</p>}</div>}
+      </div>
 
+      {weeklyEntries.length > 0 && <details className="summary-data-details">
+        <summary>Explore details</summary>
       <div className="summary-stat-grid">
         <Stat label="Check-ins this week" value={weeklyEntries.length} helper={`${countFilledDays(intensityData)} of 7 days`} />
         <Stat label="Average intensity" value={avgIntensity === '-' ? avgIntensity : `${avgIntensity}/10`} helper={avgIntensity === '-' ? 'No check-ins yet' : intensityLabel(avgIntensity)} />
@@ -153,6 +159,7 @@ export function Summary({ nav, entries }) {
           </div>
         )}
       </section>
+      </details>}
     </section>
   );
 }

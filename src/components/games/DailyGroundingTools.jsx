@@ -1,6 +1,6 @@
-import { CheckCircle2, ListChecks, Pause, Play, RotateCcw, Search, Sparkles, Waves } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { scavengerSets } from './gameUtils';
+import { ArrowLeft, ArrowRight, CheckCircle2, Ear, Eye, Hand, Pause, Play, RotateCcw, Wind, Flower2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { PauseNote } from './PauseNote';
 
 const breathingPhases = ['Breathe in', 'Hold', 'Breathe out', 'Rest'];
 const groundingSteps = [
@@ -11,63 +11,67 @@ const groundingSteps = [
   '1 slow breath'
 ];
 
-const groundingTools = [
-  { id: 'breathing', title: 'Breathing', icon: Waves },
-  { id: 'scavenger', title: 'Scavenger hunt', icon: Search },
-  { id: 'senses', title: '5-4-3-2-1', icon: ListChecks }
-];
-
-export function DailyGroundingTools({ todayKey }) {
+export function DailyGroundingTools({ todayKey, selectedTool, focusActiveTool = false, active = true, privateStorage }) {
   const today = todayKey();
-  const dayNumber = Math.floor(new Date(today).getTime() / 86400000);
-  const huntItems = scavengerSets[dayNumber % scavengerSets.length];
-  const huntStorageKey = `groundingHunt:${today}`;
   const sensesStorageKey = `grounding54321:${today}`;
-  const [activeTool, setActiveTool] = useState('breathing');
-  const [huntDone, setHuntDone] = useState(() => readStoredList(huntStorageKey));
+  const activeTool = selectedTool === 'senses' ? 'senses' : 'breathing';
+  const panelRef = useRef(null);
+  const bloomRef = useRef(null);
   const [sensesDone, setSensesDone] = useState(() => readStoredList(sensesStorageKey));
+  const [senseIndex, setSenseIndex] = useState(() => {
+    const saved = readStoredList(sensesStorageKey);
+    const next = groundingSteps.findIndex((step) => !saved.includes(step));
+    return next < 0 ? 4 : next;
+  });
+  const SenseIcon = [Eye, Hand, Ear, Flower2, Wind][senseIndex];
   const [bubbleRunning, setBubbleRunning] = useState(false);
   const [bubbleStarted, setBubbleStarted] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
+  const elapsed = useRef(0);
+
+  useEffect(() => {
+    if (!active || !focusActiveTool) return;
+    panelRef.current?.focus({ preventScroll: true });
+    panelRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [active, activeTool, focusActiveTool]);
 
   useEffect(() => {
     if (!bubbleRunning) return undefined;
+    const startedAt = performance.now();
     const timer = setInterval(() => {
-      setPhaseIndex((current) => (current + 1) % breathingPhases.length);
-    }, 4000);
-    return () => clearInterval(timer);
+      setPhaseIndex(Math.floor((elapsed.current + performance.now() - startedAt) / 4000) % breathingPhases.length);
+    }, 100);
+    return () => {
+      elapsed.current += performance.now() - startedAt;
+      clearInterval(timer);
+    };
   }, [bubbleRunning]);
 
   useEffect(() => {
-    if (activeTool !== 'breathing') setBubbleRunning(false);
-  }, [activeTool]);
+    // Keep the petals and phase text together when returning to a paused breath.
+    const animation = bloomRef.current?.getAnimations()[0];
+    if (animation) animation.currentTime = elapsed.current;
+  }, [activeTool, bubbleRunning, bubbleStarted]);
 
   useEffect(() => {
-    localStorage.setItem(huntStorageKey, JSON.stringify(huntDone));
-  }, [huntDone, huntStorageKey]);
+    if (!active || activeTool !== 'breathing') setBubbleRunning(false);
+  }, [active, activeTool]);
 
   useEffect(() => {
     localStorage.setItem(sensesStorageKey, JSON.stringify(sensesDone));
   }, [sensesDone, sensesStorageKey]);
 
-  const huntProgress = `${huntDone.length}/${huntItems.length} found`;
-  const huntComplete = huntDone.length === huntItems.length;
   const sensesComplete = sensesDone.length === groundingSteps.length;
   const breathingLabel = bubbleStarted ? breathingPhases[phaseIndex] : 'Ready when you are';
 
-  const toggleHuntItem = (item) => {
-    setHuntDone((current) => (
-      current.includes(item) ? current.filter((doneItem) => doneItem !== item) : [...current, item]
-    ));
-  };
-
-  const toggleSensesStep = (item) => {
-    setSensesDone((current) => (
-      current.includes(item) ? current.filter((doneItem) => doneItem !== item) : [...current, item]
-    ));
+  const noticeSense = () => {
+    const item = groundingSteps[senseIndex];
+    setSensesDone((current) => current.includes(item) ? current : [...current, item]);
+    setSenseIndex((current) => Math.min(current + 1, groundingSteps.length - 1));
   };
 
   const startBubble = () => {
+    elapsed.current = 0;
     setBubbleStarted(true);
     setBubbleRunning(true);
   };
@@ -78,61 +82,32 @@ export function DailyGroundingTools({ todayKey }) {
     setPhaseIndex(0);
   };
 
-  const statusByTool = {
-    breathing: bubbleStarted ? breathingLabel : 'One slow round',
-    scavenger: huntComplete ? 'Complete' : huntProgress,
-    senses: sensesComplete ? 'Complete' : `${sensesDone.length}/${groundingSteps.length}`
-  };
-
   return (
-    <section className="grounding-tools" id="grounding-tools" aria-labelledby="grounding-tools-title">
-      <header className="grounding-tools-heading">
-        <span className="activities-eyebrow">More ways to pause</span>
-        <h2 id="grounding-tools-title">Choose one grounding tool</h2>
-        <p>Open one when a little more structure would help.</p>
-      </header>
-
-      <div className="grounding-tool-tabs" role="tablist" aria-label="Grounding tools">
-        {groundingTools.map(({ id, title, icon: Icon }) => (
-          <button
-            aria-controls={`grounding-panel-${id}`}
-            aria-selected={activeTool === id}
-            className={activeTool === id ? 'grounding-tool-tab selected' : 'grounding-tool-tab'}
-            id={`grounding-tab-${id}`}
-            key={id}
-            onClick={() => setActiveTool(id)}
-            role="tab"
-            type="button"
-          >
-            <Icon aria-hidden="true" size={19} />
-            <span>{title}</span>
-            <small>{statusByTool[id]}</small>
-          </button>
-        ))}
-      </div>
-
+    <section className="grounding-tools" id="grounding-tools">
       <div
-        aria-labelledby={`grounding-tab-${activeTool}`}
+        aria-label={activeTool === 'senses' ? 'Five senses' : 'Breathing'}
         className="grounding-workspace"
         id={`grounding-panel-${activeTool}`}
-        role="tabpanel"
+        ref={panelRef}
+        role="region"
+        tabIndex={-1}
       >
         {activeTool === 'breathing' && (
           <div className="grounding-tool-content breathing-tool-content">
             <header>
-              <h3>Breathing Bubble</h3>
-              <p>Follow the bubble for one slow round.</p>
+              <span className="app-eyebrow">A softer pace</span>
+              <h3>Breathe with the circle.</h3>
             </header>
-            <div aria-live="polite" className={bubbleRunning ? `breathing-bubble active phase-${phaseIndex}` : 'breathing-bubble'}>
-              <span>{breathingLabel}</span>
-            </div>
+            <button aria-label={bubbleStarted ? bubbleRunning ? 'Pause breathing' : 'Continue breathing' : 'Start breathing'} className={`breathing-bubble breathing-flower${bubbleStarted ? ' started' : ''}${bubbleRunning ? ' active' : ''} phase-${phaseIndex}`} onClick={() => bubbleStarted ? setBubbleRunning((current) => !current) : startBubble()} type="button">
+              <svg className="breathing-petals" viewBox="0 0 280 280" fill="none" aria-hidden="true">
+                <circle cx="140" cy="140" r="132" className="breathing-guide" />
+                <g className="breathing-bloom" ref={bloomRef}>{Array.from({ length: 8 }, (_, index) => <ellipse key={index} cx="140" cy="99" rx="47" ry="77" transform={`rotate(${index * 45} 140 140)`} />)}</g>
+                <circle className="breathing-center" cx="140" cy="140" r="65" />
+              </svg>
+              <span aria-live="polite">{breathingLabel}</span>
+            </button>
             <div className="grounding-actions">
-              {!bubbleStarted ? (
-                <button onClick={startBubble} type="button">
-                  <Play aria-hidden="true" size={16} />
-                  Start
-                </button>
-              ) : (
+              {bubbleStarted && (
                 <>
                   <button onClick={() => setBubbleRunning((current) => !current)} type="button">
                     {bubbleRunning ? <Pause aria-hidden="true" size={16} /> : <Play aria-hidden="true" size={16} />}
@@ -148,49 +123,23 @@ export function DailyGroundingTools({ todayKey }) {
           </div>
         )}
 
-        {activeTool === 'scavenger' && (
-          <div className="grounding-tool-content">
-            <header>
-              <h3>Daily Scavenger Hunt</h3>
-              <p>Use your space to notice a few steady details.</p>
-            </header>
-            <div className="hunt-list">
-              {huntItems.map((item) => (
-                <label className={huntDone.includes(item) ? 'checked' : ''} key={item}>
-                  <input className="journal-checkbox-input" checked={huntDone.includes(item)} onChange={() => toggleHuntItem(item)} type="checkbox" />
-                  <span className="journal-checkbox-mark" aria-hidden="true"><Sparkles size={14} strokeWidth={2.5} /></span>
-                  <span>{item}</span>
-                </label>
-              ))}
-            </div>
-            <div className="grounding-workspace-footer">
-              {huntComplete && (
-                <p className="grounding-complete">
-                  <CheckCircle2 aria-hidden="true" size={16} />
-                  Grounding complete
-                </p>
-              )}
-              <button className="secondary subtle-control" disabled={huntDone.length === 0} onClick={() => setHuntDone([])} type="button">
-                Clear finds
-              </button>
-            </div>
-          </div>
-        )}
-
         {activeTool === 'senses' && (
-          <div className="grounding-tool-content">
+          <div className="grounding-tool-content senses-tool-content">
             <header>
-              <h3>5-4-3-2-1 Grounding</h3>
-              <p>Name what is around you, one sense at a time.</p>
+              <span className="app-eyebrow">Five senses</span>
+              <h3>Come back to what's around you.</h3>
             </header>
-            <div className="hunt-list senses-list">
-              {groundingSteps.map((item) => (
-                <label className={sensesDone.includes(item) ? 'checked' : ''} key={item}>
-                  <input className="journal-checkbox-input" checked={sensesDone.includes(item)} onChange={() => toggleSensesStep(item)} type="checkbox" />
-                  <span className="journal-checkbox-mark" aria-hidden="true"><Sparkles size={14} strokeWidth={2.5} /></span>
-                  <span>{item}</span>
-                </label>
-              ))}
+            <div className="sense-step" aria-live="polite" aria-atomic="true">
+              <SenseIcon size={64} aria-hidden="true" />
+              <h4>{groundingSteps[senseIndex]}</h4>
+              <span>{senseIndex + 1} of {groundingSteps.length}</span>
+            </div>
+            <div className="sense-progress" aria-label={`${sensesDone.length} of 5 senses noticed`}>
+              {groundingSteps.map((item, index) => <span key={item} className={sensesDone.includes(item) ? 'done' : ''} aria-current={index === senseIndex ? 'step' : undefined} />)}
+            </div>
+            <div className="sense-actions">
+              <button className="secondary" type="button" disabled={senseIndex === 0} onClick={() => setSenseIndex((current) => current - 1)}><ArrowLeft size={17} />Back</button>
+              <button className="primary" type="button" disabled={sensesComplete && senseIndex === 4} onClick={noticeSense}>I noticed<ArrowRight size={17} /></button>
             </div>
             <div className="grounding-workspace-footer">
               {sensesComplete && (
@@ -199,12 +148,13 @@ export function DailyGroundingTools({ todayKey }) {
                   Grounding complete
                 </p>
               )}
-              <button className="secondary subtle-control" disabled={sensesDone.length === 0} onClick={() => setSensesDone([])} type="button">
+              <button className="secondary subtle-control" disabled={sensesDone.length === 0} onClick={() => { setSensesDone([]); setSenseIndex(0); }} type="button">
                 Reset
               </button>
             </div>
           </div>
         )}
+        {privateStorage && <PauseNote key={`${privateStorage.ownerId}:${activeTool}:${today}`} privateStorage={privateStorage} storageKey={`groundingNoteV1:${activeTool}:${today}`} />}
       </div>
     </section>
   );

@@ -1,0 +1,45 @@
+.wonders-page { width: min(960px, 100%); margin-inline: auto; color: var(--text-primary); }
+.wonders-page h1, .wonders-page h2 { font-family: var(--app-heading-font); font-weight: 400; line-height: 1.18; color: var(--text-primary); background: none; padding: 0; text-align: left; }
+.wonders-page h1 { font-size: calc(2.6rem * var(--font-scale, 1)); margin: 12px 0 20px; }
+.wonders-page h1:focus { outline: none; }
+.wonders-page p { color: var(--text-secondary); line-height: 1.6; }
+.wonders-intro { display: grid; grid-template-columns: 1.3fr 1fr; align-items: center; gap: 24px; margin-bottom: 24px; }
+.wonders-intro .destination-art { width: 100%; aspect-ratio: 4 / 3; border-radius: 8px; }
+.wonders-setup { display: grid; gap: 28px; padding-block: 24px; }
+.wonders-setup fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.wonders-setup legend { margin-bottom: 14px; }
+.wonders-place-options, .wonders-length-options { display: grid; gap: 12px; }
+.wonders-place-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wonders-length-options { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 480px; }
+.wonders-length-options button { background: var(--journal-paper); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+.wonders-page button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; white-space: normal; border-radius: 8px; }
+.wonders-place-options button { flex-direction: column; padding: 24px 12px; background: var(--journal-paper); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+.wonders-place-options button[aria-pressed="true"], .wonders-length-options button[aria-pressed="true"] { outline: 2px solid var(--interactive-accent); outline-offset: 2px; background: var(--surface-secondary); color: var(--text-primary); }
+.wonders-begin, .wonders-hunt-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding-block: 20px; }
+.wonders-begin p { max-width: 350px; margin: 0; font-size: .85em; }
+.wonders-progress { display: flex; gap: 10px; margin: 24px 0; }
+.wonders-progress > span { display: grid; width: 36px; height: 36px; place-items: center; border: 1px dashed var(--border-subtle); border-radius: 50%; }
+.wonders-progress .found { border-style: solid; color: var(--text-on-accent); background: var(--interactive-accent); }
+.wonders-prompt { padding: 36px 28px; background: var(--journal-paper); border: 1px solid var(--border-subtle); border-radius: 8px; text-align: center; box-shadow: var(--shadow-soft); }
+.wonders-prompt-symbol { display: block; margin: 8px auto 28px; color: var(--interactive-accent); }
+.wonders-prompt h2 { max-width: 650px; margin: auto; font-size: calc(2rem * var(--font-scale, 1)); text-align: center; }
+.wonders-prompt p { max-width: 450px; margin: 20px auto 28px; }
+.wonders-prompt-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.wonders-hunt-footer > span { color: var(--text-secondary); font-size: .85em; }
+.wonders-complete { max-width: 680px; margin: 24px auto; }
+.wonders-collected { list-style: none; padding: 0; }
+.wonders-collected li { display: flex; align-items: center; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--border-subtle); }
+.wonders-collected li span { flex: 1; }
+.wonders-collected svg { flex-shrink: 0; color: var(--interactive-accent); }
+.wonders-complete > button { margin-top: 28px; }
+.wonders-earlier { margin-top: 24px; color: var(--text-secondary); }
+.wonders-earlier summary { cursor: pointer; padding: 12px 0; }
+@media (max-width: 600px) {
+  .wonders-intro { grid-template-columns: minmax(0, 1fr); }
+  .wonders-intro .destination-art { max-height: 190px; }
+  .wonders-page h1 { font-size: calc(2rem * var(--font-scale, 1)); }
+  .wonders-prompt h2 { font-size: calc(1.6rem * var(--font-scale, 1)); }
+  .wonders-place-options { grid-template-columns: minmax(0, 1fr); }
+  .wonders-place-options button { flex-direction: row; justify-content: flex-start; padding: 16px; }
+  .wonders-prompt { padding: 24px 16px; }
+}
