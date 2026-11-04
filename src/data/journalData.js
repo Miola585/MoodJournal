@@ -214,8 +214,15 @@ export const resourceLinks = [
   { href: 'https://www.youtube.com/live/dnBAU8Co6PA?si=J-u4VaLRCmOt_Npu', title: 'Music Playlist', tag: 'Calm / Focus', className: 'focus', text: 'Soothing instrumental tracks to calm your mind.' },
   { href: 'https://positivepsychology.com/emotion-regulation/', title: 'Emotional Regulation', tag: 'Learn', className: 'learn', text: 'Clear tips to stay balanced, spot triggers, and respond to challenges in healthier ways.' }
 ];
-export const appViews = ['checkin', 'activities', 'games', 'gameArchive', 'entries', 'calendar', 'summary', 'about'];
+export const appViews = ['checkin', 'activities', 'games', 'entries', 'calendar', 'summary', 'about'];
 export const viewPaths = {
+  library: '/journal/library',
+  write: '/journal/write',
+  stickers: '/explore/stickers',
+  moodColors: '/explore/mood-colors',
+  explore: '/explore',
+  staffPreview: '/support/preview/staff',
+  supportPreview: '/support/preview',
   home: '/',
   checkin: '/checkin',
   activities: '/activities',
@@ -228,6 +235,9 @@ export const viewPaths = {
   newsletter: '/newsletter',
   support: '/support',
   admin: '/admin',
+  profile: '/profile',
+  privacy: '/privacy',
+  preferences: '/preferences',
   settings: '/settings'
 };
 export const navLabels = {
@@ -242,6 +252,9 @@ export const navLabels = {
   newsletter: 'Newsletter',
   support: 'Help & Feedback',
   admin: 'Admin',
+  profile: 'Profile',
+  privacy: 'Privacy',
+  preferences: 'Preferences',
   settings: 'Settings'
 };
 export const localEntriesKey = 'journalEntriesV2';

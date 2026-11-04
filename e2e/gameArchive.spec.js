@@ -15,12 +15,14 @@ for (const width of [1280, 390]) {
     await page.getByRole('button', { name: 'Finish constellation' }).click();
     await expect(page.locator('.game-success-card')).toBeVisible();
     await expect(page.locator('.game-success-card .mini-sky img')).toHaveCount(2);
+    await page.getByRole('dialog').getByRole('button', { name: 'Back to the stars' }).click();
     await page.getByRole('button', { name: 'Undo', exact: true }).click();
     await page.getByRole('button', { name: 'Back to games' }).click();
-    if (width < 600) await page.getByRole('button', { name: 'Open navigation' }).click();
-    await page.getByRole('button', { name: 'More', exact: true }).click();
-    await page.getByRole('button', { name: 'Game Archive', exact: true }).click();
-    await expect(page).toHaveURL(/\/game-archive$/);
+    await page.getByRole('button', { name: 'Profile menu', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Game Archive', exact: true })).toHaveCount(0);
+    await page.goto('/game-archive');
+    await expect(page).toHaveURL(/\/explore$/);
+    await page.goto('/e2e/fixtures/game-archive.html');
     const archive = page.getByRole('region', { name: 'Constellation archive', exact: true });
     await expect(archive.locator('.archive-sky img')).toHaveCount(2);
     await expect(archive.locator('.archive-sky line')).toHaveCount(1);
@@ -31,9 +33,8 @@ for (const width of [1280, 390]) {
     await page.reload();
     await expect(archive.getByRole('heading', { name: 'My first sky' })).toBeVisible();
     await page.getByRole('link', { name: 'Mood Orbit', exact: true }).click();
-    await expect(page).toHaveURL(/game=orbit/);
     await expect(page.getByText('No saved orbits yet.')).toBeVisible();
-    await page.goBack();
+    await page.getByRole('link', { name: 'Constellations', exact: true }).click();
     await expect(archive.getByRole('heading', { name: 'My first sky' })).toBeVisible();
   });
 }
@@ -50,7 +51,7 @@ test('orbit archive preserves old dates and two different same-day arrangements'
   await page.getByLabel('Anything you would like to remember?').fill('Second arrangement');
   await page.getByRole('button', { name: 'Save orbit and reflection' }).click();
   await expect(page.locator('.orbit-message')).toContainText('Saved');
-  await page.goto('/game-archive?game=orbit');
+  await page.goto('/e2e/fixtures/game-archive.html?game=orbit');
   const archive = page.getByRole('region', { name: 'Mood Orbit archive' });
   await expect(archive.locator('.game-archive-item')).toHaveCount(3);
   await expect(archive.locator('.game-archive-day')).toHaveCount(2);
@@ -73,7 +74,7 @@ test('memory archive keeps older memories beyond the visible jar capacity', asyn
   await page.getByPlaceholder('A tiny good thing from today...').fill('A new little moment');
   await page.getByRole('button', { name: 'Add to jar' }).click();
   await expect(page.getByText('Saved to jar.', { exact: true })).toBeVisible();
-  await page.goto('/game-archive?game=memory');
+  await page.goto('/e2e/fixtures/game-archive.html?game=memory');
   const archive = page.getByRole('region', { name: 'Memory Jar archive' });
   await expect(archive.getByRole('status')).toContainText('25 saved moments');
   await archive.getByLabel('Search archive').fill('Older moment 23');
@@ -85,6 +86,8 @@ test('memory archive keeps older memories beyond the visible jar capacity', asyn
   })).toBe(true);
   await page.screenshot({ path: testInfo.outputPath('archive-memory-mobile.png') });
   await page.goto('/games/memory');
+  await expect(page.locator('.memory-marble')).toHaveCount(1);
+  await page.getByLabel('Memory month').selectOption('2026-01');
   await expect(page.locator('.memory-marble')).toHaveCount(24);
 });
 
@@ -108,7 +111,7 @@ test('the same memory can be saved again on another local day without changing i
   const saved = await page.evaluate((storageKey) => JSON.parse(localStorage.getItem(storageKey)), key('gameMemoryJar'));
   expect(saved).toHaveLength(2);
   expect(saved.find((entry) => entry.id === 'older-walk')).toMatchObject({ text: 'Grateful for a walk', createdAt: yesterday });
-  await page.goto('/game-archive?game=memory', { waitUntil: 'domcontentloaded' });
+  await page.goto('/e2e/fixtures/game-archive.html?game=memory', { waitUntil: 'domcontentloaded' });
   const archive = page.getByRole('region', { name: 'Memory Jar archive' });
   await expect(archive.getByRole('status')).toContainText('2 saved moments');
   await expect(archive.locator('.game-archive-item')).toHaveCount(2);
@@ -146,7 +149,7 @@ test('failed memory saves retain the text and never claim success', async ({ pag
 });
 
 test('archives show empty and read-error states with a working retry', async ({ page }) => {
-  await page.goto('/game-archive?game=memory');
+  await page.goto('/e2e/fixtures/game-archive.html?game=memory');
   const archive = page.getByRole('region', { name: 'Memory Jar archive' });
   await expect(archive).toContainText('No saved memories yet.');
   await page.evaluate((storageKey) => localStorage.setItem(storageKey, '{broken'), key('gameMemoryJar'));
@@ -157,7 +160,7 @@ test('archives show empty and read-error states with a working retry', async ({ 
   await expect(archive).toContainText('No saved memories yet.');
 });
 
-test('the archive route respects the journal privacy lock', async ({ page }) => {
+test('the public archive route is unavailable even with a journal privacy lock', async ({ page }) => {
   await page.goto('/');
   await page.evaluate((storageKey) => {
     localStorage.setItem('journalPrivacyCode', '1234');
@@ -166,9 +169,6 @@ test('the archive route respects the journal privacy lock', async ({ page }) => 
     ]));
   }, key('gameMemoryJar'));
   await page.goto('/game-archive?game=memory');
-  await expect(page.getByRole('heading', { name: 'Journal Locked' })).toBeVisible();
+  await expect(page).toHaveURL(/\/explore$/);
   await expect(page.getByText('A private little moment')).toHaveCount(0);
-  await page.getByLabel('Passphrase or PIN').fill('1234');
-  await page.getByRole('button', { name: 'Reveal journal' }).click();
-  await expect(page.locator('.game-archive-writing')).toHaveText('A private little moment');
 });

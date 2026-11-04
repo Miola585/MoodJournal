@@ -7,7 +7,7 @@ export function DraftRecoveryNotice({ record, onRestore, onDiscard }) {
     <aside className="draft-recovery-notice" role="status">
       <div>
         <strong>Unsaved writing found on this device</strong>
-        <span>Saved {savedAt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
+        <span>Device draft from {savedAt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</span>
       </div>
       <div className="draft-recovery-actions">
         <button className="secondary-button" onClick={onRestore} type="button"><RotateCcw aria-hidden="true" size={16} />Restore</button>
@@ -19,9 +19,9 @@ export function DraftRecoveryNotice({ record, onRestore, onDiscard }) {
 
 export function SaveState({ state, onRetry, draftStatus }) {
   const label = state === 'saving' ? 'Saving...'
-    : state === 'saved' ? 'Saved'
+    : state === 'saved' ? 'Entry saved'
       : state === 'error' ? 'Could not save'
-        : draftStatus === 'saved' ? 'Draft saved on this device'
+        : draftStatus === 'saved' ? 'Draft kept on this device'
           : draftStatus === 'saving' ? 'Saving device draft...'
             : draftStatus === 'error' ? 'Device draft could not be saved'
               : draftStatus === 'unavailable' ? 'Unsaved changes stay in this tab'

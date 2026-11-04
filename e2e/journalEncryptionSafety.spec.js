@@ -15,7 +15,7 @@ const seed = async (page) => {
 const unlock = async (page) => {
   await page.getByLabel('Journal passphrase', { exact: true }).fill(passphrase);
   await page.getByRole('button', { name: 'Unlock', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'New free write', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'New entry', exact: true })).toBeVisible();
 };
 
 test('encrypted drafts are isolated by tab and a cross-tab lock preserves each draft', async ({ page, context }) => {
@@ -45,5 +45,5 @@ test('damaged local encryption settings block writing without replacing stored d
   await expect(page.getByRole('heading', { name: 'Unlock your journal', exact: true })).toBeVisible();
   await expect(page.getByRole('alert')).toContainText('damaged');
   expect(await page.evaluate(() => localStorage.getItem('journalEncryptedStoreV1'))).toBe('{damaged');
-  await expect(page.getByRole('button', { name: 'New free write', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'New entry', exact: true })).toHaveCount(0);
 });

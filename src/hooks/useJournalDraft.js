@@ -33,7 +33,10 @@ export function useJournalDraft({ privateStorage, formId, draft, setDraft, debou
   const [draftStatus, setDraftStatus] = useState(privateStorage?.encrypted ? 'idle' : 'unavailable');
   const dirty = useMemo(() => snapshot(draft) !== baseline.current, [draft]);
 
-  useEffect(() => { draftRef.current = draft; }, [draft]);
+  useEffect(() => {
+    draftRef.current = draft;
+    if (dirty && draftReady && !storedDraft) memoryDrafts.set(memoryKey, { version: DRAFT_VERSION, formId, savedAt: new Date().toISOString(), draft });
+  }, [draft, dirty, draftReady, storedDraft, memoryKey, formId]);
 
   useEffect(() => {
     const flush = async () => {
@@ -152,6 +155,7 @@ export function useJournalDraft({ privateStorage, formId, draft, setDraft, debou
     || window.confirm('Discard these unsaved journal changes?'), [dirty]);
 
   return {
+    draftReady,
     dirty,
     storedDraft,
     draftStatus,

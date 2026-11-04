@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Bug, Heart, Lightbulb, MessageCircleQuestionMark, RefreshCw, Send } from 'lucide-react';
 import { isSupabaseConfigured } from '../supabaseClient';
 import { createSupportRequest, listSupportRequests } from '../utils/supportApi';
@@ -103,7 +104,7 @@ export function Support({ user, siteTheme, theme, originPage = '/support', onReq
       <button aria-pressed={tab === 'send'} className={tab === 'send' ? 'active' : ''} onClick={() => { setTab('send'); setError(''); }} type="button">Send a request</button>
       <button aria-pressed={tab === 'requests'} className={tab === 'requests' ? 'active' : ''} onClick={() => { setTab('requests'); setError(''); }} type="button">My requests{requests.length ? ` · ${requests.length}` : ''}</button>
     </div>
-    {!isSupabaseConfigured || !user ? <div className="support-empty"><h2>Feedback is not connected yet</h2><p>Requests can only be delivered when Supabase accounts are configured and you're signed in. Nothing typed here will be sent until then.</p></div> : <>
+    {!isSupabaseConfigured || !user ? <div className="support-empty"><h2>Feedback is not connected yet</h2><p>Requests can only be delivered when Supabase accounts are configured and you're signed in. Nothing typed here will be sent until then.</p><p><Link to="/support/preview">Open the session-only support preview</Link></p></div> : <>
       {tab === 'send' && <form className="support-form" onSubmit={submit}>
         <h2>How can we help?</h2>
         <div className="support-category-grid" role="group" aria-label="Request type">

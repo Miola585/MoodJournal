@@ -13,46 +13,76 @@ const entries = [
 ].map((entry) => ({ ...entry, type: 'checkin', created: `${entry.dateKey}T12:00:00`, primary: true, tags: [] }));
 
 test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-10-20T12:00:00'));
   await page.addInitScript((seed) => {
     localStorage.setItem('journalEntriesV2', JSON.stringify(seed));
-  }, entries);
+  }, entries.map((entry, i) => ({ ...entry, dateKey: `2026-10-${18 + i}`, created: `2026-10-${18 + i}T12:00:00` })));
 });
 
 test('journal night sky shows shaped stars and a visible glow', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/games');
-  const stars = page.locator('.galaxy-map .galaxy-star');
+  await page.goto('/games/night-sky');
+  const stars = page.locator('.personal-sky-star .galaxy-star');
   await expect(stars).toHaveCount(3);
   const pointCounts = await stars.locator('.galaxy-star-core').evaluateAll((polygons) => (
     polygons.map((polygon) => polygon.points.numberOfItems)
   ));
   expect(pointCounts).toEqual([8, 10, 12]);
-  await expect(stars.nth(0)).toHaveAttribute('aria-label', /4-point star/u);
-  await expect(stars.nth(1)).toHaveAttribute('aria-label', /5-point star/u);
-  await expect(stars.nth(2)).toHaveAttribute('aria-label', /6-point star/u);
+  await expect(page.locator('.personal-sky-star').nth(0)).toHaveAttribute('aria-label', /4-point star/u);
+  await expect(page.locator('.personal-sky-star').nth(1)).toHaveAttribute('aria-label', /5-point star/u);
+  await expect(page.locator('.personal-sky-star').nth(2)).toHaveAttribute('aria-label', /6-point star/u);
   await page.screenshot({ path: testInfo.outputPath('night-sky-desktop.png'), fullPage: true });
 });
+
+for (const width of [320, 820, 1440]) {
+  test(`Personal Night Sky is immersive, keyboard accessible and follows history at ${width}px`, async ({ page }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/explore');
+    await expect(page.locator('.galaxy-star')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Personal Night Sky', exact: true }).click();
+    await expect(page).toHaveURL(/\/games\/night-sky$/u);
+    await expect(page.locator('.topbar')).toHaveCount(0);
+    await expect(page.getByRole('navigation', { name: 'Mobile destinations' })).toHaveCount(0);
+    const star = page.locator('.personal-sky-star').first();
+    await star.focus();
+    await page.keyboard.press('Enter');
+    await expect(star).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.personal-sky-recap')).toContainText('Calm');
+    await page.screenshot({ path: info.outputPath(`personal-sky-${width}.png`), fullPage: true });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    await page.getByRole('button', { name: 'Open journal', exact: true }).click();
+    await expect(page).toHaveURL(/\/entries\?entry=sky-low$/u);
+    await page.goBack();
+    await expect(page.getByRole('heading', { name: 'Personal Night Sky', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Little breaks', exact: true }).click();
+    await expect(page).toHaveURL(/\/explore$/u);
+    if (width === 320) {
+      await page.getByRole('button', { name: 'Personal Night Sky', exact: true }).click();
+      await page.setViewportSize({ width: 844, height: 390 });
+      await page.locator('.personal-sky-star').first().click();
+      await expect(page.getByRole('button', { name: 'Open journal', exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+      // A full monthly sky retains its touch targets in landscape and scrolls with the document.
+      expect(await page.locator('.personal-sky-field').evaluate((el) => getComputedStyle(el).overflowY)).toBe('visible');
+      await page.screenshot({ path: info.outputPath('personal-sky-landscape.png'), fullPage: true });
+    }
+  });
+}
 
 for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
   test(`immersive games fill ${viewport.width}px viewport without app chrome`, async ({ page }, testInfo) => {
     await page.setViewportSize(viewport);
+    await page.goto('/games');
+    const gardenCard = page.getByRole('button', { name: /Mood Garden/u });
+    await expect(gardenCard).toBeDisabled();
     await page.goto('/games/garden');
-    await expect(page.getByRole('heading', { name: 'Your pocket garden.' })).toBeVisible();
-    await expect(page.locator('.topbar, .footer, .support-help-bubble')).toHaveCount(0);
-    await expect(page.locator('.garden-plant')).not.toHaveCount(0);
-    await expect(page.locator('.game-route-shell')).toHaveJSProperty('offsetTop', 0);
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).not.toBe('rgb(243, 232, 223)');
-    await page.getByText('How to play').click();
-    await expect(page.getByText('Choose a plant to see what it reflects.')).toBeVisible();
-    await page.getByText('How to play').click();
-    await page.screenshot({ path: testInfo.outputPath(`garden-${viewport.width}.png`), fullPage: true });
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-
-    await page.getByRole('button', { name: 'Back to games' }).click();
+    await expect(page).toHaveURL(/\/explore$/u);
+    await expect(page.getByRole('heading', { name: 'Your pocket garden.' })).toHaveCount(0);
     await expect(page.locator('.topbar')).toBeVisible();
     await page.goto('/games/constellation');
     await expect(page.locator('.topbar, .footer, .support-help-bubble')).toHaveCount(0);
     await expect(page.locator('.constellation-stage')).toBeVisible();
+    await expect(page.locator('.constellation-stage .star')).toHaveCount(32);
     await expect(page.locator('.game-route-shell')).toHaveJSProperty('offsetTop', 0);
     expect(await page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)).not.toBe('rgb(243, 232, 223)');
     await page.getByText('How to play').click();
@@ -150,6 +180,19 @@ test('mood orbit selects without moving, supports distances and saves a reflecti
   await expect(page.getByRole('textbox', { name: 'Anything you would like to remember?' })).toHaveValue('A little closer today.');
 });
 
+test('new stars can be selected and saved without replacing earlier coordinates', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/games/constellation');
+  await page.getByRole('button', { name: 'Star 27', exact: true }).click();
+  await page.getByRole('button', { name: 'Star 28', exact: true }).click();
+  await expect(page.locator('.mini-insight')).toContainText('1 connection');
+  await page.getByRole('button', { name: 'Finish constellation' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('moodJournalPrivateV1:local-browser:gameConstellations'))[0]);
+  expect(saved.stars).toEqual([27, 28]);
+  expect(saved.starPositions.map(({ id, x, y }) => ({ id, x, y }))).toEqual([{ id: 27, x: 44, y: 30 }, { id: 28, x: 64, y: 32 }]);
+});
+
 test('constellation undo preserves shared endpoints and saves only remaining connected stars', async ({ page }) => {
   await page.goto('/games/constellation');
   const star = (id) => page.getByRole('button', { name: `Star ${id}`, exact: true });
@@ -170,7 +213,7 @@ test('constellation undo preserves shared endpoints and saves only remaining con
 
 test('garden care ignores the old shared flag and survives a reload', async ({ page }) => {
   await page.addInitScript((today) => localStorage.setItem(`gardenTendedToday:${today}`, 'true'), dateKey(0));
-  await page.goto('/games/garden');
+  await page.goto('/e2e/fixtures/mood-garden.html');
   await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
   await page.getByRole('button', { name: 'Tend garden' }).click();
   await expect(page.getByRole('button', { name: 'Tended today' })).toBeDisabled();
@@ -222,7 +265,7 @@ test('constellation undo has a clear enabled style distinct from its disabled st
 });
 
 test('garden care shows a save error without claiming it was tended', async ({ page }) => {
-  await page.goto('/games/garden');
+  await page.goto('/e2e/fixtures/mood-garden.html');
   await expect(page.getByRole('button', { name: 'Tend garden' })).toBeEnabled();
   await page.evaluate(() => {
     const setItem = Storage.prototype.setItem;
@@ -269,13 +312,11 @@ test.describe('touch games', () => {
     await page.getByRole('button', { name: 'Undo', exact: true }).tap();
     await expect(page.getByRole('button', { name: 'Star 1', exact: true })).toHaveAttribute('aria-pressed', 'false');
     await page.setViewportSize({ width: 844, height: 390 });
-    const layout = await page.evaluate(() => ({
+    await expect.poll(() => page.evaluate(() => ({
       introBottom: document.querySelector('.immersive-game-intro').getBoundingClientRect().bottom,
       toolbarTop: document.querySelector('.constellation-toolbar').getBoundingClientRect().top,
       stars: [...document.querySelectorAll('.constellation-stage .star')].map((star) => ({ top: star.getBoundingClientRect().top, bottom: star.getBoundingClientRect().bottom }))
-    }));
-    expect(Math.min(...layout.stars.map((star) => star.top))).toBeGreaterThan(layout.introBottom);
-    expect(Math.max(...layout.stars.map((star) => star.bottom))).toBeLessThan(layout.toolbarTop);
+    })).then((layout) => Math.min(...layout.stars.map((star) => star.top)) > layout.introBottom && Math.max(...layout.stars.map((star) => star.bottom)) < layout.toolbarTop)).toBe(true);
     await page.screenshot({ path: testInfo.outputPath('constellation-landscape.png'), fullPage: true });
   });
 });

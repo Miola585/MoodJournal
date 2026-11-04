@@ -4,16 +4,91 @@ import { createPortal } from 'react-dom';
 import { isStickerUnlocked, stickerPages, stickers } from '../../data/stickers';
 import { StickerArtwork } from './StickerArtwork';
 
-export function StickerBook({ pageIndex, onPageChange, discoveries, onChoose, onDropSticker, onClose, placementRegion, onPlacementRegionChange }) {
+export function useStickerDiscoveries(privateStorage) {
+  const [result, setResult] = useState({ owner: null, discoveries: {}, discoveryError: '', loading: true });
+  useEffect(() => {
+    let active = true;
+    Promise.resolve().then(() => privateStorage?.read('gameConstellations', []) || [])
+      .then((saved) => {
+        if (active) setResult({ owner: privateStorage, discoveries: { constellation: Array.isArray(saved) && saved.length > 0 }, discoveryError: '', loading: false });
+      }).catch(() => {
+        if (active) setResult({ owner: privateStorage, discoveries: {}, discoveryError: 'Sticker discoveries could not be loaded. Reopen the collection to try again.', loading: false });
+      });
+    return () => { active = false; };
+  }, [privateStorage]);
+  return result.owner === privateStorage ? result : { discoveries: {}, discoveryError: '', loading: true };
+}
+
+export function StickerBook({ pageIndex, onPageChange, discoveries, discoveryError, onChoose, onDropSticker, onClose }) {
   const pointer = useRef(null);
   const clearDrag = useRef(null);
+  const panelRef = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 1100px)').matches);
+  const [headerBottom, setHeaderBottom] = useState(112);
   const [dragPreview, setDragPreview] = useState(null);
-  const page = stickerPages[pageIndex];
+  const page = stickerPages[pageIndex] || stickerPages[0];
   const pageStickers = stickers.filter((sticker) => sticker.page === page.id);
   useEffect(() => () => clearDrag.current?.(), []);
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1100px)');
+    const sync = () => setMobile(query.matches);
+    query.addEventListener('change', sync);
+    const measureHeader = () => {
+      const slot = document.getElementById('journal-context-actions');
+      const header = slot?.closest('header, .context-header, .journal-subheader, .contextual-subheader') || slot?.parentElement;
+      setHeaderBottom(Math.max(58, Math.ceil(header?.getBoundingClientRect().bottom || 112)));
+    };
+    measureHeader();
+    const resize = new ResizeObserver(measureHeader);
+    resize.observe(document.body);
+    const slot = document.getElementById('journal-context-actions');
+    if (slot?.parentElement) resize.observe(slot.parentElement);
+    window.addEventListener('scroll', measureHeader, true);
+    window.addEventListener('resize', measureHeader);
+    return () => {
+      query.removeEventListener('change', sync);
+      resize.disconnect();
+      window.removeEventListener('scroll', measureHeader, true);
+      window.removeEventListener('resize', measureHeader);
+    };
+  }, []);
+  useEffect(() => {
+    const panel = panelRef.current;
+    const previousFocus = document.activeElement;
+    if (mobile) panel.showModal();
+    const focusable = () => [...panel.querySelectorAll('button:not(:disabled), [href], input, select, [tabindex="0"]')].filter((node) => node.getClientRects().length);
+    const focusFirst = () => (focusable()[0] || panel).focus();
+    focusFirst();
+    const keydown = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); closeRef.current(); }
+      if (!mobile || event.key !== 'Tab') return;
+      const items = focusable();
+      const first = items[0];
+      const last = items.at(-1);
+      if (event.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+        event.preventDefault(); (last || panel).focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+        event.preventDefault(); (first || panel).focus();
+      }
+    };
+    const containFocus = (event) => { if (mobile && !panel.contains(event.target)) focusFirst(); };
+    document.addEventListener('keydown', keydown);
+    document.addEventListener('focusin', containFocus);
+    const previousOverflow = document.body.style.overflow;
+    if (mobile) document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', keydown);
+      document.removeEventListener('focusin', containFocus);
+      if (mobile) document.body.style.overflow = previousOverflow;
+      if (mobile) panel.close();
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [mobile]);
 
   const startDrag = (event, sticker) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || mobile || event.pointerType === 'touch') return;
     event.preventDefault();
     const pointerId = event.pointerId;
     pointer.current = { id: sticker.id, startX: event.clientX, startY: event.clientY, moved: false };
@@ -46,16 +121,19 @@ export function StickerBook({ pageIndex, onPageChange, discoveries, onChoose, on
     window.addEventListener('blur', cancel);
   };
 
+  const Panel = mobile ? 'dialog' : 'section';
   return (
-    <section aria-label="Sticker Book" className="sticker-book" id="sticker-book-panel">
+    <>
+    <Panel aria-label="Sticker Book" aria-modal={mobile ? true : undefined} role={mobile ? 'dialog' : 'region'} tabIndex={-1} ref={panelRef} onCancel={(event) => { event.preventDefault(); onClose(); }} onClick={(event) => {
+      if (!mobile || event.target !== event.currentTarget) return;
+      const bounds = event.currentTarget.getBoundingClientRect();
+      if (event.clientY < bounds.top || event.clientX < bounds.left || event.clientX > bounds.right) onClose();
+    }} className="sticker-book editor-sticker-book" id="sticker-book-panel" style={{ '--editor-header-bottom': `${headerBottom}px` }}>
       <div className="sticker-book-topline">
         <span>Sticker Book</span>
         <button aria-label="Close Sticker Book" className="icon-button" onClick={onClose} title="Close Sticker Book" type="button"><X size={18} /></button>
       </div>
-      <div aria-label="Place sticker on" className="sticker-book-location" role="group">
-        <button aria-pressed={placementRegion !== 'details'} onClick={() => onPlacementRegionChange('writing')} type="button">Writing</button>
-        <button aria-pressed={placementRegion === 'details'} onClick={() => onPlacementRegionChange('details')} type="button">Page details</button>
-      </div>
+      {discoveryError && <p className="sticker-discovery-error" role="alert">{discoveryError}</p>}
       <div className="sticker-book-page" key={page.id}>
         <header>
           <span>Collection {pageIndex + 1} of {stickerPages.length}</span>
@@ -70,7 +148,7 @@ export function StickerBook({ pageIndex, onPageChange, discoveries, onChoose, on
                   className="sticker-book-choice"
                   draggable="false"
                   key={sticker.id}
-                  onClick={(event) => { if (event.detail === 0) onChoose(sticker.id); }}
+                  onClick={(event) => { if (mobile || event.detail === 0 || event.nativeEvent.pointerType === 'touch') onChoose(sticker.id); }}
                   onDragStart={(event) => event.preventDefault()}
                   onPointerDown={(event) => startDrag(event, sticker)}
                   title={`Place ${sticker.name}`}
@@ -88,7 +166,7 @@ export function StickerBook({ pageIndex, onPageChange, discoveries, onChoose, on
               );
             })}
           </div>
-        ) : <p className="sticker-book-empty">No stickers on this page yet.</p>}
+        ) : <p className="sticker-book-empty">This collection is waiting for your artwork. Try another page.</p>}
       </div>
       <nav aria-label="Sticker Book pages" className="sticker-book-turn">
         <button aria-label="Previous sticker page" disabled={pageIndex === 0} onClick={() => onPageChange(pageIndex - 1)} title="Previous page" type="button"><ChevronLeft aria-hidden="true" size={18} /></button>
@@ -99,6 +177,7 @@ export function StickerBook({ pageIndex, onPageChange, discoveries, onChoose, on
         <StickerArtwork className="sticker-drag-preview" longEdge={208} sticker={dragPreview.sticker} style={{ left: dragPreview.x, top: dragPreview.y }} />,
         document.body
       )}
-    </section>
+    </Panel>
+    </>
   );
 }

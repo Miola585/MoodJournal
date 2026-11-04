@@ -600,13 +600,14 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 }
 
 .app.immersive-game-active .standalone-game-screen-constellation .constellation-surface {
+  min-height: max(100dvh, calc(var(--constellation-heading-bottom, 180px) + var(--constellation-controls-height, 140px) + 360px));
   background: radial-gradient(circle at 22% 30%, rgba(93, 83, 144, 0.2), transparent 35%), linear-gradient(155deg, #11142d, #191b3b 62%, #242044);
 }
 
 .app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
-  inset: 0;
+  inset: var(--constellation-stage-top, 0px) 0 auto;
   width: 100%;
-  height: auto;
+  height: var(--constellation-stage-height, 100%);
   min-height: 0;
   padding: 0;
   background: transparent;
@@ -679,6 +680,7 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 }
 
 .app.immersive-game-active .standalone-game-screen-orbit .orbit-surface {
+  min-height: max(100dvh, calc(var(--orbit-heading-bottom, 140px) + 420px + var(--orbit-controls-height, 160px)));
   background:
     radial-gradient(ellipse at 50% 53%, rgba(81, 62, 103, 0.28), transparent 58%),
     radial-gradient(ellipse at 18% 40%, rgba(67, 61, 101, 0.22), transparent 48%),
@@ -701,8 +703,8 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 
 .app.immersive-game-active .standalone-game-screen-orbit .orbit-map {
   position: absolute;
-  top: clamp(175px, 20vh, 220px);
-  bottom: clamp(115px, 13vh, 155px);
+  top: calc(var(--orbit-heading-bottom, 140px) + 24px);
+  bottom: calc(var(--orbit-controls-height, 160px) + 52px);
   left: 50%;
   width: min(1024px, calc(100% - 32px));
   height: auto;
@@ -743,18 +745,15 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   opacity: 0.92;
 }
 
-.app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+.standalone-game-screen-orbit .orbit-dock {
   position: absolute;
   right: 18px;
   bottom: 20px;
   left: 18px;
   z-index: 10;
-  display: flex;
+  display: grid;
   width: min(910px, calc(100% - 36px));
-  min-height: 66px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
   margin-inline: auto;
   padding: 10px 16px;
   border: 1px solid rgba(255, 247, 242, 0.22);
@@ -764,17 +763,25 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   backdrop-filter: blur(10px);
 }
 
+.app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
 .standalone-game-screen-orbit .orbit-footer-copy {
   display: grid;
   gap: 4px;
   color: #f6f0ff;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale, 1));
   text-align: left;
 }
 
 .standalone-game-screen-orbit .orbit-footer-copy span {
   color: #c9bed4;
-  font-size: 0.76rem;
+  font-size: calc(0.76rem * var(--font-scale, 1));
 }
 
 .standalone-game-screen-orbit .orbit-ring-buttons button,
@@ -800,7 +807,7 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   left: 18%;
   margin: 0;
   color: #eee5ff;
-  font-size: 0.68rem;
+  font-size: calc(0.68rem * var(--font-scale, 1));
   white-space: nowrap;
   transform: translate(-50%, -50%);
 }
@@ -810,7 +817,7 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   border: 0;
   background: transparent;
   color: #37433e;
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--font-scale, 1));
   font-weight: 600;
   box-shadow: none;
   pointer-events: none;
@@ -846,7 +853,7 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   border: 1px solid transparent;
   background: transparent;
   color: #352f3c;
-  font-size: 0.67rem;
+  font-size: calc(0.67rem * var(--font-scale, 1));
   font-weight: 600;
   line-height: 1.1;
   text-align: center;
@@ -876,7 +883,7 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   border-radius: 6px;
   background: rgba(23, 24, 45, 0.88);
   color: #f6f0ff;
-  font-size: 0.68rem;
+  font-size: calc(0.68rem * var(--font-scale, 1));
   line-height: 1.2;
   white-space: nowrap;
   pointer-events: none;
@@ -900,29 +907,27 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 }
 
 .standalone-game-screen-orbit .orbit-guidance {
-  position: absolute;
-  right: 16px;
-  bottom: 110px;
-  left: 16px;
-  z-index: 5;
   display: grid;
   justify-items: center;
   gap: 4px;
   color: #f6f0ff;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale, 1));
   text-align: center;
   pointer-events: none;
 }
 
 .standalone-game-screen-orbit .orbit-guidance strong {
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale, 1));
   font-weight: 500;
 }
 
 .standalone-game-screen-orbit .orbit-guidance p {
   margin: 0;
   color: #b9aac9;
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--font-scale, 1));
+  min-height: 2.6em;
+  display: grid;
+  align-items: center;
 }
 
 .standalone-game-screen-orbit .planet.dragging {
@@ -956,25 +961,21 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 }
 
 .standalone-game-screen-orbit .orbit-ring-buttons {
-  position: absolute;
-  right: 16px;
-  bottom: 99px;
-  left: 16px;
-  z-index: 6;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 360px);
+  gap: 6px;
+  margin: 0 auto;
 }
 
 .standalone-game-screen-orbit .orbit-ring-buttons button {
-  min-height: 30px;
-  padding: 4px 11px;
-  font-size: 0.74rem;
-}
-
-.standalone-game-screen-orbit .orbit-surface:has(.orbit-ring-buttons) .orbit-guidance {
-  bottom: 144px;
-}
-
-.standalone-game-screen-orbit .orbit-ring-buttons + .orbit-message {
-  bottom: 190px;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 6px 8px;
+  font-size: calc(0.78rem * var(--font-scale, 1));
+  line-height: 1.25;
+  white-space: normal;
 }
 
 .orbit-actions {
@@ -1009,19 +1010,15 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 }
 
 .orbit-message {
-  position: absolute;
-  right: 18px;
-  bottom: 175px;
-  left: 18px;
-  z-index: 11;
-  width: fit-content;
-  max-width: calc(100% - 36px);
+  position: static;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgba(17, 20, 45, 0.88);
+  padding: 0;
+  background: transparent;
   color: #fff7f2;
   text-align: center;
+  font-size: calc(0.78rem * var(--font-scale, 1));
 }
 
 .orbit-reflection-dialog {
@@ -1057,7 +1054,7 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   padding: 0;
   background: transparent;
   color: #fff7f2;
-  font-size: 1.8rem;
+  font-size: calc(1.8rem * var(--font-scale, 1));
   text-align: left;
 }
 
@@ -1127,19 +1124,26 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 
   .immersive-route-header > .immersive-game-intro {
     grid-column: 1 / -1;
-    margin-top: 20px;
+    margin-top: 12px;
+  }
+
+  .app.immersive-game-active .immersive-route-header .back-to-games,
+  .immersive-route-header .game-how-to summary {
+    min-height: 40px;
+    padding: 6px 10px;
+    font-size: calc(.8rem * var(--font-scale, 1));
   }
 
   .immersive-game-intro h1 {
-    font-size: 2.15rem;
+    font-size: calc(2.15rem * var(--font-scale, 1));
   }
 
   .app.immersive-game-active .immersive-game-intro h1 {
-    font-size: 2.15rem;
+    font-size: calc(2.15rem * var(--font-scale, 1));
   }
 
   .immersive-game-intro p {
-    font-size: 0.85rem;
+    font-size: calc(0.85rem * var(--font-scale, 1));
   }
 
   .app.immersive-game-active .immersive-route-header .immersive-game-intro p {
@@ -1157,57 +1161,66 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 
   .immersive-game-intro .constellation-prompt-chips span,
   .immersive-game-intro .constellation-prompt-chips span:first-child {
-    padding: 7px 9px;
-    font-size: 0.74rem;
-  }
-
-  .app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
-    inset: 60px 0 128px;
+    padding: 5px 8px;
+    font-size: calc(0.74rem * var(--font-scale, 1));
   }
 
   .app.immersive-game-active .standalone-game-screen-constellation .constellation-toolbar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 10px;
   }
 
   .app.immersive-game-active .standalone-game-screen-constellation .mini-insight {
     display: block;
     grid-column: 1 / -1;
     text-align: left;
+    font-size: calc(.8rem * var(--font-scale, 1));
   }
 
   .standalone-game-screen-constellation .constellation-toolbar input {
     grid-column: 1 / -1;
     min-width: 0;
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: calc(1rem * var(--font-scale, 1));
   }
 
   .standalone-game-screen-constellation .constellation-toolbar button {
     width: 100%;
-    padding-inline: 10px;
-    font-size: 0.78rem;
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: calc(0.78rem * var(--font-scale, 1));
+    white-space: normal;
+    line-height: 1.25;
   }
 
   .garden-scene-intro h1 {
-    font-size: 2.8rem;
+    font-size: calc(2.8rem * var(--font-scale, 1));
   }
 
   .app.immersive-game-active .standalone-game-screen-orbit .orbit-map {
-    top: 160px;
-    bottom: 180px;
     width: calc(100% - 48px);
   }
 
-  .app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+  .standalone-game-screen-orbit .orbit-dock {
     bottom: 12px;
-    min-height: 62px;
+    left: 12px;
+    right: 12px;
+    width: calc(100% - 24px);
     padding: 8px 10px;
   }
 
+  .standalone-game-screen-orbit .orbit-footer-copy { display: none; }
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-ring span { display: none; }
+  .standalone-game-screen-orbit .orbit-actions { width: 100%; justify-content: center; }
+
   .standalone-game-screen-orbit .orbit-footer-copy {
-    font-size: 0.72rem;
+    font-size: calc(0.72rem * var(--font-scale, 1));
   }
 
   .standalone-game-screen-orbit .orbit-footer-copy span {
-    font-size: 0.64rem;
+    font-size: calc(0.64rem * var(--font-scale, 1));
   }
 
   .app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet,
@@ -1216,25 +1229,15 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   .app.immersive-game-active .standalone-game-screen-orbit .mood-orbit-map .planet.far {
     width: clamp(46px, calc(var(--planet-size) * 0.7), 58px);
     padding: 3px;
-    font-size: 0.53rem;
+    font-size: calc(0.53rem * var(--font-scale, 1));
   }
 
   .app.immersive-game-active .standalone-game-screen-orbit .orbit-center {
     width: 48px;
-    font-size: 0.6rem;
+    font-size: calc(0.6rem * var(--font-scale, 1));
   }
 
-  .standalone-game-screen-orbit .orbit-guidance {
-    bottom: 102px;
-  }
-
-  .standalone-game-screen-orbit .orbit-surface:has(.orbit-ring-buttons) .orbit-guidance {
-    bottom: 145px;
-  }
-
-  .standalone-game-screen-orbit .orbit-ring-buttons {
-    bottom: 101px;
-  }
+  .standalone-game-screen-orbit .orbit-center .orbit-planet-label { top: calc(100% + 14px); }
 
   .orbit-actions {
     width: auto;
@@ -1242,42 +1245,29 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 
   .orbit-actions button {
     flex: 0 0 auto;
-    min-height: 34px;
+    min-height: 40px;
     padding-inline: 8px;
-    font-size: 0.7rem;
-  }
-
-  .orbit-message {
-    bottom: 180px;
+    font-size: calc(0.78rem * var(--font-scale, 1));
   }
 }
 
 @media (max-width: 420px) {
   .immersive-route-header > .back-to-games {
     padding-inline: 10px;
-    font-size: 0.78rem;
+    font-size: calc(0.78rem * var(--font-scale, 1));
   }
 
   .game-how-to summary {
     min-height: 38px;
     padding: 6px 12px;
-    font-size: 0.78rem;
+    font-size: calc(0.78rem * var(--font-scale, 1));
   }
 
   .garden-scene-intro h1 {
-    font-size: 2.4rem;
+    font-size: calc(2.4rem * var(--font-scale, 1));
   }
 
-  .app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
-    inset: 65px 0 128px;
-  }
-
-  .app.immersive-game-active .standalone-game-screen-orbit .orbit-map {
-    top: 155px;
-    bottom: 170px;
-  }
-
-  .app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+  .standalone-game-screen-orbit .orbit-dock {
     display: grid;
     justify-content: stretch;
     gap: 6px;
@@ -1305,11 +1295,11 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   }
 
   .app.immersive-game-active .immersive-game-intro h1 {
-    font-size: 1.6rem;
+    font-size: calc(1.6rem * var(--font-scale, 1));
   }
 
   .immersive-game-intro p {
-    font-size: 0.72rem;
+    font-size: calc(0.72rem * var(--font-scale, 1));
   }
 
   .immersive-game-intro .constellation-prompt-chips {
@@ -1320,11 +1310,11 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   .immersive-game-intro .constellation-prompt-chips span,
   .immersive-game-intro .constellation-prompt-chips span:first-child {
     padding: 5px 7px;
-    font-size: 0.65rem;
+    font-size: calc(0.65rem * var(--font-scale, 1));
   }
 
-  .app.immersive-game-active .standalone-game-screen-constellation .constellation-stage {
-    inset: 32px 0 64px;
+  .app.immersive-game-active .standalone-game-screen-constellation .constellation-surface {
+    min-height: max(100dvh, calc(var(--constellation-heading-bottom, 80px) + var(--constellation-controls-height, 80px) + 240px));
   }
 
   .app.immersive-game-active .standalone-game-screen-constellation .immersive-route-header .immersive-game-intro p {
@@ -1347,10 +1337,10 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
 
   .app.immersive-game-active .standalone-game-screen-orbit .orbit-center {
     width: 48px;
-    font-size: 0.65rem;
+    font-size: calc(0.65rem * var(--font-scale, 1));
   }
 
-  .app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel {
+  .standalone-game-screen-orbit .orbit-dock {
     right: 16px;
     bottom: 18px;
     left: auto;
@@ -1359,6 +1349,8 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
     padding: 10px;
     gap: 8px;
   }
+
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-control-panel { justify-content: center; }
 
   .standalone-game-screen-orbit .orbit-footer-copy {
     text-align: center;
@@ -1372,38 +1364,16 @@ html:has(.app.immersive-game-active .standalone-game-screen-garden) {
   .standalone-game-screen-orbit .orbit-actions button {
     min-height: 34px;
     padding-inline: 8px;
-    font-size: 0.68rem;
-  }
-
-  .standalone-game-screen-orbit .orbit-guidance,
-  .standalone-game-screen-orbit .orbit-surface:has(.orbit-ring-buttons) .orbit-guidance {
-    right: 16px;
-    bottom: 176px;
-    left: auto;
-    width: 248px;
-  }
-
-  .standalone-game-screen-orbit .orbit-ring-buttons {
-    right: 16px;
-    bottom: 132px;
-    left: auto;
-    width: 248px;
-    gap: 5px;
+    font-size: calc(0.68rem * var(--font-scale, 1));
   }
 
   .standalone-game-screen-orbit .orbit-ring-buttons button {
-    padding-inline: 8px;
-    font-size: 0.68rem;
+    padding-inline: 4px;
+    font-size: calc(0.74rem * var(--font-scale, 1));
   }
 
-  .standalone-game-screen-orbit .orbit-message,
-  .standalone-game-screen-orbit .orbit-ring-buttons + .orbit-message {
-    right: 16px;
-    bottom: 238px;
-    left: auto;
-    max-width: 248px;
-    font-size: 0.72rem;
-  }
+  .standalone-game-screen-orbit .orbit-footer-copy { display: none; }
+  .app.immersive-game-active .standalone-game-screen-orbit .orbit-surface { min-height: max(100dvh, calc(90px + var(--orbit-controls-height, 160px))); }
 }
 
 @media (prefers-reduced-motion: reduce) {

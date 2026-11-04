@@ -9,7 +9,8 @@ for (const [width, fontScale] of [[1280, 1], [1280, 1.5], [900, 1], [850, 1], [7
       localStorage.setItem('fontScale', String(scale));
     }, fontScale);
     await page.goto('/entries');
-    await expect(page.getByRole('heading', { name: 'No saved entries yet.' })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: width <= 760 ? 'Mobile destinations' : 'Main destinations', exact: true }).getByRole('button', { name: 'My journal', exact: true })).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('heading', { name: 'A blank page is waiting' })).toBeVisible();
 
     const assertContained = async () => {
       const overflow = await page.locator('.entries-screen').evaluate((screen) => {
@@ -25,13 +26,7 @@ for (const [width, fontScale] of [[1280, 1], [1280, 1.5], [900, 1], [850, 1], [7
       expect(overflow).toEqual([]);
     };
     await assertContained();
-    await page.getByRole('textbox', { name: 'Keyword search' }).fill('test');
-    if (width <= 560) await page.getByRole('button', { name: 'Filters', exact: true }).click();
-    await page.getByRole('button', { name: 'Bookmarked', exact: true }).click();
-    await expect(page.getByRole('button', { name: 'Bookmarked', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    await assertContained();
-    await page.getByRole('button', { name: 'Clear filters' }).click();
-    await expect(page.getByRole('textbox', { name: 'Keyword search' })).toHaveValue('');
+    await expect(page.getByRole('textbox', { name: 'Keyword search' })).toHaveCount(0);
     await page.screenshot({ path: testInfo.outputPath(`entries-${width}-${fontScale}.png`), fullPage: true });
 
     await page.evaluate(() => localStorage.setItem('journalEntriesV2', JSON.stringify([{
@@ -40,8 +35,14 @@ for (const [width, fontScale] of [[1280, 1], [1280, 1.5], [900, 1], [850, 1], [7
     }])));
     await page.reload();
     await expect(page.locator('.entry-card')).toBeVisible();
+    await page.getByRole('textbox', { name: 'Keyword search' }).fill('test');
+    if (width <= 560) await page.getByRole('button', { name: 'Filters', exact: true }).click();
+    await page.getByRole('button', { name: 'Bookmarked', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Bookmarked', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('.archive-toolbar').getByRole('button', { name: 'Clear filters' }).click();
     await assertContained();
-    await page.getByRole('button', { name: 'New free write', exact: true }).click();
+    await page.getByRole('button', { name: 'New entry', exact: true }).click();
     await expect(page.getByRole('textbox', { name: 'Title', exact: true })).toBeVisible();
+    await expect(page.locator('.journal-editor-context').getByRole('button', { name: 'Sticker Book', exact: true })).toBeVisible();
   });
 }

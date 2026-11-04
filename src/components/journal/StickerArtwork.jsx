@@ -1,12 +1,14 @@
-export function stickerArtworkSize(sticker, longEdge) {
+import { stickerHeightScale } from '../../utils/stickerUtils';
+
+export function stickerArtworkSize(sticker, longEdge, heightScale) {
   const [, , width, height] = sticker.crop;
   const scale = longEdge / Math.max(width, height);
-  return { width: Math.round(width * scale), height: Math.round(height * scale) };
+  return { width: Math.round(width * scale), height: Math.round(height * scale * stickerHeightScale(heightScale)) };
 }
 
-export function StickerArtwork({ sticker, className = '', longEdge, style }) {
+export function StickerArtwork({ sticker, className = '', longEdge, heightScale, style }) {
   const [x, y, width, height] = sticker.crop;
-  const size = stickerArtworkSize(sticker, longEdge);
+  const size = stickerArtworkSize(sticker, longEdge, heightScale);
   return (
     <span className={`sticker-artwork ${className}`} style={{ ...size, ...style }}>
       <img

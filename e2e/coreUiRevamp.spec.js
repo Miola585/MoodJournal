@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-const intersects = (first, second) => first.left < second.right && first.right > second.left
-  && first.top < second.bottom && first.bottom > second.top;
+const intersects = (first, second) => first.x < second.x + second.width && first.x + first.width > second.x
+  && first.y < second.y + second.height && first.y + first.height > second.y;
 
 async function assertContained(page) {
   const excess = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -22,51 +22,42 @@ for (const [width, height] of [[320, 700], [390, 844], [768, 900], [1440, 900]])
       await assertContained(page);
       await page.screenshot({ path: info.outputPath(`${width}-${route === '/' ? 'home' : route.slice(1)}.png`) });
     if (route === '/' && width <= 560) {
-      const help = await page.locator('.support-help-bubble').boundingBox();
-      const arrow = await page.locator('.home-space-card').first().locator('.home-space-open svg').boundingBox();
-      expect(intersects(help, arrow)).toBe(false);
+      await expect(page.locator('.support-help-bubble')).toBeHidden();
+      await page.getByRole('button', { name: 'Profile menu', exact: true }).click();
+      await expect(page.getByRole('navigation', { name: 'Account and help' }).getByRole('button', { name: 'Help & feedback' })).toBeVisible();
+      await page.keyboard.press('Escape');
     }
     }
     await page.goto('/checkin', { waitUntil: 'domcontentloaded' });
     if (width <= 560) {
       const help = await page.getByRole('button', { name: 'Help & feedback' }).boundingBox();
-      const title = await page.getByRole('heading', { name: 'Daily Mood Check-In' }).boundingBox();
+      const title = await page.getByRole('heading', { name: "What's here right now?", exact: true }).boundingBox();
       expect(intersects(help, title)).toBe(false);
       await expect(page.locator('.support-help-bubble')).toBeHidden();
     }
-    await page.getByRole('button', { name: /Happy$/ }).click();
-    await page.getByRole('button', { name: 'Next', exact: true }).click();
-    await expect(page.getByRole('heading', { name: /kind of happy/i })).toBeVisible();
-    await page.getByRole('button', { name: 'Next', exact: true }).click();
-    await page.locator('.journal-writing-field textarea').fill('A small note about today.');
-    await expect(page.getByRole('button', { name: 'Save Check-In' })).toBeEnabled();
-    await page.getByRole('button', { name: 'Continue to context' }).click();
-    await expect(page.getByRole('heading', { name: 'Add anything that might help later.' })).toBeVisible();
+    await page.getByRole('button', { name: 'Bright', exact: true }).click();
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Reflect on this feeling', level: 1, exact: true })).toHaveCount(1);
+    await page.getByRole('textbox', { name: 'Your note', exact: true }).fill('A small note about today.');
+    await page.getByRole('button', { name: 'Continue', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'What would feel supportive now?' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Keep this moment' })).toBeEnabled();
   });
 }
 
-test('phone filters keep their values, and writing controls do not collide', async ({ page }, info) => {
+test('empty journal hides filters, and writing controls do not collide', async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/entries', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('textbox', { name: 'Keyword search' }).fill('quiet');
-  await expect(page.getByRole('textbox', { name: 'Tag search' })).toBeHidden();
-  await page.getByRole('button', { name: 'Filters', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Tag search' }).fill('#rest');
-  await page.getByRole('button', { name: 'Bookmarked', exact: true }).click();
-  await page.getByRole('button', { name: /Filters/ }).click();
-  await expect(page.getByRole('textbox', { name: 'Keyword search' })).toHaveValue('quiet');
-  await page.getByRole('button', { name: /Filters/ }).click();
-  await expect(page.getByRole('textbox', { name: 'Tag search' })).toHaveValue('#rest');
-  await expect(page.getByRole('button', { name: 'Bookmarked', exact: true })).toHaveAttribute('aria-pressed', 'true');
-  await page.getByRole('button', { name: 'Clear filters' }).click();
-  await page.getByRole('button', { name: 'New free write' }).click();
+  await expect(page.getByRole('textbox', { name: 'Keyword search' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Start writing' }).click();
   await page.screenshot({ path: info.outputPath('phone-editor.png') });
   const help = await page.getByRole('button', { name: 'Help & feedback' }).boundingBox();
   const save = await page.getByRole('button', { name: 'Save page' }).boundingBox();
   const title = await page.getByRole('textbox', { name: 'Title', exact: true }).boundingBox();
-  const bookmark = await page.locator('.freewrite-notebook .notebook-page-corner').boundingBox();
+  const paperStyle = await page.getByRole('group', { name: 'Paper style', exact: true }).boundingBox();
   expect(intersects(help, save)).toBe(false);
-  expect(intersects(title, bookmark)).toBe(false);
+  expect(intersects(title, paperStyle)).toBe(false);
+  expect(intersects(title, help)).toBe(false);
   await expect(page.locator('.support-help-bubble')).toBeHidden();
   await assertContained(page);
   await page.getByRole('button', { name: 'Help & feedback' }).click();
@@ -91,8 +82,7 @@ test('Night Sky mobile art and editor controls stay clear', async ({ page }, inf
     localStorage.setItem('theme', 'dark');
     localStorage.setItem('fontScale', '1.3');
   });
-  await page.goto('/entries', { waitUntil: 'domcontentloaded' });
-  await page.getByRole('button', { name: 'New free write' }).click();
+  await page.goto('/journal/write', { waitUntil: 'domcontentloaded' });
   await page.screenshot({ path: info.outputPath('night-editor-320.png') });
   await assertContained(page);
   await expect(page.getByRole('button', { name: 'Add note' })).toBeVisible();
@@ -103,15 +93,15 @@ test('another mood moment keeps its compact mobile actions', async ({ page }) =>
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/checkin', { waitUntil: 'domcontentloaded' });
   await page.getByRole('button', { name: /Calm$/ }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.getByRole('button', { name: 'Next', exact: true }).click();
-  await page.locator('.journal-writing-field textarea').fill('A quiet morning.');
-  await page.getByRole('button', { name: 'Save Check-In' }).click();
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Your note', exact: true }).fill('A quiet morning.');
+  await page.getByRole('button', { name: 'Continue', exact: true }).click();
+  await page.getByRole('button', { name: 'Keep this moment' }).click();
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('journalEntriesV2'))?.entries?.length)).toBe(1);
   await page.goto('/checkin', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'How are you feeling now?' })).toBeVisible();
-  await page.getByRole('button', { name: /Happy$/ }).click();
-  await expect(page.getByRole('button', { name: 'Save mood moment' })).toBeEnabled();
+  await page.getByRole('button', { name: 'Bright', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Keep this moment', exact: true })).toBeEnabled();
   await assertContained(page);
 });
 
@@ -123,8 +113,8 @@ test('other theme artwork stays clear of Home headings on phones', async ({ page
     await page.reload({ waitUntil: 'domcontentloaded' });
     const heading = page.getByRole('heading', { level: 1 });
     await expect(heading).toBeVisible();
-    const art = page.locator('.theme-art-image:visible');
-    await expect(art).toHaveCount(1);
+    const art = page.locator('.today-writing img');
+    await expect(art).toBeVisible();
     expect(intersects(await art.boundingBox(), await heading.boundingBox())).toBe(false);
     await assertContained(page);
     await page.screenshot({ path: info.outputPath(`${theme}-home-phone.png`) });

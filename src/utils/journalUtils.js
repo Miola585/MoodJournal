@@ -1,5 +1,8 @@
 export const viewFromPath = (pathname, viewPaths) => {
-  const match = Object.entries(viewPaths).find(([, path]) => path !== '/' && pathname.startsWith(path));
+  const match = Object.entries(viewPaths)
+    .filter(([, path]) => path !== '/')
+    .sort((a, b) => b[1].length - a[1].length)
+    .find(([, path]) => pathname === path || pathname.startsWith(`${path}/`));
   return match?.[0] || 'home';
 };
 export const formatDateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

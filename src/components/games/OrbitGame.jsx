@@ -4,14 +4,28 @@ import { getOrbitPrompt, normalizeStoredOrbit, orbitRingLabels, orbitRings, plan
 import { todayKey } from '../../utils/journalUtils';
 import { orbitArtwork, orbitCenterArtwork } from './gameArtwork';
 import { appendOrbitSnapshot } from './gameArchiveData';
+import { findOpenOrbitAngle, orbitRingRadii as ringRadii } from './orbitPlacement';
 
-const ringRadii = { close: 0.17, between: 0.3, far: 0.43 };
 const planetLabels = Object.fromEntries(Object.entries(orbitArtwork).map(([name, artwork]) => [name, artwork.label]));
+
+function measurePlanet(element) {
+  const label = element.querySelector('.orbit-planet-label');
+  const image = element.querySelector('img');
+  const artScale = Number(getComputedStyle(element).getPropertyValue('--planet-art-scale')) || 1;
+  const width = Math.max(element.offsetWidth, image.offsetWidth * artScale) * 1.1;
+  const height = Math.max(element.offsetHeight, image.offsetHeight * artScale) * 1.1;
+  return {
+    halfWidth: Math.max(width, label.offsetWidth * 1.1) / 2,
+    top: height / 2,
+    bottom: Math.max(height / 2, (label.offsetTop - element.offsetHeight / 2 + label.offsetHeight) * 1.1)
+  };
+}
 
 export function OrbitGame({ privateStorage }) {
   const today = todayKey();
   const storageKey = `moodOrbit:${today}`;
   const stageRef = useRef(null);
+  const controlsRef = useRef(null);
   const dialogRef = useRef(null);
   const dragRef = useRef(null);
   const storageSession = useRef(null);
@@ -24,6 +38,21 @@ export function OrbitGame({ privateStorage }) {
   const [message, setMessage] = useState('');
   const [storageError, setStorageError] = useState('');
   const selected = planets.find((planet) => planet.name === selectedPlanet) || null;
+
+  useEffect(() => {
+    const controls = controlsRef.current;
+    const surface = controls.parentElement;
+    const heading = surface.closest('.standalone-game-screen')?.querySelector('.immersive-route-header');
+    const update = () => {
+      surface.style.setProperty('--orbit-controls-height', `${controls.offsetHeight}px`);
+      if (heading) surface.style.setProperty('--orbit-heading-bottom', `${heading.offsetTop + heading.offsetHeight}px`);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(controls);
+    if (heading) observer.observe(heading);
+    update();
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -50,13 +79,26 @@ export function OrbitGame({ privateStorage }) {
   }, [privateStorage, storageKey]);
 
   const movePlanet = (planetName, orbit, angle = null) => {
+    const stage = stageRef.current;
+    const planet = planets.find((item) => item.name === planetName);
+    if (!stage || !planet) return null;
+    const sizes = Object.fromEntries([...stage.querySelectorAll('.planet')].map((element) => [element.dataset.planet, measurePlanet(element)]));
+    const nextAngle = findOpenOrbitAngle({
+      planets, name: planetName, orbit, angle: angle ?? planet.angle,
+      stage: stage.getBoundingClientRect(), sizes, centerSize: measurePlanet(stage.querySelector('.orbit-center'))
+    });
+    setSelectedPlanet(planetName);
+    if (nextAngle === null) {
+      setMessage('This ring is full here. Try another distance.');
+      return null;
+    }
     setPlanets((current) => current.map((planet) => (
       planet.name === planetName
-        ? { ...planet, orbit, angle: angle ?? planet.angle }
+        ? { ...planet, orbit, angle: nextAngle }
         : planet
     )));
-    setSelectedPlanet(planetName);
     setMessage('');
+    return orbit;
   };
 
   const updateDragTarget = (event, planetName) => {
@@ -72,8 +114,7 @@ export function OrbitGame({ privateStorage }) {
     ), 'close');
     const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
     setActiveRing(nearestRing);
-    movePlanet(planetName, nearestRing, angle);
-    return nearestRing;
+    return movePlanet(planetName, nearestRing, angle);
   };
 
   const resetOrbit = () => {
@@ -123,6 +164,7 @@ export function OrbitGame({ privateStorage }) {
             aria-label={`Move ${planetLabels[planet.name] || planet.name} planet`}
             aria-pressed={selectedPlanet === planet.name}
             className={`planet ${planet.orbit} ${selectedPlanet === planet.name ? 'selected' : ''} ${draggingPlanet === planet.name ? 'dragging' : ''}`}
+            data-planet={planet.name}
             key={planet.name}
             onClick={() => setSelectedPlanet(planet.name)}
             onKeyDown={(event) => {
@@ -154,8 +196,7 @@ export function OrbitGame({ privateStorage }) {
               }
               const drag = dragRef.current;
               if (drag?.pointerId === event.pointerId && drag.moved) {
-                const orbit = updateDragTarget(event, planet.name);
-                if (orbit) setMessage(`${planet.name} feels ${orbitRingLabels[orbit].toLowerCase()} today.`);
+                updateDragTarget(event, planet.name);
               }
               dragRef.current = null;
               setDraggingPlanet('');
@@ -175,10 +216,25 @@ export function OrbitGame({ privateStorage }) {
           </button>
         ))}
       </div>
-      <div className="orbit-guidance" aria-live="polite">
-        <strong>{selected ? planetLabels[selected.name] || selected.name : 'Choose a planet to explore its place in your day.'}</strong>
-        <p>{selected ? getOrbitPrompt(selected) : 'Drag to move it, or use the distance buttons.'}</p>
+      <div className="orbit-dock" ref={controlsRef}>
+      <div className="orbit-guidance">
+        <strong>{selected ? planetLabels[selected.name] || selected.name : 'Your orbit today'}</strong>
+        <p className="orbit-message" role="status">{message || (selected ? getOrbitPrompt(selected) : 'Choose a planet to move.')}</p>
       </div>
+        <div className="orbit-ring-buttons" aria-label="Move selected planet" role="group">
+          {orbitRings.map((orbit) => (
+            <button
+              aria-pressed={selected?.orbit === orbit}
+              disabled={!selected}
+              className={selected?.orbit === orbit ? 'orbit-distance-button selected' : 'orbit-distance-button'}
+              key={orbit}
+              onClick={() => selected && movePlanet(selected.name, orbit)}
+              type="button"
+            >
+              {orbitRingLabels[orbit]}
+            </button>
+          ))}
+        </div>
       <div className="orbit-control-panel">
         <div className="orbit-footer-copy"><strong>Your orbit, your pace.</strong><span>Every arrangement belongs here.</span></div>
         <div className="orbit-actions">
@@ -187,23 +243,8 @@ export function OrbitGame({ privateStorage }) {
           <button className="primary finish-orbit" disabled={!canSave} onClick={finishOrbit} type="button">Finish orbit</button>
         </div>
       </div>
-      {selected && (
-        <div className="orbit-ring-buttons" aria-label="Move selected planet" role="group">
-          {orbitRings.map((orbit) => (
-            <button
-              aria-pressed={selected.orbit === orbit}
-              className={selected.orbit === orbit ? 'orbit-distance-button selected' : 'orbit-distance-button'}
-              key={orbit}
-              onClick={() => movePlanet(selected.name, orbit)}
-              type="button"
-            >
-              {orbitRingLabels[orbit]}
-            </button>
-          ))}
-        </div>
-      )}
-      {message && <p className="orbit-message" role="status">{message}</p>}
       {storageError && <p className="form-error" role="alert">{storageError}</p>}
+      </div>
       <dialog className="orbit-reflection-dialog" ref={dialogRef} aria-labelledby="orbit-reflection-title" onClick={(event) => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
         <button className="orbit-dialog-close" onClick={() => dialogRef.current?.close()} type="button" aria-label="Close reflection"><X aria-hidden="true" size={20} /></button>
         <h2 id="orbit-reflection-title">Your orbit today</h2>

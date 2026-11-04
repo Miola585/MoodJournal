@@ -609,7 +609,7 @@
 .theme-art-cafe-pumpkin {
   width: min(230px, 19vw);
   height: min(230px, 19vw);
-  inset: 8% 2.5% auto auto;
+  inset: max(8%, 160px) 2.5% auto auto;
   opacity: 0.14;
   transform: rotate(-2deg);
   filter: saturate(0.88) brightness(1.02);
@@ -653,7 +653,7 @@
 .theme-art-ocean-shell {
   width: min(320px, 27vw);
   height: min(290px, 25vw);
-  inset: 8% 3% auto auto;
+  inset: max(8%, 160px) 3% auto auto;
   opacity: 0.22;
   transform: rotate(10deg);
   filter: saturate(0.94) brightness(1.04);
@@ -662,7 +662,7 @@
 .theme-art-ocean-marine-shell {
   width: min(340px, 28vw);
   height: min(340px, 28vw);
-  inset: 8% auto auto 3%;
+  inset: max(8%, 160px) auto auto 3%;
   opacity: 0.24;
   transform: rotate(-9deg);
   filter: saturate(1.04) brightness(1.38);
@@ -1064,14 +1064,11 @@
     display: block;
     width: 44px;
     height: 44px;
-    inset: 64px 8px auto auto;
+    inset: auto 8px calc(104px + env(safe-area-inset-bottom, 0px)) auto;
     opacity: 0.24;
     transform: none;
   }
 
-  .app:has(.checkin-screen) .theme-atmosphere .theme-art-image {
-    display: none;
-  }
 }
 
 .app.theme-ocean .layer-three,

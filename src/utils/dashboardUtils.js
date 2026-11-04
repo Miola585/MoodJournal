@@ -1,5 +1,12 @@
 import { calendarWeekDays, isCheckIn, isVisibleJournalEntry } from './journalUtils.js';
 
+export function getJournalGreeting(username, now = new Date()) {
+  const hour = now.getHours();
+  const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+  const name = typeof username === 'string' ? username.trim() : '';
+  return `Good ${timeOfDay}${name ? `, ${name}` : ''}!`;
+}
+
 const startOfDay = (value) => {
   const date = new Date(value);
   date.setHours(0, 0, 0, 0);
